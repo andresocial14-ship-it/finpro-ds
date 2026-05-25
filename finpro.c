@@ -1,3 +1,5 @@
+//Testes git Rafif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
