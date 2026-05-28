@@ -89,20 +89,6 @@ void edit_schedule();
 void del_schedule();
 void view_schedule();
 
-// ! TICKET PRICE MANAGEMENT ! //
-void price_manage();
-void set_weekday();
-void set_weekend();
-void set_vip();
-void view_curr_prices();
-
-// ! REPORTS & STATISTICS ! //
-void reports();
-void view_all_transactions();
-void revenue_film();    // B-TREE
-void revenue_day();     // B-TREE
-void export_reports();
-
 // ! USER ACCOUNT MANAGEMENT ! //
 void acc_manage();
 void view_users();
@@ -416,18 +402,16 @@ void menu_admin () {
         printf("Welcome Back, Admin!\n");
         printf("[1] Film Management\n");
         printf("[2] Studio & Schedule Management\n");
-        printf("[3] Ticket Price Management\n");
-        printf("[4] Reports & Statistics\n");
-        printf("[5] User Account Management\n");
+        printf("[3] User Account Management\n");
         printf("[0] Logout\n");
         printf("============================================\n");    
         printf("Choose : ");
         scanf("%d", &choice);
         
-        if (choice < 0 || choice > 5) {
+        if (choice < 0 || choice > 3) {
             invalid_choice();
         }
-    } while(choice < 0 || choice > 5); 
+    } while(choice < 0 || choice > 3); 
 
     switch (choice) {
         case 1 : 
@@ -435,15 +419,6 @@ void menu_admin () {
             break;
         case 2 : 
             schedule_manage();
-            break;
-        case 3 : 
-            price_manage();
-            break;
-        case 4 : 
-            reports();
-            break;
-        case 5 : 
-            acc_manage();
             break;
         case 0 : 
             main_menu();
@@ -962,130 +937,6 @@ void del_schedule () {
 // VIEW SCHEDULE //
 void view_schedule () {
     
-}
-
-// SUB-MENU TICKET PRICE MANAGEMENT // 
-void price_manage () {
-    int choice;
-
-    do {
-        system("cls");
-        printf("============================================\n");
-        printf("            TICKET PRICE MANAGEMENT         \n");
-        printf("--------------------------------------------\n");
-        printf("[1] Set Weekday Price\n");
-        printf("[2] Set Weekend Price\n");
-        printf("[3] Set VIP Price\n");
-        printf("[4] View Current Prices\n");
-        printf("[0] Back\n");
-        printf("============================================\n");    
-        printf("Choose : ");
-        scanf("%d", &choice);
-        
-        if (choice < 0 || choice > 4) {
-            invalid_choice();
-        }
-    } while(choice < 0 || choice > 4); 
-
-    switch (choice) {
-        case 1 : 
-            set_weekday();
-            break;
-        case 2 : 
-            set_weekend();
-            break;
-        case 3 : 
-            set_vip();
-            break;
-        case 4 : 
-            view_curr_prices();
-            break;
-        case 0 : 
-            menu_admin();
-            break;
-    }
-}
-
-// SET WEEKDAY //
-void set_weekday () {
-
-}
-
-// SET WEEKEND //
-void set_weekend () {
-
-}
-
-// SET VIP //
-void set_vip () {
-
-}
-
-// VIEW CURRENT PRICES //
-void view_curr_prices () {
-
-}
-
-// SUB-MENU REPORTS & STATISTICS // 
-void reports () {
-    int choice;
-
-    do {
-        system("cls");
-        printf("============================================\n");
-        printf("             REPORTS & STATISTICS           \n");
-        printf("--------------------------------------------\n");
-        printf("[1] View All Transactions\n");
-        printf("[2] Revenue per Film\n");
-        printf("[3] Revenue per Day\n");
-        printf("[4] Export Reports to .txt\n");
-        printf("[0] Back\n");
-        printf("============================================\n");    
-        printf("Choose : ");
-        scanf("%d", &choice);
-        
-        if (choice < 0 || choice > 4) {
-            invalid_choice();
-        }
-    } while(choice < 0 || choice > 4); 
-
-    switch (choice) {
-        case 1 : 
-            view_all_transactions();
-            break;
-        case 2 : 
-            revenue_film();
-            break;
-        case 3 : 
-            revenue_day();
-            break;
-        case 4 : 
-            export_reports();
-            break;
-        case 0 : 
-            menu_admin();
-            break;
-    }
-}
-
-// VIEW ALL TRANSACTIONS //
-void view_all_transactions () {
-
-}
-
-// REVENUE FILM //
-void revenue_film () {
-    
-}
-
-// REVENUE DAY //
-void revenue_day () {
-
-}
-
-// EXPORT REPORTS //
-void export_reports () {
-
 }
 
 // SUB-MENU USER ACCOUNT MANAGEMENT // 
