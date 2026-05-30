@@ -1,4 +1,4 @@
-argauser,12345,argaarga,arga@gmail.com
+arga,12345678,arga,arga12@gmail.com
 arga123,arga123,arga,arga@gmail.com
 rafif,rafif,rafifdua,rafif@mail.com
 andreauser,andreapass2,andrea,andrea@binus.ac
