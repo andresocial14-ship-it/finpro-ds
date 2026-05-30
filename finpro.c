@@ -9,9 +9,9 @@
 #define studio_file "studios.txt"
 #define schedule_file "schedules.txt"
 #define booking_file "bookings.txt"
-
-// !! GLOBAL VARIABLE !! //
-char current_user[100];
+#define T 3               // minimum degree
+#define MAX_KEYS (2*T-1)  // = 5, maksimum key per node
+#define MIN_KEYS (T-1)    // = 2, minimum key per node
 
 // !! STRUCT !! //
 typedef struct {
@@ -54,12 +54,40 @@ typedef struct {
     int status;
 } Booking;
 
+typedef struct BTreeNode {
+    int n;                          // jumlah key saat ini
+    Film keys[MAX_KEYS];            // array of film data (key = film.id)
+    struct BTreeNode* children[MAX_KEYS + 1]; // pointer ke child nodes
+    int leaf;                       // 1 jika node adalah daun, 0 jika tidak
+} BTreeNode;
+
+// !! GLOBAL VARIABLE !! //
+char current_user[100];
+BTreeNode* film_tree = NULL;
+
 // !! FUNCTION STRUCT !! //
 Account* find_username(char* username, char* password);
 
 // !! PRINTILAN !! // 
 void invalid_choice();  // DONE
 void invalid_file();    // DONE
+
+// !! B-TREE !! //
+BTreeNode* btree_create_node(int leaf);
+void       btree_insert(BTreeNode** root, Film film);
+void       btree_insert_nonfull(BTreeNode* node, Film film);
+void       btree_split_child(BTreeNode* parent, int i, BTreeNode* child);
+Film*      btree_search(BTreeNode* root, int id);
+void       btree_inorder(BTreeNode* root, Film* result, int* count);
+void       btree_delete(BTreeNode** root, int id);
+void       btree_delete_internal(BTreeNode* node, int id);
+Film       btree_get_predecessor(BTreeNode* node, int idx);
+Film       btree_get_successor(BTreeNode* node, int idx);
+void       btree_fill(BTreeNode* node, int idx);
+void       btree_borrow_from_prev(BTreeNode* node, int idx);
+void       btree_borrow_from_next(BTreeNode* node, int idx);
+void       btree_merge(BTreeNode* node, int idx);
+void       btree_free(BTreeNode* root);
 int auto_id();
 
 // !! MENU !! //
@@ -73,6 +101,8 @@ void register_acc();    // DONE
 void menu_admin();      // DONE
 
 // ! FILM MANAGEMENT ! //
+void btree_load_from_file();
+void btree_save_to_file();
 void film_manage();
 void add_film();        // DONE
 void del_film();        // DONE
@@ -127,6 +157,466 @@ int main () {
     return 0;
 }
 
+// B-TREE //
+BTreeNode* btree_create_node(int leaf) {
+    BTreeNode* node = (BTreeNode*)malloc(sizeof(BTreeNode));
+    if (!node) {
+        printf("Memory allocation failed!\n");
+        exit(1);
+    }
+    node->n    = 0;
+    node->leaf = leaf;
+    for (int i = 0; i <= MAX_KEYS; i++) {
+        node->children[i] = NULL;
+    }
+    return node;
+}
+
+// ----------------------------------------
+// INSERT: Main entry point
+// Jika root penuh ? split root ? insert
+// ----------------------------------------
+void btree_insert(BTreeNode** root, Film film) {
+    // Jika tree kosong
+    if (*root == NULL) {
+        *root = btree_create_node(1); // buat root sebagai leaf
+        (*root)->keys[0] = film;
+        (*root)->n = 1;
+        return;
+    }
+
+    // Jika root penuh (n == MAX_KEYS), harus split dulu
+    if ((*root)->n == MAX_KEYS) {
+        // Buat root baru
+        BTreeNode* new_root = btree_create_node(0); // bukan leaf
+        new_root->children[0] = *root;
+
+        // Split root lama sebagai child[0] dari new_root
+        btree_split_child(new_root, 0, *root);
+
+        // Tentukan ke child mana yang akan diinsert
+        int i = 0;
+        if (new_root->keys[0].id < film.id) {
+            i = 1;
+        }
+        btree_insert_nonfull(new_root->children[i], film);
+
+        *root = new_root;
+    } else {
+        // Root tidak penuh, langsung insert
+        btree_insert_nonfull(*root, film);
+    }
+}
+
+// ----------------------------------------
+// INSERT ke node yang belum penuh
+// ----------------------------------------
+void btree_insert_nonfull(BTreeNode* node, Film film) {
+    int i = node->n - 1;
+
+    if (node->leaf) {
+        // Geser key yang lebih besar ke kanan untuk beri ruang
+        while (i >= 0 && node->keys[i].id > film.id) {
+            node->keys[i + 1] = node->keys[i];
+            i--;
+        }
+        node->keys[i + 1] = film;
+        node->n++;
+    } else {
+        // Cari child yang tepat
+        while (i >= 0 && node->keys[i].id > film.id) {
+            i--;
+        }
+        i++;
+
+        // Jika child penuh, split dulu
+        if (node->children[i]->n == MAX_KEYS) {
+            btree_split_child(node, i, node->children[i]);
+
+            // Setelah split, tentukan ke child mana
+            if (node->keys[i].id < film.id) {
+                i++;
+            }
+        }
+        btree_insert_nonfull(node->children[i], film);
+    }
+}
+
+// ----------------------------------------
+// SPLIT CHILD: Split child[i] dari parent
+// ----------------------------------------
+// Contoh split (t=3, max=5 keys):
+// Before: child = [1,2,3,4,5]
+// After:  left  = [1,2]   ? child[i]
+//         mid   = [3]     ? naik ke parent
+//         right = [4,5]   ? child[i+1] baru
+// ----------------------------------------
+void btree_split_child(BTreeNode* parent, int i, BTreeNode* child) {
+    // Buat node baru untuk menampung right half dari child
+    BTreeNode* new_node = btree_create_node(child->leaf);
+    new_node->n = T - 1; // = 2 keys
+
+    // Salin right half dari child ke new_node
+    // keys[T] sampai keys[MAX_KEYS-1] ? keys[0] sampai keys[T-2]
+    for (int j = 0; j < T - 1; j++) {
+        new_node->keys[j] = child->keys[j + T];
+    }
+
+    // Salin children jika bukan leaf
+    if (!child->leaf) {
+        for (int j = 0; j < T; j++) {
+            new_node->children[j] = child->children[j + T];
+        }
+    }
+
+    // Kurangi jumlah key di child (sekarang hanya left half)
+    child->n = T - 1; // = 2 keys
+
+    // Geser children parent ke kanan untuk beri ruang child baru
+    for (int j = parent->n; j >= i + 1; j--) {
+        parent->children[j + 1] = parent->children[j];
+    }
+    parent->children[i + 1] = new_node;
+
+    // Geser keys parent ke kanan
+    for (int j = parent->n - 1; j >= i; j--) {
+        parent->keys[j + 1] = parent->keys[j];
+    }
+
+    // Naikkan median key dari child ke parent
+    parent->keys[i] = child->keys[T - 1]; // keys[2] = median
+    parent->n++;
+}
+
+// ----------------------------------------
+// SEARCH: Cari film by ID
+// Return pointer ke Film jika ketemu, NULL jika tidak
+// ----------------------------------------
+Film* btree_search(BTreeNode* root, int id) {
+    if (root == NULL) return NULL;
+
+    int i = 0;
+
+    // Cari posisi key pertama yang >= id
+    while (i < root->n && id > root->keys[i].id) {
+        i++;
+    }
+
+    // Cek apakah ketemu
+    if (i < root->n && id == root->keys[i].id) {
+        return &(root->keys[i]);
+    }
+
+    // Jika node adalah leaf dan tidak ketemu
+    if (root->leaf) return NULL;
+
+    // Rekursi ke child yang sesuai
+    return btree_search(root->children[i], id);
+}
+
+// ----------------------------------------
+// IN-ORDER TRAVERSAL: Kumpulkan semua film terurut by ID
+// ----------------------------------------
+void btree_inorder(BTreeNode* root, Film* result, int* count) {
+    if (root == NULL) return;
+
+    for (int i = 0; i < root->n; i++) {
+        // Kunjungi left child sebelum key[i]
+        if (!root->leaf) {
+            btree_inorder(root->children[i], result, count);
+        }
+        // Tambahkan key[i] ke result
+        result[(*count)++] = root->keys[i];
+    }
+
+    // Kunjungi rightmost child
+    if (!root->leaf) {
+        btree_inorder(root->children[root->n], result, count);
+    }
+}
+
+// ============================================
+// !! DELETE (HARD DELETE) !!
+// ============================================
+
+// Main delete entry point
+void btree_delete(BTreeNode** root, int id) {
+    if (*root == NULL) {
+        printf("Film with ID %d not found!\n", id);
+        return;
+    }
+
+    btree_delete_internal(*root, id);
+
+    // Jika root sekarang kosong dan punya child, turunkan root
+    if ((*root)->n == 0) {
+        BTreeNode* old_root = *root;
+        if ((*root)->leaf) {
+            *root = NULL;
+        } else {
+            *root = (*root)->children[0];
+        }
+        free(old_root);
+    }
+}
+
+// ----------------------------------------
+// DELETE INTERNAL: rekursif
+// ----------------------------------------
+void btree_delete_internal(BTreeNode* node, int id) {
+    int i = 0;
+
+    // Cari posisi id di node ini
+    while (i < node->n && id > node->keys[i].id) {
+        i++;
+    }
+
+    // CASE 1: Key ditemukan di node ini
+    if (i < node->n && id == node->keys[i].id) {
+
+        if (node->leaf) {
+            // CASE 1a: Node adalah leaf ? hapus langsung
+            for (int j = i; j < node->n - 1; j++) {
+                node->keys[j] = node->keys[j + 1];
+            }
+            node->n--;
+        } else {
+            // CASE 1b: Node bukan leaf
+            if (node->children[i]->n >= T) {
+                // Ganti dengan predecessor (max key dari left subtree)
+                Film pred = btree_get_predecessor(node, i);
+                node->keys[i] = pred;
+                btree_delete_internal(node->children[i], pred.id);
+            } else if (node->children[i + 1]->n >= T) {
+                // Ganti dengan successor (min key dari right subtree)
+                Film succ = btree_get_successor(node, i);
+                node->keys[i] = succ;
+                btree_delete_internal(node->children[i + 1], succ.id);
+            } else {
+                // Merge children[i] dan children[i+1]
+                btree_merge(node, i);
+                btree_delete_internal(node->children[i], id);
+            }
+        }
+    } else {
+        // CASE 2: Key tidak di node ini, cari di child
+        if (node->leaf) {
+            printf("Film with ID %d not found!\n", id);
+            return;
+        }
+
+        // Tentukan apakah key ada di subtree child[i]
+        int last_child = (i == node->n);
+
+        // Pastikan child[i] punya cukup key sebelum rekursi
+        if (node->children[i]->n < T) {
+            btree_fill(node, i);
+        }
+
+        // Setelah fill, posisi bisa berubah karena merge
+        if (last_child && i > node->n) {
+            btree_delete_internal(node->children[i - 1], id);
+        } else {
+            btree_delete_internal(node->children[i], id);
+        }
+    }
+}
+
+// Ambil predecessor: key terbesar dari left subtree child[idx]
+Film btree_get_predecessor(BTreeNode* node, int idx) {
+    BTreeNode* cur = node->children[idx];
+    while (!cur->leaf) {
+        cur = cur->children[cur->n];
+    }
+    return cur->keys[cur->n - 1];
+}
+
+// Ambil successor: key terkecil dari right subtree child[idx+1]
+Film btree_get_successor(BTreeNode* node, int idx) {
+    BTreeNode* cur = node->children[idx + 1];
+    while (!cur->leaf) {
+        cur = cur->children[0];
+    }
+    return cur->keys[0];
+}
+
+// Fill: pastikan children[idx] punya minimal T keys
+void btree_fill(BTreeNode* node, int idx) {
+    if (idx != 0 && node->children[idx - 1]->n >= T) {
+        // Pinjam dari sibling kiri
+        btree_borrow_from_prev(node, idx);
+    } else if (idx != node->n && node->children[idx + 1]->n >= T) {
+        // Pinjam dari sibling kanan
+        btree_borrow_from_next(node, idx);
+    } else {
+        // Merge dengan sibling
+        if (idx != node->n) {
+            btree_merge(node, idx);
+        } else {
+            btree_merge(node, idx - 1);
+        }
+    }
+}
+
+// Pinjam key dari child kiri (prev sibling)
+void btree_borrow_from_prev(BTreeNode* node, int idx) {
+    BTreeNode* child = node->children[idx];
+    BTreeNode* sibling = node->children[idx - 1];
+
+    // Geser keys child ke kanan
+    for (int i = child->n - 1; i >= 0; i--) {
+        child->keys[i + 1] = child->keys[i];
+    }
+    if (!child->leaf) {
+        for (int i = child->n; i >= 0; i--) {
+            child->children[i + 1] = child->children[i];
+        }
+    }
+
+    // Turunkan key parent ke child
+    child->keys[0] = node->keys[idx - 1];
+    if (!child->leaf) {
+        child->children[0] = sibling->children[sibling->n];
+    }
+
+    // Naikkan key terakhir sibling ke parent
+    node->keys[idx - 1] = sibling->keys[sibling->n - 1];
+
+    child->n++;
+    sibling->n--;
+}
+
+// Pinjam key dari child kanan (next sibling)
+void btree_borrow_from_next(BTreeNode* node, int idx) {
+    BTreeNode* child = node->children[idx];
+    BTreeNode* sibling = node->children[idx + 1];
+
+    // Turunkan key parent ke akhir child
+    child->keys[child->n] = node->keys[idx];
+    if (!child->leaf) {
+        child->children[child->n + 1] = sibling->children[0];
+    }
+
+    // Naikkan key pertama sibling ke parent
+    node->keys[idx] = sibling->keys[0];
+
+    // Geser keys sibling ke kiri
+    for (int i = 1; i < sibling->n; i++) {
+        sibling->keys[i - 1] = sibling->keys[i];
+    }
+    if (!sibling->leaf) {
+        for (int i = 1; i <= sibling->n; i++) {
+            sibling->children[i - 1] = sibling->children[i];
+        }
+    }
+
+    child->n++;
+    sibling->n--;
+}
+
+// Merge: gabungkan children[idx] dan children[idx+1]
+// dengan keys[idx] sebagai median
+void btree_merge(BTreeNode* node, int idx) {
+    BTreeNode* child  = node->children[idx];
+    BTreeNode* sibling = node->children[idx + 1];
+
+    // Turunkan key parent ke posisi tengah child
+    child->keys[T - 1] = node->keys[idx];
+
+    // Salin keys sibling ke child
+    for (int i = 0; i < sibling->n; i++) {
+        child->keys[i + T] = sibling->keys[i];
+    }
+    if (!child->leaf) {
+        for (int i = 0; i <= sibling->n; i++) {
+            child->children[i + T] = sibling->children[i];
+        }
+    }
+
+    // Geser keys dan children parent ke kiri
+    for (int i = idx + 1; i < node->n; i++) {
+        node->keys[i - 1] = node->keys[i];
+    }
+    for (int i = idx + 2; i <= node->n; i++) {
+        node->children[i - 1] = node->children[i];
+    }
+
+    child->n += sibling->n + 1;
+    node->n--;
+
+    free(sibling);
+}
+
+// ----------------------------------------
+// FREE: Bebaskan semua memory B-Tree
+// ----------------------------------------
+void btree_free(BTreeNode* root) {
+    if (root == NULL) return;
+    if (!root->leaf) {
+        for (int i = 0; i <= root->n; i++) {
+            btree_free(root->children[i]);
+        }
+    }
+    free(root);
+}
+
+// ============================================
+// !! LOAD & SAVE FILE !!
+// ============================================
+
+// Load semua film dari file ke B-Tree
+void btree_load_from_file() {
+    // Bebaskan tree lama jika ada
+    if (film_tree != NULL) {
+        btree_free(film_tree);
+        film_tree = NULL;
+    }
+
+    FILE* fp = fopen(film_file, "r");
+    if (fp == NULL) return; // file belum ada, tree kosong
+
+    char buffer[600];
+    while (fgets(buffer, sizeof(buffer), fp)) {
+        Film film;
+        buffer[strcspn(buffer, "\n")] = 0;
+        sscanf(buffer, "%d=%[^=]=%[^=]=%d=%d=%[^\n]",
+               &film.id, film.title, film.genre,
+               &film.duration, &film.age_rating, film.detail);
+        btree_insert(&film_tree, film);
+    }
+    fclose(fp);
+}
+
+// Simpan semua film dari B-Tree ke file (in-order = urut by ID)
+void btree_save_to_file() {
+    Film result[200];
+    int count = 0;
+    btree_inorder(film_tree, result, &count);
+
+    FILE* fp = fopen(film_file, "w");
+    if (fp == NULL) {
+        printf("Failed to save to file!\n");
+        return;
+    }
+    for (int i = 0; i < count; i++) {
+        fprintf(fp, "%d=%s=%s=%d=%d=%s\n",
+                result[i].id, result[i].title, result[i].genre,
+                result[i].duration, result[i].age_rating, result[i].detail);
+    }
+    fclose(fp);
+}
+
+// ============================================
+// !! AUTO ID !!
+// ============================================
+int auto_id() {
+    Film result[200];
+    int count = 0;
+    btree_inorder(film_tree, result, &count);
+    if (count == 0) return 0;
+    return result[count - 1].id; // ID terbesar (in-order = terurut)
+}
+
 // INVALID CHOICE //
 void invalid_choice () {
     printf("Invalid choice! Try again\n");
@@ -138,23 +628,6 @@ void invalid_file () {
     printf("Failed to open file!\n");
     system("pause");
     return;
-}
-
-// AUTO ID FILM //
-int auto_id() {
-    FILE* fp = fopen(film_file, "r");
-    if (fp == NULL) return 0;
-
-    char buffer[500];
-    int last_id = 0;
-    int id;
-
-    while (fgets(buffer, sizeof(buffer), fp)) {
-        sscanf(buffer, "%d,", &id);
-        last_id = id;
-    }
-    fclose(fp);
-    return last_id;
 }
 
 // MAIN MENU //
@@ -393,6 +866,7 @@ void register_acc() {
 // MENU ADMIN //
 void menu_admin () {
     int choice;
+    btree_load_from_file();
 
     do {
         system("cls");
@@ -544,13 +1018,11 @@ void add_film() {
     // auto ID
     film.id = auto_id() + 1;
 
-    FILE* data = fopen(film_file, "a");
-    if (data == NULL) {
-        invalid_file();
-        return;
-    }
-    fprintf(data, "%d=%s=%s=%d=%d=%s\n", film.id, film.title, film.genre, film.duration, film.age_rating, film.detail);
-    fclose(data);
+    // insert B-tree
+    btree_insert(&film_tree, film);
+
+    // simpan
+    btree_save_to_file();
 
     system("cls");
     printf("============================================\n");
@@ -571,46 +1043,23 @@ void add_film() {
 void del_film() {
     system("cls");
 
-    Film films[100];
-    int n = 0;
-    char buffer[500];
-    int del_id;
-    char input[10];
-    int valid;
-    int found = 0;
+    Film result[200];
+    int count = 0;
+    btree_inorder(film_tree, result, &count);
 
-    FILE* data = fopen(film_file, "r");
-    FILE* temp = fopen("temp.txt", "w");
-
-    if (data == NULL || temp == NULL) {
-        invalid_file();
-        return;
-    }
-
-    while (fgets(buffer, sizeof(buffer), data)) {
-        sscanf(buffer, "%d=%[^=]=%[^=]=%d=%d=%[^\n]", &films[n].id, films[n].title, films[n].genre, &films[n].duration, &films[n].age_rating, films[n].detail);
-        n++;
-    }
-    fclose(data);
-
-    // view film
-    printf("==============================\n"); 
+    printf("==============================\n");
     printf("          DELETE FILM         \n");
-    printf("==============================\n"); 
+    printf("==============================\n");
     printf("%-5s %-20s\n", "ID", "Title");
     printf("------------------------------\n");
 
-    for (int i = 0; i < n; i++) {
-        printf("%-5d %-20s\n", films[i].id, films[i].title);
+    for (int i = 0; i < count; i++) {
+        printf("%-5d %-20s\n", result[i].id, result[i].title);
     }
 
-    printf("------------------------------\n");
-
-    // ga ada film
-    if (n == 0) {
+    if (count == 0) {
         printf("No films available.\n");
         printf("==============================\n");
-        fclose(temp);
         system("pause");
         film_manage();
         return;
@@ -618,47 +1067,38 @@ void del_film() {
 
     printf("==============================\n");
 
-    // input ID
+    char input[10];
+    int del_id;
+    int valid;
+
     do {
         printf("Enter Film ID to delete : ");
         scanf("%s", input);
-
         valid = 1;
         for (int i = 0; input[i] != '\0'; i++) {
-            if (!isdigit(input[i])) {
-                valid = 0;
-                break;
-            }
+            if (!isdigit(input[i])) { valid = 0; break; }
         }
-
-        if (!valid) {
-            printf("ID must be a number!\n");
-        }
-    } while(!valid);
+        if (!valid) printf("ID must be a number!\n");
+    } while (!valid);
 
     del_id = atoi(input);
 
-    for (int i = 0; i < n; i++) {
-        if (films[i].id == del_id) {
-            found = 1;
-        } 
-        else {
-            fprintf(temp, "%d=%s=%s=%d=%d=%s\n", films[i].id, films[i].title, films[i].genre, films[i].duration, films[i].age_rating, films[i].detail);
-        }
-    }
-
-    fclose(temp);
-
-    if (found) {
-        remove(film_file);
-        rename("temp.txt", film_file);
-        printf("Film with ID %d deleted successfully!\n", del_id);
-    } 
-    else {
-        remove("temp.txt");
+    // cek id
+    Film* found = btree_search(film_tree, del_id);
+    if (found == NULL) {
         printf("Film with ID %d not found!\n", del_id);
+        system("pause");
+        film_manage();
+        return;
     }
 
+    // delete B-tree
+    btree_delete(&film_tree, del_id);
+
+    // simpan
+    btree_save_to_file();
+
+    printf("Film with ID %d deleted successfully!\n", del_id);
     system("pause");
     film_manage();
 }
@@ -667,46 +1107,23 @@ void del_film() {
 void edit_film() {
     system("cls");
 
-    Film films[100];
-    int n = 0;
-    char buffer[500];
-    int edit_id;
-    char input[10];
-    int valid;
-    int found = -1;
+    Film result[200];
+    int count = 0;
+    btree_inorder(film_tree, result, &count);
 
-    FILE* data = fopen(film_file, "r");
-    FILE* temp = fopen("temp.txt", "w");
-
-    if (data == NULL || temp == NULL) {
-        invalid_file();
-        return;
-    }
-
-    while (fgets(buffer, sizeof(buffer), data)) {
-        sscanf(buffer, "%d=%[^=]=%[^=]=%d=%d=%[^\n]", &films[n].id, films[n].title, films[n].genre, &films[n].duration, &films[n].age_rating, films[n].detail);
-        n++;
-    }
-    fclose(data);
-
-    // view film
     printf("==============================\n");
     printf("           EDIT FILM          \n");
     printf("==============================\n");
     printf("%-5s %-20s\n", "ID", "Title");
     printf("------------------------------\n");
 
-    for (int i = 0; i < n; i++) {
-        printf("%-5d %-20s\n", films[i].id, films[i].title);
+    for (int i = 0; i < count; i++) {
+        printf("%-5d %-20s\n", result[i].id, result[i].title);
     }
 
-    printf("------------------------------\n");
-
-    // ga ada film
-    if (n == 0) {
+    if (count == 0) {
         printf("No films available.\n");
         printf("==============================\n");
-        fclose(temp);
         system("pause");
         film_manage();
         return;
@@ -714,63 +1131,52 @@ void edit_film() {
 
     printf("==============================\n");
 
-    // input ID
+    char input[10];
+    int edit_id;
+    int valid;
+
     do {
         printf("Enter Film ID to edit : ");
         scanf("%s", input);
-
         valid = 1;
         for (int i = 0; input[i] != '\0'; i++) {
-            if (!isdigit(input[i])) {
-                valid = 0;
-                break;
-            }
+            if (!isdigit(input[i])) { valid = 0; break; }
         }
         if (!valid) printf("ID must be a number!\n");
     } while (!valid);
 
     edit_id = atoi(input);
 
-    // nyari index film yang mau diedit
-    for (int i = 0; i < n; i++) {
-        if (films[i].id == edit_id) {
-            found = i;
-            break;
-        }
-    }
-
-    // kalo ga ketemu
-    if (found == -1) {
+    // search B-tree
+    Film* target = btree_search(film_tree, edit_id);
+    if (target == NULL) {
         printf("Film with ID %d not found!\n", edit_id);
-        fclose(temp);
-        remove("temp.txt");
         system("pause");
         film_manage();
         return;
     }
 
-    // edit (enter pake yang lama)
     printf("------------------------------\n");
     printf("Leave blank to keep current value\n");
     printf("------------------------------\n");
 
     char new_val[300];
-    while (getchar() != '\n'); // bersihkan buffer
+    while (getchar() != '\n');
 
     // title
-    printf("Title [%s] : ", films[found].title);
+    printf("Title [%s] : ", target->title);
     fgets(new_val, sizeof(new_val), stdin);
     new_val[strcspn(new_val, "\n")] = '\0';
-    if (strlen(new_val) != 0) strcpy(films[found].title, new_val);
+    if (strlen(new_val) != 0) strcpy(target->title, new_val);
 
     // genre
-    printf("Genre [%s] : ", films[found].genre);
+    printf("Genre [%s] : ", target->genre);
     fgets(new_val, sizeof(new_val), stdin);
     new_val[strcspn(new_val, "\n")] = '\0';
-    if (strlen(new_val) != 0) strcpy(films[found].genre, new_val);
+    if (strlen(new_val) != 0) strcpy(target->genre, new_val);
 
-    // duration
-    printf("Duration [%d] : ", films[found].duration);
+    // duration 
+    printf("Duration [%d] : ", target->duration);
     fgets(new_val, sizeof(new_val), stdin);
     new_val[strcspn(new_val, "\n")] = '\0';
     if (strlen(new_val) != 0) {
@@ -778,12 +1184,12 @@ void edit_film() {
         for (int i = 0; new_val[i] != '\0'; i++) {
             if (!isdigit(new_val[i])) { valid = 0; break; }
         }
-        if (valid && atoi(new_val) > 0) films[found].duration = atoi(new_val);
+        if (valid && atoi(new_val) > 0) target->duration = atoi(new_val);
         else printf("Invalid duration, keeping current value.\n");
     }
 
     // age rating
-    printf("Age Rating [%d] : ", films[found].age_rating);
+    printf("Age Rating [%d] : ", target->age_rating);
     fgets(new_val, sizeof(new_val), stdin);
     new_val[strcspn(new_val, "\n")] = '\0';
     if (strlen(new_val) != 0) {
@@ -791,24 +1197,18 @@ void edit_film() {
         for (int i = 0; new_val[i] != '\0'; i++) {
             if (!isdigit(new_val[i])) { valid = 0; break; }
         }
-        if (valid && atoi(new_val) >= 0) films[found].age_rating = atoi(new_val);
+        if (valid && atoi(new_val) >= 0) target->age_rating = atoi(new_val);
         else printf("Invalid age rating, keeping current value.\n");
     }
 
     // detail
-    printf("Detail [%s] : ", films[found].detail);
+    printf("Detail [%s] : ", target->detail);
     fgets(new_val, sizeof(new_val), stdin);
     new_val[strcspn(new_val, "\n")] = '\0';
-    if (strlen(new_val) != 0) strcpy(films[found].detail, new_val);
+    if (strlen(new_val) != 0) strcpy(target->detail, new_val);
 
-    // tulis semua ke temp
-    for (int i = 0; i < n; i++) {
-        fprintf(temp, "%d=%s=%s=%d=%d=%s\n", films[i].id, films[i].title, films[i].genre, films[i].duration, films[i].age_rating, films[i].detail);
-    }
-
-    fclose(temp);
-    remove(film_file);
-    rename("temp.txt", film_file);
+    // simpan
+    btree_save_to_file();
 
     printf("Film with ID %d updated successfully!\n", edit_id);
     system("pause");
@@ -819,47 +1219,82 @@ void edit_film() {
 void view_film() {
     system("cls");
 
-    FILE* data = fopen(film_file, "r");
-    if (data == NULL) {
-        invalid_file();
-        return;
-    }
-
-    char buffer[500];
+    Film result[200];
     int count = 0;
+
+    btree_inorder(film_tree, result, &count);
 
     printf("============================================\n");
     printf("                 ALL FILMS                  \n");
+    printf("    (Displayed via B-Tree In-Order)         \n");
     printf("============================================\n");
-    printf("%-5s %-20s %-15s %-8s %-5s %-30s\n", "ID", "Title", "Genre", "Duration", "Age", "Detail");
+    printf("%-5s %-20s %-15s %-8s %-5s %-30s\n",
+           "ID", "Title", "Genre", "Duration", "Age", "Detail");
     printf("--------------------------------------------\n");
 
-    while (fgets(buffer, sizeof(buffer), data)) {
-        Film film;
-        sscanf(buffer, "%d=%[^=]=%[^=]=%d=%d=%[^\n]", &film.id, film.title, film.genre, &film.duration, &film.age_rating, film.detail);
-
-        printf("%-5d %-20s %-15s %-8d %-5d %-30s\n", film.id, film.title, film.genre, film.duration, film.age_rating, film.detail);
-        count++;
+    for (int i = 0; i < count; i++) {
+        printf("%-5d %-20s %-15s %-8d %-5d %-30s\n", result[i].id, result[i].title, result[i].genre, result[i].duration, result[i].age_rating, result[i].detail);
     }
 
-    fclose(data);
     printf("--------------------------------------------\n");
-
     if (count == 0) {
         printf("No films available.\n");
-    }
+    } 
     else {
         printf("Total: %d film(s)\n", count);
     }
-
     printf("============================================\n");
     system("pause");
     film_manage();
 }
 
 // SEARCH FILM //
-void search_film () {
+void search_film() {
+    system("cls");
 
+    printf("============================================\n");
+    printf("              SEARCH FILM BY ID             \n");
+    printf("      (Using B-Tree Search O(log n))        \n");
+    printf("--------------------------------------------\n");
+
+    char input[10];
+    int search_id;
+    int valid;
+
+    do {
+        printf("Enter Film ID to search : ");
+        scanf("%s", input);
+        valid = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i])) { 
+                valid = 0; break; 
+            }
+        }
+        if (!valid) printf("ID must be a number!\n");
+    } while(!valid);
+
+    search_id = atoi(input);
+
+    // search B-tree
+    Film* found = btree_search(film_tree, search_id);
+
+    printf("--------------------------------------------\n");
+    if (found != NULL) {
+        printf("Film Found!\n");
+        printf("--------------------------------------------\n");
+        printf("  ID       : %d\n", found->id);
+        printf("  Title    : %s\n", found->title);
+        printf("  Genre    : %s\n", found->genre);
+        printf("  Duration : %d min\n", found->duration);
+        printf("  Age      : %d+\n", found->age_rating);
+        printf("  Detail   : %s\n", found->detail);
+    } 
+    else {
+        printf("Film with ID %d not found!\n", search_id);
+    }
+    printf("============================================\n");
+    system("pause");
+    film_manage();
 }
 
 // SUB-MENU STUDIO & SCHEDULE MANAGEMENT // 
@@ -1022,9 +1457,53 @@ void view_users() {
     acc_manage();
 }
 
-// SEARCH USER //
-void search_user () {
+// SEARCH USER //  --- DIBAIKIN LAGI
+void search_user() {
+    system("cls");
 
+    char keyword[100];
+    Account accounts[100];
+    int n = 0;
+    int found = 0;
+    char buffer[500];
+
+    FILE* data = fopen(account_file, "r");
+    if (data == NULL) {
+        invalid_file();
+        return;
+    }
+
+    while (fgets(buffer, sizeof(buffer), data)) {
+        buffer[strcspn(buffer, "\n")] = 0;
+        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", accounts[n].username, accounts[n].password, accounts[n].name, accounts[n].email);
+        n++;
+    }
+    fclose(data);
+
+    printf("============================================\n");
+    printf("           SEARCH USER BY KEYWORD           \n");
+    printf("--------------------------------------------\n");
+
+    printf("Input keyword to search : ");
+    scanf("%s", keyword);
+
+    printf("\n%-20s %-25s %-30s\n", "Username", "Full Name", "Email");
+    printf("--------------------------------------------\n");
+
+    for (int i = 0; i < n; i++) {
+        if (strstr(accounts[i].username, keyword) != NULL) {
+            printf("%-20s %-25s %-30s\n", accounts[i].username, accounts[i].name, accounts[i].email);
+            found = 1;
+        }
+    }
+
+    if (found == 0)
+        printf("\nUser \"%s\" not found.\n", keyword);
+
+    printf("\n============================================\n");
+    system("pause");
+
+    acc_manage();
 }
 
 // DELETE USER //
