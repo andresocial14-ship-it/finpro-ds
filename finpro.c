@@ -153,6 +153,7 @@ void change_usn();
 void change_name();
 void change_email();
 void change_pass();
+void view_profile();
 
 // Cashier
 void menu_cashier();
@@ -2012,13 +2013,35 @@ void delete_user() {
 // ============================================================
 void menu_cust() {
     int choice;
+    char buffer[1024];
+    Account acc;
+    char current_fullname[100] = "";
+
+    // Ambil Full Name berdasarkan current_user (Username)
+    FILE* check = fopen(account_file, "r");
+    if (check != NULL) {
+        while (fgets(buffer, sizeof(buffer), check)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", acc.username, acc.password, acc.name, acc.email);
+            if (strcmp(acc.username, current_user) == 0) {
+                strcpy(current_fullname, acc.name);
+                break;
+            }
+        }
+        fclose(check);
+    }
+
+    // Fallback jika terjadi error (tidak ketemu), maka tetap tampilkan username
+    if (strlen(current_fullname) == 0) {
+        strcpy(current_fullname, current_user);
+    }
     do {
         system("cls");
         view_film_cust();
         printf("============================================\n");
         printf("               CUSTOMER MENU                \n");
         printf("--------------------------------------------\n");
-        printf("Welcome Back, %s!\n", current_user);
+        printf("Welcome Back, %s!\n", current_fullname);
         printf("[1] Book Ticket\n");
         printf("[2] History\n");
         printf("[3] Cancel Ticket\n");
@@ -2084,32 +2107,475 @@ void edit_profile() {
     do {
         system("cls");
         printf("============================================\n");
-        printf("               EDIT PROFILE                 \n");
+        printf("                EDIT PROFILE                \n");
         printf("--------------------------------------------\n");
-        printf("[1] Change Full Name\n");
-        printf("[2] Change Username\n");
-        printf("[3] Change Email\n");
-        printf("[4] Change Password\n");
+        printf("[1] View Profile\n");
+        printf("[2] Change Full Name\n");
+        printf("[3] Change Username\n");
+        printf("[4] Change Email\n");
+        printf("[5] Change Password\n");
         printf("[0] Back\n");
         printf("============================================\n");
         printf("Choose : ");
         scanf("%d", &choice);
-        if (choice < 0 || choice > 4) invalid_choice();
-    } while (choice < 0 || choice > 4);
+        if (choice < 0 || choice > 5) invalid_choice();
+    } while (choice < 0 || choice > 5);
 
     switch (choice) {
-        case 1: change_name();  break;
-        case 2: change_usn();   break;
-        case 3: change_email(); break;
-        case 4: change_pass();  break;
+        case 1: view_profile(); break;
+        case 2: change_name();  break;
+        case 3: change_usn();   break;
+        case 4: change_email(); break;
+        case 5: change_pass();  break;
         case 0: menu_cust();    break;
     }
 }
 
-void change_name()  { /* TODO */ }
-void change_usn()   { /* TODO */ }
-void change_email() { /* TODO */ }
-void change_pass()  { /* TODO */ }
+void change_name() {
+    system("cls");
+    char buffer[1024];
+    Account acc;
+    char current_name[100] = "";
+    char new_name[100];
+    int valid;
+
+    // Ambil full name saat ini terlebih dahulu
+    FILE* check = fopen(account_file, "r");
+    if (check != NULL) {
+        while (fgets(buffer, sizeof(buffer), check)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", acc.username, acc.password, acc.name, acc.email);
+            if (strcmp(acc.username, current_user) == 0) {
+                strcpy(current_name, acc.name);
+                break;
+            }
+        }
+        fclose(check);
+    }
+
+    printf("============================================\n");
+    printf("              CHANGE FULL NAME              \n");
+    printf("============================================\n");
+    printf("Current Full Name : %s\n", current_name);
+    printf("--------------------------------------------\n");
+
+    // Bersihkan sisa newline (\n) dari input scanf di menu sebelumnya
+    while (getchar() != '\n');
+
+    do {
+        printf("Enter new Full Name : ");
+        
+        // Menggunakan fgets agar bisa mendeteksi input kosong
+        fgets(new_name, sizeof(new_name), stdin);
+        new_name[strcspn(new_name, "\n")] = '\0'; // Hapus newline dari akhir input
+
+        // Validasi jika input kosong (hanya menekan enter)
+        if (strlen(new_name) == 0) {
+            printf("New Full Name cannot be empty!\n");
+            system("pause");
+            edit_profile();
+            return;
+        }
+        
+        // Validasi kesamaan dengan nama sebelumnya
+        if (strcmp(current_name, new_name) == 0) {
+            printf("New Full Name cannot be the same as the current one!\n");
+            system("pause");
+            edit_profile();
+            return;
+        }
+
+        valid = 1;
+        for (int i = 0; new_name[i] != '\0'; i++) {
+            if (isdigit(new_name[i])) {
+                printf("Full name cannot contain numbers!\n");
+                valid = 0; 
+                break;
+            }
+        }
+    } while (!valid);
+
+    // Proses update ke dalam file
+    FILE* data = fopen(account_file, "r");
+    FILE* temp = fopen("temp.txt", "w");
+    if (!data || !temp) { invalid_file(); return; }
+
+    while (fgets(buffer, sizeof(buffer), data)) {
+        buffer[strcspn(buffer, "\n")] = 0;
+        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", acc.username, acc.password, acc.name, acc.email);
+
+        if (strcmp(acc.username, current_user) == 0) {
+            strcpy(acc.name, new_name);
+        }
+        fprintf(temp, "%s,%s,%s,%s\n", acc.username, acc.password, acc.name, acc.email);
+    }
+
+    fclose(data);
+    fclose(temp);
+    remove(account_file);
+    rename("temp.txt", account_file);
+
+    printf("--------------------------------------------\n");
+    printf("Full Name successfully updated!\n");
+    printf("============================================\n");
+    system("pause");
+    edit_profile();
+}
+
+void change_usn() {
+    system("cls");
+    char buffer[1024];
+    Account acc;
+    char new_usn[100];
+    int found, has_space;
+
+    printf("============================================\n");
+    printf("              CHANGE USERNAME               \n");
+    printf("============================================\n");
+    // Gunakan variabel global current_user
+    printf("Current Username : %s\n", current_user);
+    printf("--------------------------------------------\n");
+
+    // Bersihkan sisa newline (\n) dari input scanf di menu sebelumnya
+    while (getchar() != '\n');
+
+    do {
+        printf("Enter new Username : ");
+        
+        // Menggunakan fgets untuk deteksi input kosong
+        fgets(new_usn, sizeof(new_usn), stdin);
+        new_usn[strcspn(new_usn, "\n")] = '\0'; // Hapus newline
+
+        // Validasi jika input kosong
+        if (strlen(new_usn) == 0) {
+            printf("New Username cannot be empty!\n");
+            system("pause");
+            edit_profile();
+            return;
+        }
+
+        // Validasi kesamaan dengan username sebelumnya
+        if (strcmp(current_user, new_usn) == 0) {
+            printf("New Username cannot be the same as the current one!\n");
+            system("pause");
+            edit_profile();
+            return;
+        }
+
+        // Validasi tambahan agar username tidak memiliki spasi (karena fgets menangkap spasi)
+        has_space = 0;
+        for (int i = 0; new_usn[i] != '\0'; i++) {
+            if (isspace(new_usn[i])) {
+                has_space = 1;
+                break;
+            }
+        }
+        if (has_space) {
+            printf("Username cannot contain spaces!\n");
+            found = 1;
+            continue;
+        }
+
+        found = 0;
+        // Pengecekan username duplikat di file
+        FILE* check = fopen(account_file, "r");
+        if (check != NULL) {
+            char temp_buffer[1024];
+            char check_usn[100];
+            while (fgets(temp_buffer, sizeof(temp_buffer), check)) {
+                sscanf(temp_buffer, "%[^,]", check_usn);
+                if (strcmp(check_usn, new_usn) == 0) {
+                    found = 1;
+                    printf("Username already exists! Try another username!\n");
+                    break;
+                }
+            }
+            fclose(check);
+        }
+    } while (found);
+
+    // Proses update ke dalam file
+    FILE* data = fopen(account_file, "r");
+    FILE* temp = fopen("temp.txt", "w");
+    if (!data || !temp) { invalid_file(); return; }
+
+    while (fgets(buffer, sizeof(buffer), data)) {
+        buffer[strcspn(buffer, "\n")] = 0;
+        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", acc.username, acc.password, acc.name, acc.email);
+
+        if (strcmp(acc.username, current_user) == 0) {
+            strcpy(acc.username, new_usn);
+        }
+        fprintf(temp, "%s,%s,%s,%s\n", acc.username, acc.password, acc.name, acc.email);
+    }
+
+    fclose(data);
+    fclose(temp);
+    remove(account_file);
+    rename("temp.txt", account_file);
+
+    // Update variabel global setelah berhasil diganti
+    strcpy(current_user, new_usn); 
+
+    printf("--------------------------------------------\n");
+    printf("Username successfully updated!\n");
+    printf("============================================\n");
+    system("pause");
+    edit_profile();
+}
+
+void change_email() {
+    system("cls");
+    char buffer[1024];
+    Account acc;
+    char current_email[100] = "";
+    char new_email[100];
+    char confirm_email[100];
+    int validasi_at;
+
+    // Ambil email saat ini terlebih dahulu
+    FILE* check = fopen(account_file, "r");
+    if (check != NULL) {
+        while (fgets(buffer, sizeof(buffer), check)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", acc.username, acc.password, acc.name, acc.email);
+            if (strcmp(acc.username, current_user) == 0) {
+                strcpy(current_email, acc.email);
+                break;
+            }
+        }
+        fclose(check);
+    }
+
+    printf("============================================\n");
+    printf("                CHANGE EMAIL                \n");
+    printf("============================================\n");
+    printf("Current Email : %s\n", current_email);
+    printf("--------------------------------------------\n");
+
+    // Bersihkan sisa newline (\n) dari input scanf di menu sebelumnya
+    while (getchar() != '\n');
+
+    do {
+        printf("Enter new Email : ");
+        
+        // Menggunakan fgets agar bisa mendeteksi jika user hanya menekan Enter
+        fgets(new_email, sizeof(new_email), stdin);
+        new_email[strcspn(new_email, "\n")] = '\0'; // Hapus karakter newline di akhir string
+
+        // Validasi jika input kosong (hanya menekan enter)
+        if (strlen(new_email) == 0) {
+            printf("New Email cannot be empty!\n");
+            system("pause");
+            edit_profile();
+            return;
+        }
+
+        // Validasi kesamaan dengan email sebelumnya
+        if (strcmp(current_email, new_email) == 0) {
+            printf("New Email cannot be the same as the current one!\n");
+            system("pause");
+            edit_profile();
+            return;
+        }
+
+        // Validasi format email (harus mengandung '@')
+        validasi_at = 0;
+        for (int i = 0; new_email[i] != '\0'; i++) {
+            if (new_email[i] == '@') { validasi_at = 1; break; }
+        }
+
+        if (!validasi_at) {
+            printf("Email must contain '@'!\n");
+            continue; // Ulangi loop meminta input yang benar
+        }
+
+        // Konfirmasi email baru
+        printf("Confirm new Email : ");
+        fgets(confirm_email, sizeof(confirm_email), stdin);
+        confirm_email[strcspn(confirm_email, "\n")] = '\0'; // Hapus karakter newline
+
+        if (strcmp(new_email, confirm_email) != 0) {
+            printf("Email does not match! Try again!\n");
+            printf("--------------------------------------------\n");
+        }
+
+    } while (!validasi_at || strcmp(new_email, confirm_email) != 0);
+
+    // Proses update ke dalam file
+    FILE* data = fopen(account_file, "r");
+    FILE* temp = fopen("temp.txt", "w");
+    if (!data || !temp) { invalid_file(); return; }
+
+    while (fgets(buffer, sizeof(buffer), data)) {
+        buffer[strcspn(buffer, "\n")] = 0;
+        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", acc.username, acc.password, acc.name, acc.email);
+
+        if (strcmp(acc.username, current_user) == 0) {
+            strcpy(acc.email, new_email);
+        }
+        fprintf(temp, "%s,%s,%s,%s\n", acc.username, acc.password, acc.name, acc.email);
+    }
+
+    fclose(data);
+    fclose(temp);
+    remove(account_file);
+    rename("temp.txt", account_file);
+
+    printf("--------------------------------------------\n");
+    printf("Email successfully updated!\n");
+    printf("============================================\n");
+    system("pause");
+    edit_profile();
+}
+
+void change_pass() {
+    system("cls");
+    char buffer[1024];
+    Account acc;
+    char current_pass[100] = "";
+    char new_pass[100];
+    char confirm_pass[100];
+
+    // Ambil password saat ini terlebih dahulu
+    FILE* check = fopen(account_file, "r");
+    if (check != NULL) {
+        while (fgets(buffer, sizeof(buffer), check)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", acc.username, acc.password, acc.name, acc.email);
+            if (strcmp(acc.username, current_user) == 0) {
+                strcpy(current_pass, acc.password);
+                break;
+            }
+        }
+        fclose(check);
+    }
+
+    printf("============================================\n");
+    printf("              CHANGE PASSWORD               \n");
+    printf("============================================\n");
+    
+    // Tampilkan password saat ini dengan sensor '*'
+    printf("Current Password : ");
+    for (int i = 0; i < strlen(current_pass); i++) {
+        printf("*");
+    }
+    printf("\n--------------------------------------------\n");
+
+    // Bersihkan sisa newline (\n) dari input scanf di menu sebelumnya
+    while (getchar() != '\n');
+
+    do {
+        printf("Enter new Password : ");
+        
+        // Menggunakan fgets untuk deteksi input kosong
+        fgets(new_pass, sizeof(new_pass), stdin);
+        new_pass[strcspn(new_pass, "\n")] = '\0'; // Hapus newline
+
+        // Validasi jika input kosong
+        if (strlen(new_pass) == 0) {
+            printf("New Password cannot be empty!\n");
+            system("pause");
+            edit_profile();
+            return;
+        }
+
+        // Validasi kesamaan dengan password sebelumnya
+        if (strcmp(current_pass, new_pass) == 0) {
+            printf("New Password cannot be the same as the current one!\n");
+            system("pause");
+            edit_profile();
+            return;
+        }
+
+        // Validasi minimal 8 karakter
+        if (strlen(new_pass) < 8) {
+            printf("Password must be at least 8 characters long!\n");
+            continue; // Ulangi loop meminta input yang benar
+        }
+
+        // Konfirmasi password baru
+        printf("Confirm new Password : ");
+        fgets(confirm_pass, sizeof(confirm_pass), stdin);
+        confirm_pass[strcspn(confirm_pass, "\n")] = '\0';
+
+        if (strcmp(new_pass, confirm_pass) != 0) {
+            printf("Password does not match! Try again!\n");
+            printf("--------------------------------------------\n");
+        }
+
+    } while (strlen(new_pass) < 8 || strcmp(new_pass, confirm_pass) != 0);
+
+    // Proses update ke dalam file
+    FILE* data = fopen(account_file, "r");
+    FILE* temp = fopen("temp.txt", "w");
+    if (!data || !temp) { invalid_file(); return; }
+
+    while (fgets(buffer, sizeof(buffer), data)) {
+        buffer[strcspn(buffer, "\n")] = 0;
+        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", acc.username, acc.password, acc.name, acc.email);
+
+        if (strcmp(acc.username, current_user) == 0) {
+            strcpy(acc.password, new_pass);
+        }
+        fprintf(temp, "%s,%s,%s,%s\n", acc.username, acc.password, acc.name, acc.email);
+    }
+
+    fclose(data);
+    fclose(temp);
+    remove(account_file);
+    rename("temp.txt", account_file);
+
+    printf("--------------------------------------------\n");
+    printf("Password successfully updated!\n");
+    printf("============================================\n");
+    system("pause");
+    edit_profile();
+}
+
+void view_profile() {
+    system("cls");
+    char buffer[1024];
+    Account acc;
+    int found = 0;
+
+    // Baca data user saat ini dari file
+    FILE* check = fopen(account_file, "r");
+    if (check != NULL) {
+        while (fgets(buffer, sizeof(buffer), check)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", acc.username, acc.password, acc.name, acc.email);
+            if (strcmp(acc.username, current_user) == 0) {
+                found = 1;
+                break;
+            }
+        }
+        fclose(check);
+    }
+
+    printf("============================================\n");
+    printf("                MY PROFILE                  \n");
+    printf("============================================\n");
+
+    if (found) {
+        printf("Full Name : %s\n", acc.name);
+        printf("Username  : %s\n", acc.username);
+        printf("Email     : %s\n", acc.email);
+        
+        // Menampilkan password yang disensor sesuai dengan panjang karakternya
+        printf("Password  : ");
+        for (int i = 0; i < strlen(acc.password); i++) {
+            printf("*");
+        }
+        printf("\n");
+    } else {
+        printf("Error: Profile data not found!\n");
+    }
+
+    printf("============================================\n");
+    system("pause");
+    edit_profile();
+}
 
 // ============================================================
 // !! CASHIER MENU !!
