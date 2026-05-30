@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-// !! DEFINE FILE !! //
+// !! DEFINE !! //
 #define account_file "users.txt"
 #define film_file "films.txt"
 #define studio_file "studios.txt"
@@ -69,45 +69,45 @@ BTreeNode* film_tree = NULL;
 Account* find_username(char* username, char* password);
 
 // !! PRINTILAN !! // 
-void invalid_choice();  // DONE
-void invalid_file();    // DONE
+void invalid_choice();
+void invalid_file();    
 
 // !! B-TREE !! //
 BTreeNode* btree_create_node(int leaf);
-void       btree_insert(BTreeNode** root, Film film);
-void       btree_insert_nonfull(BTreeNode* node, Film film);
-void       btree_split_child(BTreeNode* parent, int i, BTreeNode* child);
-Film*      btree_search(BTreeNode* root, int id);
-void       btree_inorder(BTreeNode* root, Film* result, int* count);
-void       btree_delete(BTreeNode** root, int id);
-void       btree_delete_internal(BTreeNode* node, int id);
-Film       btree_get_predecessor(BTreeNode* node, int idx);
-Film       btree_get_successor(BTreeNode* node, int idx);
-void       btree_fill(BTreeNode* node, int idx);
-void       btree_borrow_from_prev(BTreeNode* node, int idx);
-void       btree_borrow_from_next(BTreeNode* node, int idx);
-void       btree_merge(BTreeNode* node, int idx);
-void       btree_free(BTreeNode* root);
+void btree_insert(BTreeNode** root, Film film);
+void btree_insert_nonfull(BTreeNode* node, Film film);
+void btree_split_child(BTreeNode* parent, int i, BTreeNode* child);
+Film* btree_search(BTreeNode* root, int id);
+void btree_inorder(BTreeNode* root, Film* result, int* count);
+void btree_delete(BTreeNode** root, int id);
+void btree_delete_internal(BTreeNode* node, int id);
+Film btree_get_predecessor(BTreeNode* node, int idx);
+Film btree_get_successor(BTreeNode* node, int idx);
+void btree_fill(BTreeNode* node, int idx);
+void btree_borrow_from_prev(BTreeNode* node, int idx);
+void btree_borrow_from_next(BTreeNode* node, int idx);
+void btree_merge(BTreeNode* node, int idx);
+void btree_free(BTreeNode* root);
 int auto_id();
 
 // !! MENU !! //
-void main_menu();       // DONE
-void login();           // DONE
-void register_acc();    // DONE
+void main_menu();       
+void login();           
+void register_acc();
 
 // ---------------- //
 // !! MENU ADMIN !! //
 // ---------------- //
-void menu_admin();      // DONE
+void menu_admin();      
 
 // ! FILM MANAGEMENT ! //
 void btree_load_from_file();
 void btree_save_to_file();
 void film_manage();
-void add_film();        // DONE
-void del_film();        // DONE
-void edit_film();       // Bisa diganti dikit nanti
-void search_film();     // B-TREE
+void add_film();        
+void del_film();        
+void edit_film();       
+void search_film();
 void view_film();
 
 // ! STUDIO & SCHEDULE MANAGEMENT ! //
@@ -120,7 +120,7 @@ void del_schedule();
 void view_schedule();
 
 // ! USER ACCOUNT MANAGEMENT ! //
-void acc_manage();      // DONE
+void acc_manage();
 void view_users();
 void search_user();     
 void delete_user();
@@ -130,7 +130,7 @@ void delete_user();
 // ------------------- //
 void menu_cust();
 void view_film_cust();
-void book_ticket();     // B-TREE
+void book_ticket();     
 void history();
 void cancel();
 
@@ -144,20 +144,17 @@ void change_pass();
 // ------------------ //
 // !! MENU CASHIER !! //
 // ------------------ //
-void menu_cashier();    // DONE
-void validate_ticket(); // B-TREE
+void menu_cashier();
+void validate_ticket(); 
 void sell();
-void seat_status();     // B-TREE  
-
-// NOTE // 
-// validasi input angka, huruf, enter
+void seat_status();
 
 int main () {
     main_menu();
     return 0;
 }
 
-// B-TREE //
+// CREATE B-TREE NODE //
 BTreeNode* btree_create_node(int leaf) {
     BTreeNode* node = (BTreeNode*)malloc(sizeof(BTreeNode));
     if (!node) {
@@ -606,9 +603,7 @@ void btree_save_to_file() {
     fclose(fp);
 }
 
-// ============================================
-// !! AUTO ID !!
-// ============================================
+// AUTO ID //
 int auto_id() {
     Film result[200];
     int count = 0;
