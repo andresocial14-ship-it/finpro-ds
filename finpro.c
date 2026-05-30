@@ -90,10 +90,10 @@ void del_schedule();
 void view_schedule();
 
 // ! USER ACCOUNT MANAGEMENT ! //
-void acc_manage();
+void acc_manage();      // DONE
 void view_users();
-void search_user();     // B-TREE
-void deactivate_user();
+void search_user();     
+void delete_user();
 
 // ------------------- //
 // !! MENU CUSTOMER !! //
@@ -419,6 +419,9 @@ void menu_admin () {
             break;
         case 2 : 
             schedule_manage();
+            break;
+        case 3 : 
+            acc_manage();
             break;
         case 0 : 
             main_menu();
@@ -950,7 +953,7 @@ void acc_manage () {
         printf("--------------------------------------------\n");
         printf("[1] View All Users\n");
         printf("[2] Search User by Username\n");
-        printf("[3] Deactivate User Account\n");
+        printf("[3] Delete User Account\n");
         printf("[0] Back\n");
         printf("============================================\n");    
         printf("Choose : ");
@@ -969,7 +972,7 @@ void acc_manage () {
             search_user();
             break;
         case 3 : 
-            deactivate_user();
+            delete_user();
             break;
         case 0 : 
             menu_admin();
@@ -978,8 +981,45 @@ void acc_manage () {
 }
 
 // VIEW USERS //
-void view_users () {
+void view_users() {
+    system("cls");
 
+    FILE* data = fopen(account_file, "r");
+    if (data == NULL) {
+        invalid_file();
+        return;
+    }
+
+    char buffer[500];
+    int count = 0;
+
+    printf("============================================\n");
+    printf("               ALL USERS                    \n");
+    printf("============================================\n");
+    printf("%-20s %-25s %-30s\n", "Username", "Full Name", "Email");
+    printf("--------------------------------------------\n");
+
+    while (fgets(buffer, sizeof(buffer), data)) {
+        Account accounts;
+        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", accounts.username, accounts.password, accounts.name, accounts.email);
+
+        printf("%-20s %-25s %-30s\n", accounts.username, accounts.name, accounts.email);
+        count++;
+    }
+
+    fclose(data);
+    printf("--------------------------------------------\n");
+
+    if (count == 0) {
+        printf("No users available.\n");
+    } 
+    else {
+        printf("Total: %d user(s)\n", count);
+    }
+
+    printf("============================================\n");
+    system("pause");
+    acc_manage();
 }
 
 // SEARCH USER //
@@ -987,9 +1027,79 @@ void search_user () {
 
 }
 
-// DEACTIVATE USER //
-void deactivate_user () {
+// DELETE USER //
+void delete_user() {
+    system("cls");
 
+    Account accounts[100];
+    int n = 0;
+    char buffer[500];
+    char keyword[100];
+    int found = 0;
+
+    FILE* data = fopen(account_file, "r");
+    FILE* temp = fopen("temp.txt", "w");
+
+    if (data == NULL || temp == NULL) {
+        invalid_file();
+        return;
+    }
+
+    while (fgets(buffer, sizeof(buffer), data)) {
+        buffer[strcspn(buffer, "\n")] = 0;
+        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", accounts[n].username, accounts[n].password, accounts[n].name, accounts[n].email);
+        n++;
+    }
+    fclose(data);
+
+    printf("==============================\n");
+    printf("          DELETE USER         \n");
+    printf("==============================\n");
+    printf("%-20s %-25s\n", "Username", "Full Name");
+    printf("------------------------------\n");
+
+    for (int i = 0; i < n; i++) {
+        printf("%-20s %-25s\n", accounts[i].username, accounts[i].name);
+    }
+    printf("------------------------------\n");
+
+    if (n == 0) {
+        printf("No users available.\n");
+        printf("==============================\n");
+        fclose(temp);
+        system("pause");
+        acc_manage();
+        return;
+    }
+
+    printf("==============================\n");
+
+    // input username
+    printf("Enter Username to delete : ");
+    scanf("%s", keyword);
+
+    for (int i = 0; i < n; i++) {
+        if (strcmp(accounts[i].username, keyword) == 0) {
+            found = 1;
+        } else {
+            fprintf(temp, "%s,%s,%s,%s\n", accounts[i].username, accounts[i].password, accounts[i].name, accounts[i].email);
+        }
+    }
+
+    fclose(temp);
+
+    if (found) {
+        remove(account_file);
+        rename("temp.txt", account_file);
+        printf("User \"%s\" deleted successfully!\n", keyword);
+    } 
+    else {
+        remove("temp.txt");
+        printf("User \"%s\" not found!\n", keyword);
+    }
+
+    system("pause");
+    acc_manage();
 }
 
 // MENU CUSTOMER // 
