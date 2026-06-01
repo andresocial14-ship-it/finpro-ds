@@ -11,6 +11,7 @@
 #define RED "\033[1;31m"
 #define GREEN "\033[1;32m"
 #define DIM_GOLD "\033[2;33m"
+#define CINEMA_RED "\033[38;2;139;0;0m"
 #define RESET "\033[0m"
 #define FORM_PAD "\t\t\t\t\t\t\t   "
 // ================================================================
@@ -307,6 +308,37 @@ void registerBanner() {
     printf(RESET);
 }
 
+void tampilkan_banner_train() {
+
+    printf("\n");
+
+    /* Tulisan NOW SHOWING */
+    printf(GOLD);
+
+    printf("\t\t\t\t    _  _     ___  __      __          ___    _  _     ___  __      __ ___    _  _     ___   \n");
+    printf("\t\t\t\t   | \\| |   / _ \\ \\ \\    / /  o O O  / __|  | || |   / _ \\ \\ \\    / /|_ _|  | \\| |   / __|  \n");
+    printf("\t\t\t\t   | .` |  | (_) | \\ \\/\\/ /  o       \\__ \\  | __ |  | (_) | \\ \\/\\/ /  | |   | .` |  | (_ |  \n");
+    printf("\t\t\t\t   |_|\\_|   \\___/   \\_/\\_/  TS__[O]  |___/  |_||_|   \\___/   \\_/\\_/  |___|  |_|\\_|   \\___|  \n");
+
+    /* Kereta Merah Bioskop */
+    printf(CINEMA_RED);
+
+    printf("\t\t\t\t  _|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"| {======|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"|_|\"\"\"\"\"| \n");
+    printf("\t\t\t\t  \"`-0-0-'\"`-0-0-'\"`-0-0-'./o--000'\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-'\"`-0-0-' \n");
+
+    /* Border dan Judul */
+    printf(GOLD);
+
+    printf("\n");
+    printf("\t\t\t\t----------------------------------------------------------------------------------------------\n");
+
+    printf("\t\t\t\t                                    ! NOW SHOWING MOVIES !\n");
+
+    printf("\t\t\t\t----------------------------------------------------------------------------------------------\n");
+
+    printf(RESET);
+    printf("\n");
+}
 
 // ============================================================
 // !! B-TREE IMPLEMENTATION !!
@@ -3438,88 +3470,156 @@ void delete_user() {
 // !! CUSTOMER MENU !!
 // ============================================================
 void menu_cust() {
+
     int choice;
     char buffer[1024];
     char input[100];
     char lower_input[100];
     int valid;
+
     Account acc;
     char current_fullname[100] = "";
 
-    btree_load_from_file(); /* pastikan B-Tree termuat untuk customer */
+    btree_load_from_file();
 
     FILE* check = fopen(account_file, "r");
+
     if (check != NULL) {
+
         while (fgets(buffer, sizeof(buffer), check)) {
+
             buffer[strcspn(buffer, "\n")] = 0;
-            sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]",
-                   acc.username, acc.password, acc.name, acc.email);
+
+            sscanf(buffer,
+                   "%[^,],%[^,],%[^,],%[^\n]",
+                   acc.username,
+                   acc.password,
+                   acc.name,
+                   acc.email);
+
             if (strcmp(acc.username, current_user) == 0) {
+
                 strcpy(current_fullname, acc.name);
                 break;
             }
         }
+
         fclose(check);
     }
-    if (strlen(current_fullname) == 0) strcpy(current_fullname, current_user);
+
+    if (strlen(current_fullname) == 0)
+        strcpy(current_fullname, current_user);
 
     do {
+
         system("cls");
+
         view_film_cust();
-        printf("============================================\n");
-        printf("                CUSTOMER MENU               \n");
-        printf("--------------------------------------------\n");
-        printf("Welcome Back, %s!\n", current_fullname);
-        printf("[1] Book Ticket\n");
-        printf("[2] My Booking History\n");
-        printf("[3] Cancel Booking\n");
-        printf("[4] Edit Profile\n");
-        printf("[0] Logout\n");
-        printf("============================================\n");
-        printf("Choose : ");
 
-        // =======================================================
-        // [FIXED] Looping untuk membuang sisa input Enter (\n)
-        // =======================================================
-        do {
-            fgets(input, sizeof(input), stdin);
-            input[strcspn(input, "\n")] = '\0'; // Menghapus karakter newline (\n)
-        } while (strlen(input) == 0); 
+        
+        printf("\t\t\t\t\t\t\t----------------------------------------------\n");
+        printf(GOLD);
+        printf("\t\t\t\t\t\t\t                 CUSTOMER MENU                \n");
+        printf(RESET);
+        printf("\t\t\t\t\t\t\t----------------------------------------------\n");
 
-        // Mengonversi input menjadi lowercase (huruf kecil) agar case-insensitive
+        printf("\t\t\t\t\t\t\t| Welcome Back, " GOLD "%-27s" RESET "  |\n",
+               current_fullname);
+
+        printf("\t\t\t\t\t\t\t----------------------------------------------\n");
+        
+        printf("\t\t\t\t\t\t\t| " GOLD "[1]" RESET " Book Ticket                            |\n");
+        printf("\t\t\t\t\t\t\t| " GOLD "[2]" RESET " My Booking History                     |\n");
+        printf("\t\t\t\t\t\t\t| " GOLD "[3]" RESET " Cancel Booking                         |\n");
+        printf("\t\t\t\t\t\t\t| " GOLD "[4]" RESET " Edit Profile                           |\n");
+        printf("\t\t\t\t\t\t\t| " RED  "[0]" RESET " Logout                                 |\n");
+
+        printf("\t\t\t\t\t\t\t----------------------------------------------\n");
+
+        printf(GOLD "\n\t\t\t\t\t\t\tChoose Menu : " RESET);
+
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
         for (int i = 0; input[i] != '\0'; i++) {
             lower_input[i] = tolower(input[i]);
         }
+
         lower_input[strlen(input)] = '\0';
 
-        valid = 1; // Asumsikan input valid di awal
+        valid = 1;
 
-        // Pengecekan kondisi berdasarkan angka atau teks
-        if (strcmp(lower_input, "1") == 0 || strcmp(lower_input, "book ticket") == 0) {
+        if (strcmp(lower_input, "1") == 0 ||
+            strcmp(lower_input, "book ticket") == 0) {
+
             choice = 1;
-        } else if (strcmp(lower_input, "2") == 0 || strcmp(lower_input, "history") == 0) {
-            choice = 2;
-        } else if (strcmp(lower_input, "3") == 0 || strcmp(lower_input, "cancel ticket") == 0) {
-            choice = 3;
-        } else if (strcmp(lower_input, "4") == 0 || strcmp(lower_input, "edit profile") == 0) {
-            choice = 4;
-        } else if (strcmp(lower_input, "0") == 0 || strcmp(lower_input, "logout") == 0) {
-            choice = 0;
-        } else {
-            // Jika input di luar opsi
-            printf("\n[ERROR] Invalid Input!\n");
-            printf("Please enter the number (0-4) or the exact option text.\n");
-            system("pause");
-            valid = 0; // Input tidak valid, loop akan diulang
+
         }
+        else if (strcmp(lower_input, "2") == 0 ||
+                 strcmp(lower_input, "history") == 0 ||
+                 strcmp(lower_input, "my booking history") == 0) {
+
+            choice = 2;
+
+        }
+        else if (strcmp(lower_input, "3") == 0 ||
+                 strcmp(lower_input, "cancel") == 0 ||
+                 strcmp(lower_input, "cancel booking") == 0) {
+
+            choice = 3;
+
+        }
+        else if (strcmp(lower_input, "4") == 0 ||
+                 strcmp(lower_input, "edit profile") == 0) {
+
+            choice = 4;
+
+        }
+        else if (strcmp(lower_input, "0") == 0 ||
+                 strcmp(lower_input, "logout") == 0) {
+
+            choice = 0;
+
+        }
+        else {
+
+            printf(RED);
+            printf("\n");
+            printf("\t\t\t\t\t\t\t      Invalid Input!\n");
+            printf(RESET);
+
+            printf(DIM_GOLD);
+            printf("\t\t\t\t\t\t\tPress ENTER to continue...");
+            printf(RESET);
+
+            getchar();
+
+            valid = 0;
+        }
+
     } while (!valid);
 
     switch (choice) {
-        case 1: book_ticket();  break;
-        case 2: history();      break;
-        case 3: cancel();       break;
-        case 4: edit_profile(); break;
-        case 0: main_menu();    break;
+
+        case 1:
+            book_ticket();
+            break;
+
+        case 2:
+            history();
+            break;
+
+        case 3:
+            cancel();
+            break;
+
+        case 4:
+            edit_profile();
+            break;
+
+        case 0:
+            main_menu();
+            break;
     }
 }
 
@@ -3534,98 +3634,74 @@ void print_table_line(int w_id, int w_title, int w_genre, int w_dur, int w_age, 
 }
 
 void view_film_cust() {
-    FILE* data = fopen(film_file, "r");
-    if (data == NULL) return;
+
+    tampilkan_banner_train();
+
+    FILE *data = fopen(film_file, "r");
+
+    if (data == NULL) {
+        printf(RED "\n\t\t\t\tCannot open film database!\n" RESET);
+        return;
+    }
 
     Film film;
     char buffer[1024];
     int count = 0;
 
-    int w_id = 2;       // "ID"
-    int w_title = 5;    // "Title"
-    int w_genre = 5;    // "Genre"
-    int w_dur = 8;      // "Duration"
-    int w_age = 3;      // "Age"
-    int w_detail = 6;   // "Detail"
+    /* Header Tabel */
+    printf(GOLD);
+    printf("\t\t\t\t----------------------------------------------------------------------------------------------\n");
+    printf("\t\t\t\t| %-4s | %-30s | %-24s | %-10s | %-10s |\n",
+           "ID",
+           "TITLE",
+           "GENRE",
+           "DURATION",
+           "AGE");
+    printf("\t\t\t\t----------------------------------------------------------------------------------------------\n");
+    printf(RESET);
 
+    /* Data Film */
     while (fgets(buffer, sizeof(buffer), data)) {
-         char temp_id[20], temp_dur[20], temp_age[20];
-        
-        buffer[strcspn(buffer, "\n")] = 0; // Hapus newline
-        
-        if (sscanf(buffer, "%d=%[^=]=%[^=]=%d=%d=%[^\n]", 
-                   &film.id, film.title, film.genre, 
-                   &film.duration, &film.age_rating, film.detail) == 6) {
-            
-            sprintf(temp_id, "%d", film.id);
-            sprintf(temp_dur, "%d", film.duration);
-            sprintf(temp_age, "%d", film.age_rating);
 
-            if (strlen(temp_id) > w_id) w_id = strlen(temp_id);
-            if (strlen(film.title) > w_title) w_title = strlen(film.title);
-            if (strlen(film.genre) > w_genre) w_genre = strlen(film.genre);
-            if (strlen(temp_dur) > w_dur) w_dur = strlen(temp_dur);
-            if (strlen(temp_age) > w_age) w_age = strlen(temp_age);
-            if (strlen(film.detail) > w_detail) w_detail = strlen(film.detail);
-            
+        buffer[strcspn(buffer, "\n")] = '\0';
+
+        if (sscanf(buffer,
+                   "%d=%[^=]=%[^=]=%d=%d=%[^\n]",
+                   &film.id,
+                   film.title,
+                   film.genre,
+                   &film.duration,
+                   &film.age_rating,
+                   film.detail) == 6) {
+
             count++;
+
+            printf("\t\t\t\t| %-4d | %-30.30s | %-24.24s | %-10d | %-10d |\n",
+                   film.id,
+                   film.title,
+                   film.genre,
+                   film.duration,
+                   film.age_rating);
         }
     }
 
-    // Menghitung total lebar tabel untuk garis judul "NOW SHOWING"
-    // 19 didapat dari padding sisi kiri-kanan dan batas '|' tiap kolom
-    int total_width = w_id + w_title + w_genre + w_dur + w_age + w_detail + 19;
-
-    printf("\n");
-    for(int i = 0; i < total_width; i++) printf("="); printf("\n");
-    
-    // Teks di tengah (Center alignment) untuk "NOW SHOWING"
-    int padding = (total_width - 11) / 2; // 11 adalah panjang string "NOW SHOWING"
-    for(int i = 0; i < padding; i++) printf(" ");
-    printf("NOW SHOWING\n");
-    
-    for(int i = 0; i < total_width; i++) printf("="); printf("\n");
-
-    // Kembalikan pointer file ke awal untuk mulai membaca data kembali
-    rewind(data);
-
-    // [Pass 2] Tampilkan data dengan kolom dinamis
-    print_table_line(w_id, w_title, w_genre, w_dur, w_age, w_detail);
-    
-    printf("| %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
-           w_id, "ID", w_title, "Title", w_genre, "Genre", 
-           w_dur, "Duration", w_age, "Age", w_detail, "Detail");
-           
-    print_table_line(w_id, w_title, w_genre, w_dur, w_age, w_detail);
-
+    /* Jika Tidak Ada Film */
     if (count == 0) {
-        // Jika belum ada film sama sekali
-        printf("| %-*s |\n", total_width - 4, "No films available at the moment.");
-        print_table_line(w_id, w_title, w_genre, w_dur, w_age, w_detail);
-    } else {
-        // Jika ada film, print isinya
-        while (fgets(buffer, sizeof(buffer), data)) {
-            Film film;
-            char temp_dur[20], temp_age[20];
-            
-            buffer[strcspn(buffer, "\n")] = 0;
-            if (sscanf(buffer, "%d=%[^=]=%[^=]=%d=%d=%[^\n]", 
-                       &film.id, film.title, film.genre, 
-                       &film.duration, &film.age_rating, film.detail) == 6) {
-                
-                sprintf(temp_dur, "%d", film.duration);
-                sprintf(temp_age, "%d", film.age_rating);
 
-                printf("| %-*d | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
-                       w_id, film.id, w_title, film.title, w_genre, film.genre,
-                       w_dur, temp_dur, w_age, temp_age, w_detail, film.detail);
-            }
-        }
-        print_table_line(w_id, w_title, w_genre, w_dur, w_age, w_detail);
+        printf("\t\t\t\t| %-69s |\n",
+               "No movies are currently showing.");
     }
+
+    /* Footer Tabel */
+    printf(GOLD);
+    printf("\t\t\t\t----------------------------------------------------------------------------------------------\n");
+    printf(RESET);
+
     printf("\n");
+
     fclose(data);
 }
+
 
 // ============================================================
 // !! BOOK TICKET !!
