@@ -12,6 +12,7 @@
 #define GREEN "\033[1;32m"
 #define DIM_GOLD "\033[2;33m"
 #define RESET "\033[0m"
+#define FORM_PAD "\t\t\t\t\t\t\t   "
 // ================================================================
 
 // ============================ DEFINES ============================
@@ -291,6 +292,21 @@ void loginBanner() {
     printf(RESET);
     printf("\n");
 }
+
+void registerBanner() {
+    printf(GOLD);
+
+    printf("\n");
+    printf("\t\t\t\t\t\t\t ____  _____ ____ ___ ____ _____ _____ ____  \n");
+    printf("\t\t\t\t\t\t\t|  _ \\| ____/ ___|_ _/ ___|_   _| ____|  _ \\ \n");
+    printf("\t\t\t\t\t\t\t| |_) |  _|| |  _ | |\\___ \\ | | |  _| | |_) |\n");
+    printf("\t\t\t\t\t\t\t|  _ <| |__| |_| || | ___) || | | |___|  _ < \n");
+    printf("\t\t\t\t\t\t\t|_| \\_\\_____|____|___|____/ |_| |_____|_| \\_\\\n");
+    printf("\n");
+
+    printf(RESET);
+}
+
 
 // ============================================================
 // !! B-TREE IMPLEMENTATION !!
@@ -1101,130 +1117,203 @@ void register_acc() {
     char fileUsername[100];
     char confirm_pass[100];
     char buffer[1024];
-    int  found, valid, validasi_at, has_space;
+    int found, valid, validasi_at, has_space;
 
-    FILE* reg = fopen(account_file, "a");
-    if (reg == NULL) { invalid_file(); return; }
+    FILE *reg = fopen(account_file, "a");
+    if (reg == NULL) {
+        invalid_file();
+        return;
+    }
 
     Account customer;
+    printf("\n\n\n\n");
+    registerBanner();
 
-    printf("==========================================\n");
-    printf("                 REGISTER                 \n");
-    printf("==========================================\n");
-    printf("Complete the registration form to continue\n");
-    printf(" (Enter '0' at any prompt to go back)\n");
-    printf("------------------------------------------\n");
+    printf(GOLD FORM_PAD "+--------------------------------------+\n");
+    printf(FORM_PAD "¦               REGISTER               ¦\n");
+    printf(FORM_PAD "¦--------------------------------------¦\n");
+    printf(DIM_GOLD FORM_PAD "¦    Complete the form to continue     ¦\n");
+    printf(FORM_PAD "¦   Enter 0 at any prompt to go back   ¦\n");
+    printf(GOLD FORM_PAD "+--------------------------------------+\n\n" RESET);
 
-    // full name
+    /* FULL NAME */
     do {
-        printf("Full Name     : ");
-        fgets(customer.name, sizeof(customer.name), stdin);
-        customer.name[strcspn(customer.name, "\n")] = '\0'; // Hapus newline
+        printf(GOLD FORM_PAD "Full Name        : " RESET);
 
-        if (strcmp(customer.name, "0") == 0) { main_menu(); return; }
+        fgets(customer.name, sizeof(customer.name), stdin);
+        customer.name[strcspn(customer.name, "\n")] = '\0';
+
+        if (strcmp(customer.name, "0") == 0) {
+            fclose(reg);
+            main_menu();
+            return;
+        }
+
         valid = 1;
+
         if (strlen(customer.name) == 0) {
-            printf("Full name cannot be empty!\n"); valid = 0;
+            printf(RED FORM_PAD "? Full name cannot be empty!\n\n" RESET);
+            valid = 0;
         } else {
             for (int i = 0; customer.name[i] != '\0'; i++) {
                 if (isdigit(customer.name[i])) {
-                    printf("Full name cannot contain numbers!\n");
-                    valid = 0; break;
-                }
-            }
-        }
-    } while (!valid);
-
-    // email
-    do {
-        printf("Email         : ");
-        fgets(customer.email, sizeof(customer.email), stdin);
-        customer.email[strcspn(customer.email, "\n")] = '\0';
-
-        if (strcmp(customer.email, "0") == 0) { main_menu(); return; }
-        validasi_at = 0;
-        for (int i = 0; customer.email[i] != '\0'; i++) {
-            if (customer.email[i] == '@') { validasi_at = 1; break; }
-        }
-        if (strlen(customer.email) == 0) printf("Email cannot be empty!\n");
-        else if (!validasi_at) printf("Email must contain '@'!\n");
-    } while (strlen(customer.email) == 0 || !validasi_at);
-
-    // username
-    do {
-        printf("Username      : ");
-        fgets(customer.username, sizeof(customer.username), stdin);
-        customer.username[strcspn(customer.username, "\n")] = '\0';
-
-        if (strcmp(customer.username, "0") == 0) { main_menu(); return; }
-
-        if (strlen(customer.username) == 0) {
-            printf("Username cannot be empty!\n");
-            found = 1; 
-            continue;
-        }
-
-        // Cek spasi pada username
-        has_space = 0;
-        for (int i = 0; customer.username[i] != '\0'; i++) {
-            if (isspace(customer.username[i])) { has_space = 1; break; }
-        }
-        if (has_space) {
-            printf("Username cannot contain spaces!\n");
-            found = 1;
-            continue;
-        }
-        found = 0;
-        FILE* check = fopen(account_file, "r");
-        if (check != NULL) {
-            while (fgets(buffer, sizeof(buffer), check)) {
-                sscanf(buffer, "%[^,]", fileUsername);
-                if (strcmp(fileUsername, customer.username) == 0) {
-                    found = 1;
-                    printf("Username already exists! Try another username!\n");
+                    printf(RED FORM_PAD "? Name cannot contain numbers!\n\n" RESET);
+                    valid = 0;
                     break;
                 }
             }
+        }
+
+    } while (!valid);
+
+    /* EMAIL */
+    do {
+        printf(GOLD FORM_PAD "Email            : " RESET);
+
+        fgets(customer.email, sizeof(customer.email), stdin);
+        customer.email[strcspn(customer.email, "\n")] = '\0';
+
+        if (strcmp(customer.email, "0") == 0) {
+            fclose(reg);
+            main_menu();
+            return;
+        }
+
+        validasi_at = 0;
+
+        for (int i = 0; customer.email[i] != '\0'; i++) {
+            if (customer.email[i] == '@') {
+                validasi_at = 1;
+                break;
+            }
+        }
+
+        if (strlen(customer.email) == 0) {
+            printf(RED FORM_PAD "? Email cannot be empty!\n\n" RESET);
+        } else if (!validasi_at) {
+            printf(RED FORM_PAD "? Email must contain @\n\n" RESET);
+        }
+
+    } while (strlen(customer.email) == 0 || !validasi_at);
+
+    /* USERNAME */
+    do {
+        printf(GOLD FORM_PAD "Username         : " RESET);
+
+        fgets(customer.username, sizeof(customer.username), stdin);
+        customer.username[strcspn(customer.username, "\n")] = '\0';
+
+        if (strcmp(customer.username, "0") == 0) {
+            fclose(reg);
+            main_menu();
+            return;
+        }
+
+        if (strlen(customer.username) == 0) {
+            printf(RED FORM_PAD "? Username cannot be empty!\n\n" RESET);
+            found = 1;
+            continue;
+        }
+
+        has_space = 0;
+
+        for (int i = 0; customer.username[i] != '\0'; i++) {
+            if (isspace(customer.username[i])) {
+                has_space = 1;
+                break;
+            }
+        }
+
+        if (has_space) {
+            printf(RED FORM_PAD "? Username cannot contain spaces!\n\n" RESET);
+            found = 1;
+            continue;
+        }
+
+        found = 0;
+
+        FILE *check = fopen(account_file, "r");
+
+        if (check != NULL) {
+            while (fgets(buffer, sizeof(buffer), check)) {
+
+                sscanf(buffer, "%[^,]", fileUsername);
+
+                if (strcmp(fileUsername, customer.username) == 0) {
+                    found = 1;
+                    printf(RED FORM_PAD "? Username already exists!\n\n" RESET);
+                    break;
+                }
+            }
+
             fclose(check);
         }
-    } while (found || strlen(customer.username) == 0);
 
-    // password
+    } while (found);
+
+    /* PASSWORD */
     do {
-        printf("Password      : ");
+        printf(GOLD FORM_PAD "Password         : " RESET);
+
         fgets(customer.password, sizeof(customer.password), stdin);
         customer.password[strcspn(customer.password, "\n")] = '\0';
 
-        if (strcmp(customer.password, "0") == 0) { main_menu(); return; }
+        if (strcmp(customer.password, "0") == 0) {
+            fclose(reg);
+            main_menu();
+            return;
+        }
 
-        if (strlen(customer.password) == 0) printf("Password cannot be empty!\n");
-        else if (strlen(customer.password) < 5)
-            printf("Password must be at least 5 characters!\n");
+        if (strlen(customer.password) == 0) {
+            printf(RED FORM_PAD "? Password cannot be empty!\n\n" RESET);
+        } else if (strlen(customer.password) < 5) {
+            printf(RED FORM_PAD "? Minimum 5 characters!\n\n" RESET);
+        }
+
     } while (strlen(customer.password) < 5);
 
-    // confirm password
+    /* CONFIRM PASSWORD */
     do {
-        printf("Confirm Password : ");
+        printf(GOLD FORM_PAD "Confirm Password : " RESET);
+
         fgets(confirm_pass, sizeof(confirm_pass), stdin);
         confirm_pass[strcspn(confirm_pass, "\n")] = '\0';
 
-        if (strcmp(confirm_pass, "0") == 0) { main_menu(); return; }
+        if (strcmp(confirm_pass, "0") == 0) {
+            fclose(reg);
+            main_menu();
+            return;
+        }
 
-        if (strlen(confirm_pass) == 0) printf("Confirm password cannot be empty!\n");
-        else if (strcmp(customer.password, confirm_pass) != 0)
-            printf("Password does not match! Try again!\n");
-    } while (strcmp(customer.password, confirm_pass) != 0 || strlen(confirm_pass) == 0);
+        if (strlen(confirm_pass) == 0) {
+            printf(RED FORM_PAD "? Confirm password required!\n\n" RESET);
+        } else if (strcmp(customer.password, confirm_pass) != 0) {
+            printf(RED FORM_PAD "? Password does not match!\n\n" RESET);
+        }
 
-    fprintf(reg, "%s,%s,%s,%s\n",
-            customer.username, customer.password,
-            customer.name, customer.email);
+    } while (strcmp(customer.password, confirm_pass) != 0 ||
+             strlen(confirm_pass) == 0);
+
+    fprintf(reg,
+            "%s,%s,%s,%s\n",
+            customer.username,
+            customer.password,
+            customer.name,
+            customer.email);
+
     fclose(reg);
 
     system("cls");
-    printf("============================================\n");
-    printf("       Account created successfully!        \n");
-    printf("============================================\n");
-    system("pause");
+
+    registerBanner();
+
+    printf("\n");
+    printf(GREEN FORM_PAD "     ? Account Created Successfully!\n\n" RESET);
+
+    printf(DIM_GOLD FORM_PAD "      Press ENTER to continue..." RESET);
+
+    getchar();
+
     main_menu();
 }
 
@@ -4825,4 +4914,5 @@ int main() {
 
     return 0;
 }
+
 
