@@ -1,10 +1,9 @@
 arga,12345678,arga,arga12@gmail.com
 arga123,arga123,arga,arga@gmail.com
-rafif,rafif,Rafif Firdausy Ahla,rafif@binus.com
+rafif,rafif,Rafif Firdausy,rafif@mail.com
 andreauser,andreapass2,andrea,andrea@binus.ac
 budianto,budi1234,Budi Anto,budi.anto@gmail.com
 citra_dewi,citrapass,Citra Dewi,citra.dewi@yahoo.com
-dennis_w,dennis99,Dennis Wijaya,dennis@binus.ac.id
 elena_r,elena2026,Elena Rosiana,elena@mail.com
 fajars,fajar123,Fajar Setiawan,fajar@binus.com
 gita_p,gitapass,Gita Permata,gita.p@gmail.com

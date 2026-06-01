@@ -17,5 +17,4 @@
 812=Cinta di Batas Kota=Romance=95=13=Kisah cinta remaja beda kasta.
 855=Pendaki Terakhir=Adventure=120=13=Penyelamatan di puncak gunung bersalju.
 901=Lembah Tengkorak=Thriller=115=21=Sekelompok remaja terjebak di hutan.
-934=123=Sci-Fi=1=21=Penemuan gerbang menuju dimensi lain.
 935=Jumbo=Drama=120=17=...

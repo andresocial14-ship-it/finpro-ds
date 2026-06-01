@@ -1551,19 +1551,19 @@ void add_film() {
     film_manage();
 }
 
+// ============================================================
+// !! DELETE FILM !!
+// ============================================================
 void del_film() {
-    system("cls");
     Film result[200];
     int count = 0;
     btree_inorder(film_tree, result, &count);
 
-    printf("==============================\n");
-    printf("          DELETE FILM         \n");
-    printf("==============================\n");
-    printf("%-5s %-20s\n", "ID", "Title");
-    printf("------------------------------\n");
-
     if (count == 0) {
+        system("cls");
+        printf("============================================\n");
+        printf("                 DELETE FILM                \n");
+        printf("============================================\n");
         printf("No films available.\n");
         printf("============================================\n");
         system("pause");
@@ -1578,154 +1578,9 @@ void del_film() {
     for (int i = 0; i < count; i++) {
         char temp_id[20];
         sprintf(temp_id, "%d", result[i].id);
-
-        if (strlen(temp_id) > w_id) w_id = strlen(temp_id);
-        if (strlen(result[i].title) > w_title) w_title = strlen(result[i].title);
+        if ((int)strlen(temp_id) > w_id) w_id = strlen(temp_id);
+        if ((int)strlen(result[i].title) > w_title) w_title = strlen(result[i].title);
     }
-
-    // [Pass 2] Menampilkan tabel dinamis 2 kolom
-    printf("+"); 
-    for(int i = 0; i < w_id + 2; i++) printf("-"); 
-    printf("+"); 
-    for(int i = 0; i < w_title + 2; i++) printf("-"); 
-    printf("+\n");
-    
-    printf("| %-*s | %-*s |\n", w_id, "ID", w_title, "Title");
-    
-    printf("+"); 
-    for(int i = 0; i < w_id + 2; i++) printf("-"); 
-    printf("+"); 
-    for(int i = 0; i < w_title + 2; i++) printf("-"); 
-    printf("+\n");
-
-    for (int i = 0; i < count; i++) {
-        printf("| %-*d | %-*s |\n", w_id, result[i].id, w_title, result[i].title);
-    }
-
-    printf("+"); 
-    for(int i = 0; i < w_id + 2; i++) printf("-"); 
-    printf("+"); 
-    for(int i = 0; i < w_title + 2; i++) printf("-"); 
-    printf("+\n");
-
-    printf("--------------------------------------------\n");
-    printf(" (Enter '0' to go back)\n");
-    printf("--------------------------------------------\n");
-
-     char input[100];
-    char lower_input[100];
-    int target_id = -1;
-    char target_title[100] = "";
-
-    // Input & Validation
-    do {
-        printf("Enter Film ID or Title to delete : ");
-        fgets(input, sizeof(input), stdin);
-        input[strcspn(input, "\n")] = '\0'; // Hapus newline
-
-        // Fitur Back
-        if (strcmp(input, "0") == 0) { film_manage(); return; }
-        
-        if (strlen(input) == 0) { 
-            printf("Input cannot be empty!\n"); 
-            continue; 
-        }
-
-        // Konversi input ke lowercase untuk komparasi teks
-        for (int i = 0; input[i] != '\0'; i++) {
-            lower_input[i] = tolower(input[i]);
-        }
-        lower_input[strlen(input)] = '\0';
-
-        // Cek apakah input murni angka (untuk pencarian by ID)
-        int is_num = 1;
-        for (int i = 0; input[i] != '\0'; i++) {
-            if (!isdigit(input[i])) { is_num = 0; break; }
-        }
-        int input_id = is_num ? atoi(input) : -1;
-
-        // Pencarian melalui array (bisa cocok dengan ID ATAU Judul)
-        target_id = -1; // Reset target
-        for (int i = 0; i < count; i++) {
-            char lower_title[100];
-            strcpy(lower_title, result[i].title);
-            // Konversi judul di array ke lowercase
-            for (int j = 0; lower_title[j] != '\0'; j++) {
-                lower_title[j] = tolower(lower_title[j]);
-            }
-
-            // Jika input cocok dengan judul (lower_title) ATAU cocok dengan ID
-            if (strcmp(lower_input, lower_title) == 0 || result[i].id == input_id) {
-                target_id = result[i].id;
-                strcpy(target_title, result[i].title);
-                break;
-            }
-        }
-
-        if (target_id == -1) {
-            printf("Film with ID or Title \"%s\" not found! Please try again.\n", input);
-        }
-    } while (target_id == -1);
-
-    btree_delete(&film_tree, target_id);
-    btree_save_to_file();
-    printf("--------------------------------------------\n");
-    printf("Film \"%s\" (ID: %d) deleted successfully!\n", target_title, target_id);
-    printf("============================================\n");
-    system("pause");
-    film_manage();
-}
-
-void edit_film() {
-    system("cls");
-    Film result[200];
-    int count = 0;
-    btree_inorder(film_tree, result, &count);
-
-    printf("==============================\n");
-    printf("           EDIT FILM          \n");
-    printf("==============================\n");
-    printf("%-5s %-20s\n", "ID", "Title");
-    printf("------------------------------\n");
-
-    if (count == 0) {
-        printf("No films available.\n");
-        printf("============================================\n");
-        system("pause");
-        film_manage();
-        return;
-    }
-
-    // [Pass 1] Mencari panjang string maksimal di setiap kolom
-    int w_id = 2;       // Lebar minimal "ID"
-    int w_title = 5;    // Lebar minimal "Title"
-    
-    for (int i = 0; i < count; i++) {
-        char temp_id[20];
-        sprintf(temp_id, "%d", result[i].id);
-        if (strlen(temp_id) > w_id) w_id = strlen(temp_id);
-        if (strlen(result[i].title) > w_title) w_title = strlen(result[i].title);
-    }
-
-    // [Pass 2] Menampilkan tabel dinamis 2 kolom
-    printf("+"); for(int i = 0; i < w_id + 2; i++) printf("-"); 
-    printf("+"); for(int i = 0; i < w_title + 2; i++) printf("-"); printf("+\n");
-    
-    printf("| %-*s | %-*s |\n", w_id, "ID", w_title, "Title");
-    
-    printf("+"); for(int i = 0; i < w_id + 2; i++) printf("-"); 
-    printf("+"); for(int i = 0; i < w_title + 2; i++) printf("-"); printf("+\n");
-
-    for (int i = 0; i < count; i++) {
-        printf("| %-*d | %-*s |\n", w_id, result[i].id, w_title, result[i].title);
-    }
-
-    printf("+"); for(int i = 0; i < w_id + 2; i++) printf("-"); 
-    printf("+"); for(int i = 0; i < w_title + 2; i++) printf("-"); printf("+\n");
-
-    printf("--------------------------------------------\n");
-    printf(" (Enter '0' to go back)\n");
-    printf("--------------------------------------------\n");
 
     char input[100];
     char lower_input[100];
@@ -1733,14 +1588,359 @@ void edit_film() {
     Film matched[200];
     int match_count = 0;
 
+    // ==========================================
+    // PAGE 1 : PILIH FILM YANG INGIN DIHAPUS
+    // ==========================================
     do {
         match_count = 0;
+        
+        system("cls");
+        printf("============================================\n");
+        printf("                 DELETE FILM                \n");
+        printf("============================================\n");
+
+        // [Pass 2] Menampilkan tabel dinamis 2 kolom
+        printf("+"); for(int i = 0; i < w_id + 2; i++) printf("-"); 
+        printf("+"); for(int i = 0; i < w_title + 2; i++) printf("-"); printf("+\n");
+        
+        printf("| %-*s | %-*s |\n", w_id, "ID", w_title, "Title");
+        
+        printf("+"); for(int i = 0; i < w_id + 2; i++) printf("-"); 
+        printf("+"); for(int i = 0; i < w_title + 2; i++) printf("-"); printf("+\n");
+
+        for (int i = 0; i < count; i++) {
+            printf("| %-*d | %-*s |\n", w_id, result[i].id, w_title, result[i].title);
+        }
+
+        printf("+"); for(int i = 0; i < w_id + 2; i++) printf("-"); 
+        printf("+"); for(int i = 0; i < w_title + 2; i++) printf("-"); printf("+\n");
+
+        printf("--------------------------------------------\n");
+        printf(" (Enter '0' to go back)\n");
+        printf("--------------------------------------------\n");
+
+        printf("Enter Film ID or Title to delete : ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { film_manage(); return; }
+        
+        if (strlen(input) == 0) { 
+            printf("[ERROR] Input cannot be empty!\n"); 
+            system("pause"); 
+            continue; 
+        }
+
+        // Konversi ke lowercase untuk pencarian teks
+        for (int i = 0; input[i] != '\0'; i++) {
+            lower_input[i] = tolower(input[i]);
+        }
+        lower_input[strlen(input)] = '\0';
+
+        // Cek apakah murni angka
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i])) { is_num = 0; break; }
+        }
+
+        if (is_num) {
+            int input_id = atoi(input);
+            for (int i = 0; i < count; i++) {
+                if (result[i].id == input_id) {
+                    matched[match_count] = result[i];
+                    match_count++;
+                    break; 
+                }
+            }
+        } else {
+            for (int i = 0; i < count; i++) {
+                char lower_title[100];
+                strcpy(lower_title, result[i].title);
+                for (int j = 0; lower_title[j] != '\0'; j++) {
+                    lower_title[j] = tolower(lower_title[j]);
+                }
+                if (strstr(lower_title, lower_input) != NULL) {
+                    matched[match_count] = result[i];
+                    match_count++;
+                }
+            }
+        }
+
+        if (match_count == 0) {
+            printf("[ERROR] Film \"%s\" not found! Please try again.\n", input);
+            system("pause"); 
+        } else if (match_count == 1) {
+            target_id = matched[0].id;
+        } else {
+            int resolved = 0;
+            do {
+                system("cls");
+                printf("============================================\n");
+                printf("       DELETE FILM - MULTIPLE MATCHES       \n");
+                printf("============================================\n");
+                printf("Multiple films found for \"%s\":\n", input);
+                printf("--------------------------------------------\n");
+                for (int i = 0; i < match_count; i++) {
+                    printf("ID: %-4d | Title: %s\n", matched[i].id, matched[i].title);
+                }
+                printf("--------------------------------------------\n");
+                printf("Enter the EXACT ID from the list above\n");
+                printf(" (or '0' to go back) : ");
+                
+                char id_input[100];
+                fgets(id_input, sizeof(id_input), stdin);
+                id_input[strcspn(id_input, "\n")] = '\0';
+
+                if (strcmp(id_input, "0") == 0) { film_manage(); return; }
+                
+                if (strlen(id_input) == 0) { 
+                    printf("[ERROR] Input cannot be empty!\n"); 
+                    system("pause"); 
+                    continue; 
+                }
+
+                int id_is_num = 1;
+                for (int i = 0; id_input[i] != '\0'; i++) {
+                    if (!isdigit(id_input[i])) { id_is_num = 0; break; }
+                }
+
+                if (!id_is_num) {
+                    printf("[ERROR] Invalid input! Please enter a numeric ID.\n");
+                    system("pause");
+                    continue;
+                }
+
+                int selected_id = atoi(id_input);
+                for (int i = 0; i < match_count; i++) {
+                    if (matched[i].id == selected_id) {
+                        target_id = selected_id;
+                        resolved = 1;
+                        break;
+                    }
+                }
+
+                if (!resolved) {
+                    printf("[ERROR] ID %d is not on the list! Please type the exact ID shown above.\n", selected_id);
+                    system("pause");
+                }
+            } while (!resolved);
+        }
+    } while (target_id == -1);
+
+    Film* target = btree_search(film_tree, target_id);
+    if (target == NULL) {
+        printf("Unexpected Error: Film not found!\n");
+        system("pause");
+        film_manage();
+        return;
+    }
+
+    // ==========================================
+    // PAGE 2 : KONFIRMASI Y/N
+    // ==========================================
+    char confirm_str[10];
+    char confirm_char;
+    int conf_valid = 0;
+
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("            CONFIRM DELETION                \n");
+        printf("============================================\n");
+        printf("  Detail Film:\n");
+        printf("  ID       : %d\n", target->id);
+        printf("  Title    : %s\n", target->title);
+        printf("  Genre    : %s\n", target->genre);
+        printf("  Duration : %d min\n", target->duration);
+        printf("  Age      : %d+\n", target->age_rating);
+        printf("  Synopsis : %s\n", target->detail);
+        printf("--------------------------------------------\n");
+        printf("Are you sure you want to delete this film?\n");
+        printf("Type (Y/N) or '0' to go back : ");
+
+        fgets(confirm_str, sizeof(confirm_str), stdin);
+        confirm_str[strcspn(confirm_str, "\n")] = '\0';
+
+        if (strcmp(confirm_str, "0") == 0) { film_manage(); return; }
+
+        if (strlen(confirm_str) == 0) {
+            printf("[ERROR] Input cannot be empty! Enter Y or N.\n");
+            system("pause");
+            continue;
+        }
+
+        if (strcmp(confirm_str, "Y") == 0 || strcmp(confirm_str, "y") == 0) {
+            confirm_char = 'y';
+            conf_valid = 1;
+        } else if (strcmp(confirm_str, "N") == 0 || strcmp(confirm_str, "n") == 0) {
+            confirm_char = 'n';
+            conf_valid = 1;
+        } else {
+            printf("[ERROR] Invalid input! Enter Y or N.\n");
+            system("pause");
+        }
+    } while (!conf_valid);
+
+    if (confirm_char == 'n') {
+        printf("Deletion cancelled.\n");
+        system("pause");
+        film_manage();
+        return;
+    }
+
+    // ==========================================
+    // PAGE 3 : KONFIRMASI PASSWORD ADMIN
+    // ==========================================
+    char input_pass[100];
+    char confirm_pass_input[100]; 
+    int pass_match = 0;
+
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("         ADMIN PASSWORD CONFIRMATION        \n");
+        printf("============================================\n");
+        printf(" [WARNING] This action cannot be undone!    \n");
+        printf("--------------------------------------------\n");
+        printf(" (Enter '0' at any prompt to go back)\n");
+        printf("--------------------------------------------\n");
+
+        printf("Enter Admin password : ");
+        fgets(input_pass, sizeof(input_pass), stdin);
+        input_pass[strcspn(input_pass, "\n")] = '\0';
+
+        if (strcmp(input_pass, "0") == 0) { film_manage(); return; }
+
+        if (strlen(input_pass) == 0) {
+            printf("[ERROR] Password cannot be empty!\n");
+            system("pause");
+            continue;
+        }
+
+        printf("Confirm Admin password : ");
+        fgets(confirm_pass_input, sizeof(confirm_pass_input), stdin);
+        confirm_pass_input[strcspn(confirm_pass_input, "\n")] = '\0';
+
+        if (strcmp(confirm_pass_input, "0") == 0) { film_manage(); return; }
+
+        if (strcmp(input_pass, confirm_pass_input) != 0) {
+            printf("\n[ERROR] Passwords do not match! Please try again.\n");
+            system("pause");
+            continue;
+        }
+
+        // Hardcoded admin password validation (seperti login)
+        if (strcmp(input_pass, "admin123@") != 0) {
+            printf("\n[ERROR] Incorrect password! Please try again.\n");
+            system("pause");
+            continue;
+        }
+
+        pass_match = 1; 
+    } while (!pass_match);
+
+    // ==========================================
+    // PAGE 4 : EKSEKUSI PENGHAPUSAN
+    // ==========================================
+    char deleted_title[100];
+    strcpy(deleted_title, target->title); // Simpan nama sebelum memory di-free
+
+    btree_delete(&film_tree, target_id);
+    btree_save_to_file();
+
+    system("cls");
+    printf("============================================\n");
+    printf("               FILM DELETED                 \n");
+    printf("============================================\n");
+    printf("\n");
+    printf("   Film \"%s\" (ID: %d)       \n", deleted_title, target_id);
+    printf("       deleted successfully!                \n");
+    printf("\n");
+    printf("============================================\n");
+    system("pause");
+    film_manage();
+}
+
+// ============================================================
+// !! EDIT FILM !!
+// ============================================================
+void edit_film() {
+    Film result[200];
+    int count = 0;
+    btree_inorder(film_tree, result, &count);
+
+    if (count == 0) {
+        system("cls");
+        printf("============================================\n");
+        printf("                 EDIT FILM                  \n");
+        printf("============================================\n");
+        printf("No films available.\n");
+        printf("============================================\n");
+        system("pause");
+        film_manage();
+        return;
+    }
+
+    // [Pass 1] Mencari panjang string maksimal di setiap kolom
+    int w_id = 2;       // Lebar minimal "ID"
+    int w_title = 5;    // Lebar minimal "Title"
+    
+    for (int i = 0; i < count; i++) {
+        char temp_id[20];
+        sprintf(temp_id, "%d", result[i].id);
+        if ((int)strlen(temp_id) > w_id) w_id = strlen(temp_id);
+        if ((int)strlen(result[i].title) > w_title) w_title = strlen(result[i].title);
+    }
+
+    char input[100];
+    char lower_input[100];
+    int target_id = -1;
+    Film matched[200];
+    int match_count = 0;
+
+    // ==========================================
+    // PAGE 1 : PILIH FILM YANG INGIN DIEDIT
+    // ==========================================
+    do {
+        match_count = 0;
+        
+        // Bersihkan layar setiap kali ada input salah/kosong
+        system("cls");
+        printf("============================================\n");
+        printf("                 EDIT FILM                  \n");
+        printf("============================================\n");
+
+        // [Pass 2] Menampilkan tabel dinamis 2 kolom
+        printf("+"); for(int i = 0; i < w_id + 2; i++) printf("-"); 
+        printf("+"); for(int i = 0; i < w_title + 2; i++) printf("-"); printf("+\n");
+        
+        printf("| %-*s | %-*s |\n", w_id, "ID", w_title, "Title");
+        
+        printf("+"); for(int i = 0; i < w_id + 2; i++) printf("-"); 
+        printf("+"); for(int i = 0; i < w_title + 2; i++) printf("-"); printf("+\n");
+
+        for (int i = 0; i < count; i++) {
+            printf("| %-*d | %-*s |\n", w_id, result[i].id, w_title, result[i].title);
+        }
+
+        printf("+"); for(int i = 0; i < w_id + 2; i++) printf("-"); 
+        printf("+"); for(int i = 0; i < w_title + 2; i++) printf("-"); printf("+\n");
+
+        printf("--------------------------------------------\n");
+        printf(" (Enter '0' to go back)\n");
+        printf("--------------------------------------------\n");
+
         printf("Enter Film ID or Title to edit : ");
         fgets(input, sizeof(input), stdin);
         input[strcspn(input, "\n")] = '\0';
 
         if (strcmp(input, "0") == 0) { film_manage(); return; }
-        if (strlen(input) == 0) { printf("Input cannot be empty!\n"); continue; }
+        
+        if (strlen(input) == 0) { 
+            printf("[ERROR] Input cannot be empty!\n"); 
+            system("pause"); // Jeda sebelum layar dibersihkan dan tabel dimuat ulang
+            continue; 
+        }
 
         // Konversi ke lowercase untuk pencarian teks
         for (int i = 0; input[i] != '\0'; i++) {
@@ -1765,6 +1965,7 @@ void edit_film() {
                 }
             }
         } else {
+            // Pencarian berdasarkan Judul
             for (int i = 0; i < count; i++) {
                 char lower_title[100];
                 strcpy(lower_title, result[i].title);
@@ -1778,16 +1979,16 @@ void edit_film() {
             }
         }
 
-    // Logika Eksekusi Hasil Pencarian
+        // Logika Eksekusi Hasil Pencarian
         if (match_count == 0) {
-            printf("Film \"%s\" not found! Please try again.\n", input);
+            printf("[ERROR] Film \"%s\" not found! Please try again.\n", input);
+            system("pause"); // Jeda sebelum layar dibersihkan
         } else if (match_count == 1) {
-            target_id = matched[0].id; // Langsung masuk mode Edit jika hanya 1 yang cocok
+            target_id = matched[0].id; // Langsung masuk mode Edit
         } else {
             // Ambiguity Resolution (Jika ada 2 atau lebih film yang cocok)
             int resolved = 0;
             do {
-                // PAGE BARU: Tampilkan daftar film yang cocok
                 system("cls");
                 printf("============================================\n");
                 printf("        EDIT FILM - MULTIPLE MATCHES        \n");
@@ -1806,9 +2007,10 @@ void edit_film() {
                 id_input[strcspn(id_input, "\n")] = '\0';
 
                 if (strcmp(id_input, "0") == 0) { film_manage(); return; }
+                
                 if (strlen(id_input) == 0) { 
-                    printf("Input cannot be empty!\n"); 
-                    system("pause"); // Beri jeda agar user bisa baca error
+                    printf("[ERROR] Input cannot be empty!\n"); 
+                    system("pause"); 
                     continue; 
                 }
 
@@ -1818,7 +2020,7 @@ void edit_film() {
                 }
 
                 if (!id_is_num) {
-                    printf("Invalid input! Please enter a numeric ID.\n");
+                    printf("[ERROR] Invalid input! Please enter a numeric ID.\n");
                     system("pause");
                     continue;
                 }
@@ -1833,7 +2035,7 @@ void edit_film() {
                 }
 
                 if (!resolved) {
-                    printf("ID %d is not on the list! Please type the exact ID shown above.\n", selected_id);
+                    printf("[ERROR] ID %d is not on the list! Please type the exact ID shown above.\n", selected_id);
                     system("pause");
                 }
             } while (!resolved);
@@ -1842,7 +2044,7 @@ void edit_film() {
 
 
     // ==========================================
-    // TAHAP EDIT FILM (Menggunakan Struct Sementara)
+    // PAGE 2 : TAHAP EDIT FILM
     // ==========================================
     Film* target = btree_search(film_tree, target_id);
     if (target == NULL) {
@@ -1862,23 +2064,33 @@ void edit_film() {
     printf(" (Enter '0' at any prompt to cancel & go back)\n");
     printf("--------------------------------------------\n");
 
-
     char new_val[300];
     int valid;
 
+    /* --- EDIT TITLE --- */
     printf("Title [%s] : ", temp_film.title);
     fgets(new_val, sizeof(new_val), stdin);
     new_val[strcspn(new_val, "\n")] = '\0';
     if (strcmp(new_val, "0") == 0) { film_manage(); return; } 
     if (strlen(new_val) != 0) strcpy(temp_film.title, new_val);
 
-    do {
-        valid = 1;
+    /* --- EDIT GENRE --- */
     printf("Genre [%s] : ", temp_film.genre);
     fgets(new_val, sizeof(new_val), stdin);
     new_val[strcspn(new_val, "\n")] = '\0';
     if (strcmp(new_val, "0") == 0) { film_manage(); return; }
-    if (strlen(new_val) != 0) {
+    if (strlen(new_val) != 0) strcpy(temp_film.genre, new_val);
+
+    /* --- EDIT DURATION --- */
+    do {
+        valid = 1;
+        printf("Duration [%d] : ", temp_film.duration);
+        fgets(new_val, sizeof(new_val), stdin);
+        new_val[strcspn(new_val, "\n")] = '\0';
+        
+        if (strcmp(new_val, "0") == 0) { film_manage(); return; }
+        
+        if (strlen(new_val) != 0) {
             for (int i = 0; new_val[i] != '\0'; i++) {
                 if (!isdigit(new_val[i])) { valid = 0; break; }
             }
@@ -1891,22 +2103,13 @@ void edit_film() {
         }
     } while (!valid);
 
-    printf("Duration [%d] : ", temp_film.duration);
-    fgets(new_val, sizeof(new_val), stdin);
-    new_val[strcspn(new_val, "\n")] = '\0';
-    if (strlen(new_val) != 0) {
-        valid = 1;
-        for (int i = 0; new_val[i] != '\0'; i++)
-            if (!isdigit(new_val[i])) { valid = 0; break; }
-        if (valid && atoi(new_val) > 0) temp_film.duration = atoi(new_val);
-        else printf("Invalid duration, keeping current value.\n");
-    }
-
+    /* --- EDIT AGE RATING --- */
     do {
         valid = 1;
-    printf("Age Rating [%d] : ", temp_film.age_rating);
+        printf("Age Rating [%d] : ", temp_film.age_rating);
         fgets(new_val, sizeof(new_val), stdin);
         new_val[strcspn(new_val, "\n")] = '\0';
+        
         if (strcmp(new_val, "0") == 0) { film_manage(); return; } 
         
         if (strlen(new_val) != 0) {
@@ -1928,13 +2131,14 @@ void edit_film() {
         }
     } while (!valid);
 
+    /* --- EDIT DETAIL (SYNOPSIS) --- */
     printf("Detail [%s] : ", temp_film.detail);
     fgets(new_val, sizeof(new_val), stdin);
     new_val[strcspn(new_val, "\n")] = '\0';
     if (strcmp(new_val, "0") == 0) { film_manage(); return; } 
     if (strlen(new_val) != 0) strcpy(temp_film.detail, new_val);
 
-     // ==========================================
+    // ==========================================
     // MENERAPKAN PERUBAHAN SECARA PERMANEN
     // ==========================================
     *target = temp_film;  // Timpa data di B-Tree dengan salinan yang sudah diedit
@@ -1947,18 +2151,21 @@ void edit_film() {
     film_manage();
 }
 
+// ============================================================
+// !! SEARCH FILM !!
+// ============================================================
 void search_film() {
-    system("cls");
     Film result[200];
     int count = 0;
     btree_inorder(film_tree, result, &count);
 
-    printf("============================================\n");
-    printf("                 ALL FILMS                  \n");
-    printf("    (Displayed via B-Tree In-Order)         \n");
-    printf("                SEARCH FILM                 \n");
-    printf("============================================\n");
-     if (count == 0) {
+    if (count == 0) {
+        system("cls");
+        printf("============================================\n");
+        printf("                 ALL FILMS                  \n");
+        printf("    (Displayed via B-Tree In-Order)         \n");
+        printf("                SEARCH FILM                 \n");
+        printf("============================================\n");
         printf("No films available in the database.\n");
         printf("============================================\n");
         system("pause");
@@ -1966,11 +2173,7 @@ void search_film() {
         return;
     }
 
-    // ==========================================
-    // PAGE 1 : TAMPILKAN TABEL REFERENSI
-    // ==========================================
-    
-    // [Pass 1] Mencari panjang string maksimal (2 kolom)
+    // [Pass 1] Mencari panjang string maksimal (2 kolom) untuk tabel referensi
     int w_id_ref = 2;       // Lebar minimal "ID"
     int w_title_ref = 5;    // Lebar minimal "Title"
     
@@ -1978,45 +2181,70 @@ void search_film() {
         char temp_id[20];
         sprintf(temp_id, "%d", result[i].id);
 
-        if (strlen(temp_id) > w_id_ref) w_id_ref = strlen(temp_id);
-        if (strlen(result[i].title) > w_title_ref) w_title_ref = strlen(result[i].title);
+        if ((int)strlen(temp_id) > w_id_ref) w_id_ref = strlen(temp_id);
+        if ((int)strlen(result[i].title) > w_title_ref) w_title_ref = strlen(result[i].title);
     }
-
-    // [Pass 2] Menampilkan tabel referensi 2 kolom
-    printf("+"); for(int i = 0; i < w_id_ref + 2; i++) printf("-"); 
-    printf("+"); for(int i = 0; i < w_title_ref + 2; i++) printf("-"); printf("+\n");
-    
-    printf("| %-*s | %-*s |\n", w_id_ref, "ID", w_title_ref, "Title");
-    
-    printf("+"); for(int i = 0; i < w_id_ref + 2; i++) printf("-"); 
-    printf("+"); for(int i = 0; i < w_title_ref + 2; i++) printf("-"); printf("+\n");
-
-    printf(" (Enter '0' to go back)\n");
-    printf("--------------------------------------------\n");
-
-    printf("+"); for(int i = 0; i < w_id_ref + 2; i++) printf("-"); 
-    printf("+"); for(int i = 0; i < w_title_ref + 2; i++) printf("-"); printf("+\n");
-
-    printf("--------------------------------------------\n");
 
     char input[100];
     char lower_input[100];
-    Film matched[200]; // Array untuk menyimpan film yang cocok
+    Film matched[200]; 
     int match_count = 0;
+    int first_try = 1; // Untuk mengatur kapan pesan error muncul
 
-    // Input & Validation
+    // ==========================================
+    // PAGE 1 : TAMPILKAN TABEL REFERENSI & INPUT
+    // ==========================================
     do {
-        match_count = 0; // Reset jumlah kecocokan setiap kali looping
+        match_count = 0; // Reset setiap kali loop
+        system("cls");
         
+        printf("============================================\n");
+        printf("                 ALL FILMS                  \n");
+        printf("    (Displayed via B-Tree In-Order)         \n");
+        printf("                SEARCH FILM                 \n");
+        printf("============================================\n");
+
+        // Cetak Garis Atas
+        printf("+"); for(int i = 0; i < w_id_ref + 2; i++) printf("-"); 
+        printf("+"); for(int i = 0; i < w_title_ref + 2; i++) printf("-"); printf("+\n");
+        
+        // Cetak Header
+        printf("| %-*s | %-*s |\n", w_id_ref, "ID", w_title_ref, "Title");
+        
+        // Cetak Garis Tengah
+        printf("+"); for(int i = 0; i < w_id_ref + 2; i++) printf("-"); 
+        printf("+"); for(int i = 0; i < w_title_ref + 2; i++) printf("-"); printf("+\n");
+
+        // Cetak Isi Data Film (Bagian ini yang sebelumnya hilang)
+        for (int i = 0; i < count; i++) {
+            printf("| %-*d | %-*s |\n", w_id_ref, result[i].id, w_title_ref, result[i].title);
+        }
+
+        // Cetak Garis Bawah
+        printf("+"); for(int i = 0; i < w_id_ref + 2; i++) printf("-"); 
+        printf("+"); for(int i = 0; i < w_title_ref + 2; i++) printf("-"); printf("+\n");
+
+        printf(" (Enter '0' to go back)\n");
+        printf("--------------------------------------------\n");
+
+        // Jika input sebelumnya salah, tampilkan pesan error tanpa system pause
+        if (!first_try) {
+            printf("[ERROR] No film found matching your input. Please try again.\n");
+            printf("--------------------------------------------\n");
+        }
+
         printf("Enter Film ID or Title to search : ");
         fgets(input, sizeof(input), stdin);
         input[strcspn(input, "\n")] = '\0'; // Hapus newline
 
         // Fitur Back
-        if (strcmp(input, "0") == 0) { film_manage(); return; }
+        if (strcmp(input, "0") == 0) { 
+            film_manage(); 
+            return; 
+        }
 
         if (strlen(input) == 0) { 
-            printf("Input cannot be empty!\n"); 
+            first_try = 0; 
             continue; 
         }
 
@@ -2033,7 +2261,7 @@ void search_film() {
         }
         int input_id = is_num ? atoi(input) : -1;
 
-        // Pencarian melalui array (Partial Match untuk Judul ATAU Exact Match untuk ID)
+        // Pencarian melalui array (Partial Match Judul ATAU Exact Match ID)
         for (int i = 0; i < count; i++) {
             char lower_title[100];
             strcpy(lower_title, result[i].title);
@@ -2050,9 +2278,7 @@ void search_film() {
             }
         }
 
-        if (match_count == 0) {
-            printf("No film found matching \"%s\". Please try again.\n", input);
-        }
+        first_try = 0; // Set ke 0 agar iterasi berikutnya menampilkan error jika match_count == 0
 
     } while (match_count == 0);
 
@@ -2071,12 +2297,12 @@ void search_film() {
         sprintf(temp_dur, "%d", matched[i].duration);
         sprintf(temp_age, "%d", matched[i].age_rating);
 
-        if (strlen(temp_id) > w_id) w_id = strlen(temp_id);
-        if (strlen(matched[i].title) > w_title) w_title = strlen(matched[i].title);
-        if (strlen(matched[i].genre) > w_genre) w_genre = strlen(matched[i].genre);
-        if (strlen(temp_dur) > w_dur) w_dur = strlen(temp_dur);
-        if (strlen(temp_age) > w_age) w_age = strlen(temp_age);
-        if (strlen(matched[i].detail) > w_detail) w_detail = strlen(matched[i].detail);
+        if ((int)strlen(temp_id) > w_id) w_id = strlen(temp_id);
+        if ((int)strlen(matched[i].title) > w_title) w_title = strlen(matched[i].title);
+        if ((int)strlen(matched[i].genre) > w_genre) w_genre = strlen(matched[i].genre);
+        if ((int)strlen(temp_dur) > w_dur) w_dur = strlen(temp_dur);
+        if ((int)strlen(temp_age) > w_age) w_age = strlen(temp_age);
+        if ((int)strlen(matched[i].detail) > w_detail) w_detail = strlen(matched[i].detail);
     }
 
     int total_width = w_id + w_title + w_genre + w_dur + w_age + w_detail + 19;
@@ -3241,7 +3467,7 @@ void menu_cust() {
         system("cls");
         view_film_cust();
         printf("============================================\n");
-        printf("               CUSTOMER MENU                \n");
+        printf("                CUSTOMER MENU               \n");
         printf("--------------------------------------------\n");
         printf("Welcome Back, %s!\n", current_fullname);
         printf("[1] Book Ticket\n");
@@ -3251,9 +3477,14 @@ void menu_cust() {
         printf("[0] Logout\n");
         printf("============================================\n");
         printf("Choose : ");
-        // Menggunakan fgets untuk membaca string, termasuk spasi/enter kosong
-        fgets(input, sizeof(input), stdin);
-        input[strcspn(input, "\n")] = '\0'; // Menghapus karakter newline (\n)
+
+        // =======================================================
+        // [FIXED] Looping untuk membuang sisa input Enter (\n)
+        // =======================================================
+        do {
+            fgets(input, sizeof(input), stdin);
+            input[strcspn(input, "\n")] = '\0'; // Menghapus karakter newline (\n)
+        } while (strlen(input) == 0); 
 
         // Mengonversi input menjadi lowercase (huruf kecil) agar case-insensitive
         for (int i = 0; input[i] != '\0'; i++) {
@@ -3275,7 +3506,7 @@ void menu_cust() {
         } else if (strcmp(lower_input, "0") == 0 || strcmp(lower_input, "logout") == 0) {
             choice = 0;
         } else {
-            // Jika input kosong atau di luar opsi
+            // Jika input di luar opsi
             printf("\n[ERROR] Invalid Input!\n");
             printf("Please enter the number (0-4) or the exact option text.\n");
             system("pause");
@@ -3400,12 +3631,10 @@ void view_film_cust() {
 // !! BOOK TICKET !!
 // ============================================================
 void book_ticket() {
-    system("cls");
-    printf("============================================\n");
-    printf("               BOOK TICKET                  \n");
-    printf("============================================\n");
+    char input[100];
+    int valid;
 
-    /* -- LANGKAH 1: Pilih Film -- */
+    /* -- LANGKAH 1: Ambil Data Film -- */
     Film all_films[200];
     int film_count = 0;
     btree_inorder(film_tree, all_films, &film_count);
@@ -3417,234 +3646,418 @@ void book_ticket() {
         return;
     }
 
-    printf("\n[ STEP 1 ] Pilih Film\n");
-    printf("%-5s %-25s %-12s %-6s %s\n", "ID", "Title", "Genre", "Min", "Age");
-    printf("--------------------------------------------\n");
+    /* Hitung Lebar Kolom Dinamis Untuk Tabel Film */
+    int w_id = 2, w_title = 5, w_genre = 5, w_dur = 8, w_age = 3;
     for (int i = 0; i < film_count; i++) {
-        printf("%-5d %-25s %-12s %-6d %d+\n",
-               all_films[i].id, all_films[i].title,
-               all_films[i].genre, all_films[i].duration,
-               all_films[i].age_rating);
+        char temp_id[20], temp_dur[20], temp_age[20];
+        sprintf(temp_id, "%d", all_films[i].id);
+        sprintf(temp_dur, "%d", all_films[i].duration);
+        sprintf(temp_age, "%d+", all_films[i].age_rating);
+
+        if ((int)strlen(temp_id) > w_id) w_id = strlen(temp_id);
+        if ((int)strlen(all_films[i].title) > w_title) w_title = strlen(all_films[i].title);
+        if ((int)strlen(all_films[i].genre) > w_genre) w_genre = strlen(all_films[i].genre);
+        if ((int)strlen(temp_dur) > w_dur) w_dur = strlen(temp_dur);
+        if ((int)strlen(temp_age) > w_age) w_age = strlen(temp_age);
     }
-    printf("--------------------------------------------\n");
 
-    char input[20];
-    int film_id, valid;
+    int film_id;
+    Film* chosen_film = NULL;
 
+    /* Loop Halaman PAGE 1: Pemilihan Film */
     do {
-        printf("Masukkan Film ID : ");
-        scanf("%s", input);
-        valid = 1;
-        for (int i = 0; input[i] != '\0'; i++)
-            if (!isdigit(input[i])) { valid = 0; break; }
-        if (!valid) { printf("ID harus berupa angka!\n"); continue; }
-        film_id = atoi(input);
-        if (btree_search(film_tree, film_id) == NULL) {
-            printf("Film dengan ID %d tidak ditemukan!\n", film_id);
+        system("cls");
+        printf("======================================================================================================\n");
+        printf("                                              BOOK TICKET                                             \n");
+        printf("======================================================================================================\n");
+        printf("\n[ STEP 1 ] Pilih Film\n");
+
+        /* Cetak Garis Pembatas Atas Tabel Film */
+        printf("+"); for(int k=0; k<w_id+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_title+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_genre+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_dur+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_age+2; k++) printf("-"); printf("+\n");
+
+        /* Cetak Header */
+        printf("| %-*s | %-*s | %-*s | %-*s | %-*s |\n", w_id, "ID", w_title, "Title", w_genre, "Genre", w_dur, "Duration", w_age, "Age");
+
+        /* Cetak Garis Tengah */
+        printf("+"); for(int k=0; k<w_id+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_title+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_genre+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_dur+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_age+2; k++) printf("-"); printf("+\n");
+
+        /* Cetak Konten Film */
+        for (int i = 0; i < film_count; i++) {
+            char temp_dur[20], temp_age[20];
+            sprintf(temp_dur, "%d", all_films[i].duration);
+            sprintf(temp_age, "%d+", all_films[i].age_rating);
+            printf("| %-*d | %-*s | %-*s | %-*s | %-*s |\n", 
+                   w_id, all_films[i].id, 
+                   w_title, all_films[i].title, 
+                   w_genre, all_films[i].genre, 
+                   w_dur, temp_dur, 
+                   w_age, temp_age);
+        }
+
+        /* Cetak Garis Bawah */
+        printf("+"); for(int k=0; k<w_id+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_title+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_genre+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_dur+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_age+2; k++) printf("-"); printf("+\n");
+
+        printf("Masukkan Film ID (Ketik '0' untuk Batal) : ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        // Fitur Back
+        if (strcmp(input, "0") == 0) {
+            menu_cust();
+            return;
+        }
+
+        if (strlen(input) == 0) {
+            printf("[ERROR] ID tidak boleh kosong!\n");
+            system("pause");
             valid = 0;
+            continue;
+        }
+
+        valid = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i])) { valid = 0; break; }
+        }
+        if (!valid) {
+            printf("[ERROR] ID harus berupa angka!\n");
+            system("pause");
+            continue;
+        }
+
+        film_id = atoi(input);
+        chosen_film = btree_search(film_tree, film_id);
+        if (chosen_film == NULL) {
+            printf("[ERROR] Film dengan ID %d tidak ditemukan!\n", film_id);
+            system("pause");
+            valid = 0;
+            continue;
         }
     } while (!valid);
 
-    Film* chosen_film = btree_search(film_tree, film_id);
 
-    /* -- LANGKAH 2: Pilih Jadwal -- */
-    printf("\n[ STEP 2 ] Pilih Jadwal untuk \"%s\"\n", chosen_film->title);
-    printf("%-4s %-15s %-12s %-8s %s\n",
-           "ID", "Studio", "Date", "Time", "Price");
-    printf("--------------------------------------------\n");
+    /* -- LANGKAH 2: Ambil Data Jadwal Sesuai Film ID -- */
+    Schedule match_schedules[200];
+    int sch_count = 0;
 
     FILE* sch_fp = fopen(schedule_file, "r");
-    if (sch_fp == NULL) {
-        printf("Tidak ada jadwal tersedia.\n");
-        system("pause");
-        menu_cust();
-        return;
+    if (sch_fp != NULL) {
+        char sch_buffer[300];
+        while (fgets(sch_buffer, sizeof(sch_buffer), sch_fp)) {
+            sch_buffer[strcspn(sch_buffer, "\n")] = 0;
+            Schedule sch;
+            if (sscanf(sch_buffer, "%d=%d=%d=%[^=]=%[^=]=%f",
+                       &sch.id, &sch.film_id, &sch.studio_id,
+                       sch.date, sch.time, &sch.price) == 6) {
+                if (sch.film_id == film_id) {
+                    match_schedules[sch_count++] = sch;
+                }
+            }
+        }
+        fclose(sch_fp);
     }
-
-    int sch_count = 0;
-    char sch_buffer[300];
-    while (fgets(sch_buffer, sizeof(sch_buffer), sch_fp)) {
-        sch_buffer[strcspn(sch_buffer, "\n")] = 0;
-        Schedule sch;
-        sscanf(sch_buffer, "%d=%d=%d=%[^=]=%[^=]=%f",
-               &sch.id, &sch.film_id, &sch.studio_id,
-               sch.date, sch.time, &sch.price);
-        if (sch.film_id != film_id) continue;
-        Studio st; find_studio(sch.studio_id, &st);
-        printf("%-4d %-15s %-12s %-8s Rp %.0f\n",
-               sch.id, st.name, sch.date, sch.time, sch.price);
-        sch_count++;
-    }
-    fclose(sch_fp);
 
     if (sch_count == 0) {
-        printf("Tidak ada jadwal untuk film ini.\n");
+        printf("\nTidak ada jadwal tersedia untuk film \"%s\".\n", chosen_film->title);
         system("pause");
         menu_cust();
         return;
     }
-    printf("--------------------------------------------\n");
+
+    /* Hitung Lebar Kolom Dinamis Untuk Tabel Jadwal */
+    int w_sch_id = 2, w_studio = 6, w_date = 4, w_time = 4, w_price = 5;
+    for (int i = 0; i < sch_count; i++) {
+        char temp_id[20], temp_price[30];
+        sprintf(temp_id, "%d", match_schedules[i].id);
+        sprintf(temp_price, "Rp %.0f", match_schedules[i].price);
+
+        Studio st;
+        char st_name[50] = "Unknown";
+        if (find_studio(match_schedules[i].studio_id, &st)) {
+            strcpy(st_name, st.name);
+        }
+
+        if ((int)strlen(temp_id) > w_sch_id) w_sch_id = strlen(temp_id);
+        if ((int)strlen(st_name) > w_studio) w_studio = strlen(st_name);
+        if ((int)strlen(match_schedules[i].date) > w_date) w_date = strlen(match_schedules[i].date);
+        if ((int)strlen(match_schedules[i].time) > w_time) w_time = strlen(match_schedules[i].time);
+        if ((int)strlen(temp_price) > w_price) w_price = strlen(temp_price);
+    }
 
     int schedule_id;
     Schedule chosen_sch;
 
+    /* Loop Halaman PAGE 2: Pemilihan Jadwal */
     do {
-        printf("Masukkan Schedule ID : ");
-        scanf("%s", input);
+        system("cls");
+        printf("======================================================================================================\n");
+        printf("                                              BOOK TICKET                                             \n");
+        printf("======================================================================================================\n");
+        printf("\n[ STEP 2 ] Pilih Jadwal untuk \"%s\"\n", chosen_film->title);
+
+        /* Cetak Garis Atas Tabel Jadwal */
+        printf("+"); for(int k=0; k<w_sch_id+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_studio+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_date+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_time+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_price+2; k++) printf("-"); printf("+\n");
+
+        /* Cetak Header */
+        printf("| %-*s | %-*s | %-*s | %-*s | %-*s |\n", w_sch_id, "ID", w_studio, "Studio", w_date, "Date", w_time, "Time", w_price, "Price");
+
+        /* Cetak Garis Tengah */
+        printf("+"); for(int k=0; k<w_sch_id+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_studio+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_date+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_time+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_price+2; k++) printf("-"); printf("+\n");
+
+        /* Cetak Konten Jadwal */
+        for (int i = 0; i < sch_count; i++) {
+            Studio st;
+            char st_name[50] = "Unknown";
+            if (find_studio(match_schedules[i].studio_id, &st)) {
+                strcpy(st_name, st.name);
+            }
+            char temp_price[30];
+            sprintf(temp_price, "Rp %.0f", match_schedules[i].price);
+
+            printf("| %-*d | %-*s | %-*s | %-*s | %-*s |\n",
+                   w_sch_id, match_schedules[i].id,
+                   w_studio, st_name,
+                   w_date, match_schedules[i].date,
+                   w_time, match_schedules[i].time,
+                   w_price, temp_price);
+        }
+
+        /* Cetak Garis Bawah */
+        printf("+"); for(int k=0; k<w_sch_id+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_studio+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_date+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_time+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_price+2; k++) printf("-"); printf("+\n");
+
+        printf("Masukkan Schedule ID (Ketik '0' untuk Batal) : ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        // Fitur Back
+        if (strcmp(input, "0") == 0) {
+            menu_cust();
+            return;
+        }
+
+        if (strlen(input) == 0) {
+            printf("[ERROR] ID tidak boleh kosong!\n");
+            system("pause");
+            valid = 0;
+            continue;
+        }
+
         valid = 1;
-        for (int i = 0; input[i] != '\0'; i++)
+        for (int i = 0; input[i] != '\0'; i++) {
             if (!isdigit(input[i])) { valid = 0; break; }
-        if (!valid) { printf("ID harus berupa angka!\n"); continue; }
+        }
+        if (!valid) {
+            printf("[ERROR] ID harus berupa angka!\n");
+            system("pause");
+            continue;
+        }
+
         schedule_id = atoi(input);
         if (!find_schedule(schedule_id, &chosen_sch)) {
-            printf("Jadwal dengan ID %d tidak ditemukan!\n", schedule_id);
+            printf("[ERROR] Jadwal dengan ID %d tidak ditemukan!\n", schedule_id);
+            system("pause");
             valid = 0;
             continue;
         }
         if (chosen_sch.film_id != film_id) {
-            printf("Jadwal ID %d bukan untuk film \"%s\"!\n",
-                   schedule_id, chosen_film->title);
+            printf("[ERROR] Jadwal ID %d bukan untuk film \"%s\"!\n", schedule_id, chosen_film->title);
+            system("pause");
             valid = 0;
+            continue;
         }
     } while (!valid);
 
     Studio chosen_studio;
     find_studio(chosen_sch.studio_id, &chosen_studio);
 
-    /* -- LANGKAH 3: Pilih Kursi (bisa lebih dari satu) -- */
-    // -------------------------------------------------------
-    // Tampung kursi yang dipilih sementara di array lokal.
-    // MAX_SEATS_PER_ORDER = batas kursi per pesanan (misal 8).
-    // -------------------------------------------------------
 
+    /* -- LANGKAH 3: Pilih Kursi (Multi-seat) -- */
     char  selected_seats[MAX_SEATS_PER_ORDER][10];
     int   seat_count = 0;
 
-    printf("\n[ STEP 3 ] Pilih Kursi\n");
-    printf("  Anda bisa memilih hingga %d kursi sekaligus.\n", MAX_SEATS_PER_ORDER);
-    printf("  Ketik \"DONE\" jika sudah selesai memilih.\n\n");
-
+    /* Loop Halaman PAGE 3: Pemilihan Kursi */
     while (seat_count < MAX_SEATS_PER_ORDER) {
-        /* Tampilkan denah kursi setiap iterasi agar up-to-date */
+        system("cls");
+        printf("======================================================================================================\n");
+        printf("                                              BOOK TICKET                                             \n");
+        printf("======================================================================================================\n");
+        printf("\n[ STEP 3 ] Pilih Kursi\n");
+        printf("  Anda bisa memilih hingga %d kursi sekaligus.\n", MAX_SEATS_PER_ORDER);
+        printf("  Ketik \"DONE\" jika sudah selesai memilih.\n");
+        printf("  Ketik \"0\" untuk membatalkan pesanan dan kembali ke menu.\n");
+
+        /* Tampilkan Denah Kursi Secara Update */
         display_seat_map(schedule_id, &chosen_studio);
 
-        /* Tampilkan kursi yang sudah dipilih sesi ini */
+        /* Info Kursi Yang Sudah Dipilih Sebelumnya */
         if (seat_count > 0) {
-            printf("  Kursi dipilih (%d): ", seat_count);
+            printf("\n  Kursi dipilih (%d): ", seat_count);
             for (int i = 0; i < seat_count; i++)
-                printf("%s%s", selected_seats[i],
-                               (i < seat_count - 1) ? ", " : "\n");
+                printf("%s%s", selected_seats[i], (i < seat_count - 1) ? ", " : "\n");
+        } else {
+            printf("\n");
         }
 
-        char seat_input[10];
-        printf("Masukkan kursi ke-%d (atau \"DONE\") : ", seat_count + 1);
-        scanf("%s", seat_input);
+        char seat_input[20];
+        printf("Masukkan kursi ke-%d (atau \"DONE\" / \"0\") : ", seat_count + 1);
+        
+        fgets(seat_input, sizeof(seat_input), stdin);
+        seat_input[strcspn(seat_input, "\n")] = '\0';
 
-        /* Konversi ke huruf besar */
+        // Fitur Back
+        if (strcmp(seat_input, "0") == 0) {
+            menu_cust();
+            return;
+        }
+
+        if (strlen(seat_input) == 0) {
+            printf("[ERROR] Input kursi tidak boleh kosong!\n");
+            system("pause");
+            continue;
+        }
+
+        /* Konversi input ke huruf kapital */
         for (int i = 0; seat_input[i]; i++)
             seat_input[i] = toupper(seat_input[i]);
 
-        /* User selesai memilih */
         if (strcmp(seat_input, "DONE") == 0) {
             if (seat_count == 0) {
-                printf("  Pilih minimal 1 kursi!\n\n");
+                printf("[ERROR] Pilih minimal 1 kursi!\n");
+                system("pause");
                 continue;
             }
-            break;
+            break; // Lanjut ke Step 4
         }
 
-        /* Validasi format */
         if (!validate_seat_format(seat_input, &chosen_studio)) {
-            printf("  Kursi \"%s\" tidak valid! Baris A-%c, Kolom 1-%d.\n\n",
-                   seat_input,
-                   'A' + chosen_studio.rows - 1,
-                   chosen_studio.cols);
+            printf("[ERROR] Kursi \"%s\" tidak valid! Baris A-%c, Kolom 1-%d.\n",
+                   seat_input, 'A' + chosen_studio.rows - 1, chosen_studio.cols);
+            system("pause");
             continue;
         }
 
-        /* Cek apakah kursi sudah dibooking di database */
         if (is_seat_booked(schedule_id, seat_input)) {
-            printf("  Kursi %s sudah dibooking orang lain!\n\n", seat_input);
+            printf("[ERROR] Kursi %s sudah dibooking orang lain!\n", seat_input);
+            system("pause");
             continue;
         }
 
-        /* Cek duplikat dalam sesi pemilihan ini */
         int duplicate = 0;
         for (int i = 0; i < seat_count; i++) {
             if (strcmp(selected_seats[i], seat_input) == 0) {
-                duplicate = 1;
-                break;
+                duplicate = 1; break;
             }
         }
         if (duplicate) {
-            printf("  Kursi %s sudah Anda pilih sebelumnya!\n\n", seat_input);
+            printf("[ERROR] Kursi %s sudah Anda pilih sebelumnya!\n", seat_input);
+            system("pause");
             continue;
         }
 
-        /* Simpan ke daftar sementara */
         strcpy(selected_seats[seat_count], seat_input);
         seat_count++;
-        printf("  Kursi %s ditambahkan.\n\n", seat_input);
+        
+        /* Optional: Memberikan jeda notifikasi bahwa kursi berhasil ditambahkan */
+        printf("Kursi %s berhasil ditambahkan!\n", seat_input);
+        system("pause");
     }
 
-    /* -- LANGKAH 4: Konfirmasi -- */
+
+    /* -- LANGKAH 4: Konfirmasi Pembayaran -- */
     float total_harga = chosen_sch.price * seat_count;
+    char confirm_str[10];
+    char confirm_char;
+    int conf_valid = 0;
 
-    system("cls");
-    printf("============================================\n");
-    printf("           KONFIRMASI BOOKING               \n");
-    printf("============================================\n");
-    printf("  Film    : %s\n", chosen_film->title);
-    printf("  Studio  : %s\n", chosen_studio.name);
-    printf("  Tanggal : %s\n", chosen_sch.date);
-    printf("  Jam     : %s\n", chosen_sch.time);
-    printf("  Kursi   : ");
-    for (int i = 0; i < seat_count; i++)
-        printf("%s%s", selected_seats[i],
-                       (i < seat_count - 1) ? ", " : "\n");
-    printf("  Jumlah  : %d kursi\n", seat_count);
-    printf("  Harga   : Rp %.0f x %d = Rp %.0f\n",
-           chosen_sch.price, seat_count, total_harga);
-    printf("--------------------------------------------\n");
-    printf("Konfirmasi booking? (Y/N) : ");
+    /* Loop Halaman PAGE 4: Konfirmasi Pembayaran */
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("           KONFIRMASI BOOKING               \n");
+        printf("============================================\n");
+        printf("  Film    : %s\n", chosen_film->title);
+        printf("  Studio  : %s\n", chosen_studio.name);
+        printf("  Tanggal : %s\n", chosen_sch.date);
+        printf("  Jam     : %s\n", chosen_sch.time);
+        printf("  Kursi   : ");
+        for (int i = 0; i < seat_count; i++)
+            printf("%s%s", selected_seats[i], (i < seat_count - 1) ? ", " : "\n");
+        printf("  Jumlah  : %d kursi\n", seat_count);
+        printf("  Harga   : Rp %.0f x %d = Rp %.0f\n", chosen_sch.price, seat_count, total_harga);
+        printf("--------------------------------------------\n");
+        printf("Konfirmasi booking? (Y/N) : ");
 
-    char confirm;
-    scanf(" %c", &confirm);
+        fgets(confirm_str, sizeof(confirm_str), stdin);
+        confirm_str[strcspn(confirm_str, "\n")] = '\0';
 
-    if (confirm != 'Y' && confirm != 'y') {
+        if (strlen(confirm_str) == 0) {
+            printf("[ERROR] Input tidak boleh kosong! Masukkan huruf Y atau N.\n");
+            system("pause");
+            continue;
+        }
+
+        // Pengecekan ketat (Strict Checking) huruf Y atau N
+        if (strcmp(confirm_str, "Y") == 0 || strcmp(confirm_str, "y") == 0) {
+            confirm_char = 'y';
+            conf_valid = 1;
+        } else if (strcmp(confirm_str, "N") == 0 || strcmp(confirm_str, "n") == 0) {
+            confirm_char = 'n';
+            conf_valid = 1;
+        } else {
+            printf("[ERROR] Input tidak valid! Masukkan hanya huruf Y atau N.\n");
+            system("pause");
+        }
+    } while (!conf_valid);
+
+    // Mengeksekusi aksi setelah loop validasi
+    if (confirm_char == 'n') {
         printf("Booking dibatalkan.\n");
         system("pause");
         menu_cust();
         return;
     }
 
-    /* -- LANGKAH 5: Simpan Booking (satu record per kursi, ID berbeda) -- */
-    // -----------------------------------------------------------------------
-    // Setiap kursi mendapat booking_code unik tersendiri.
-    // auto_id_booking() harus dipanggil ulang setiap iterasi agar ID
-    // selalu naik dan tidak bentrok.
-    // -----------------------------------------------------------------------
-    /* -- LANGKAH 5: Simpan Booking (satu record per kursi, ID unik) -- */
-    
-    // Ambil base ID SEBELUM fopen agar file sudah dalam kondisi final
-    int base_id = auto_id_booking();  // misal: 11
-    
+
+    /* -- LANGKAH 5: Simpan Data ke File -- */
+    int base_id = auto_id_booking();
     char saved_codes[MAX_SEATS_PER_ORDER][20];
 
     FILE* bk_fp = fopen(booking_file, "a");
     if (bk_fp == NULL) { invalid_file(); return; }
 
     for (int i = 0; i < seat_count; i++) {
-        // Increment manual: 11, 12, 13, dst — tidak perlu baca file lagi
         generate_booking_code(base_id + i, saved_codes[i]);
-
         fprintf(bk_fp, "%s=%s=%d=%s=%.0f=1\n",
                 saved_codes[i], current_user,
                 schedule_id, selected_seats[i], chosen_sch.price);
     }
-    fclose(bk_fp);  // flush sekali di sini
+    fclose(bk_fp);
 
-    /* -- Tampilkan Hasil -- */
+
+    /* -- TAMPILKAN STRUK/INVOICE BERHASIL -- */
     system("cls");
     printf("============================================\n");
     printf("          BOOKING BERHASIL!                 \n");
@@ -3664,7 +4077,6 @@ void book_ticket() {
     printf("============================================\n");
     system("pause");
     menu_cust();
-
 }
 
 // ============================================================
@@ -3732,87 +4144,158 @@ void history() {
 // !! CANCEL BOOKING !!
 // ============================================================
 void cancel() {
-    system("cls");
-    printf("============================================\n");
-    printf("              CANCEL BOOKING                \n");
-    printf("============================================\n");
-
-    /* Tampilkan booking aktif milik user */
     Booking bookings[MAX_BOOKINGS];
     int total = load_bookings(bookings, MAX_BOOKINGS);
 
+    int active_idx[MAX_BOOKINGS];
     int active_count = 0;
-    printf("  Booking aktif Anda:\n");
-    printf("--------------------------------------------\n");
-    printf("  %-12s %-20s %-12s %-8s %s\n",
-           "Code", "Film", "Date", "Seat", "Price");
-    printf("--------------------------------------------\n");
+
+    /* Hitung Lebar Kolom Dinamis Untuk Tabel */
+    int w_code = 4, w_film = 4, w_date = 4, w_seat = 4, w_price = 5;
 
     for (int i = 0; i < total; i++) {
-        if (strcmp(bookings[i].username, current_user) != 0) continue;
-        if (bookings[i].status != 1) continue; /* hanya yang aktif */
+        if (strcmp(bookings[i].username, current_user) == 0 && bookings[i].status == 1) {
+            active_idx[active_count] = i;
+            active_count++;
 
-        Schedule sch;
-        char film_title[100] = "Unknown";
-        char date_str[20]    = "-";
+            if ((int)strlen(bookings[i].booking_code) > w_code) w_code = strlen(bookings[i].booking_code);
+            if ((int)strlen(bookings[i].seat) > w_seat) w_seat = strlen(bookings[i].seat);
 
-        if (find_schedule(bookings[i].schedule_id, &sch)) {
-            Film* f = btree_search(film_tree, sch.film_id);
-            if (f != NULL) strcpy(film_title, f->title);
-            strcpy(date_str, sch.date);
+            char price_str[30];
+            sprintf(price_str, "Rp %.0f", bookings[i].total_price);
+            if ((int)strlen(price_str) > w_price) w_price = strlen(price_str);
+
+            Schedule sch;
+            if (find_schedule(bookings[i].schedule_id, &sch)) {
+                if ((int)strlen(sch.date) > w_date) w_date = strlen(sch.date);
+                Film* f = btree_search(film_tree, sch.film_id);
+                if (f != NULL) {
+                    if ((int)strlen(f->title) > w_film) w_film = strlen(f->title);
+                } else {
+                    if (7 > w_film) w_film = 7; // Panjang kata "Unknown"
+                }
+            }
+        }
+    }
+
+    char code_input[30];
+    Booking target;
+    int target_found = 0;
+
+    /* ==========================================
+       PAGE 1: TAMPILAN TABEL BOOKING
+       ========================================== */
+    do {
+        system("cls");
+        printf("==========================================================================\n");
+        printf("                              CANCEL BOOKING                              \n");
+        printf("==========================================================================\n");
+
+        if (active_count == 0) {
+            printf("\n  Tidak ada booking aktif untuk dibatalkan.\n");
+            printf("==========================================================================\n");
+            system("pause");
+            menu_cust();
+            return;
         }
 
-        printf("  %-12s %-20s %-12s %-8s Rp %.0f\n",
-               bookings[i].booking_code, film_title,
-               date_str, bookings[i].seat, bookings[i].total_price);
-        active_count++;
-    }
+        printf("\n[ Booking aktif Anda ]\n");
 
-    if (active_count == 0) {
-        printf("  Tidak ada booking aktif untuk dibatalkan.\n");
-        printf("============================================\n");
-        system("pause");
-        menu_cust();
-        return;
-    }
+        /* Cetak Garis Atas Tabel */
+        printf("+"); for(int k=0; k<w_code+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_film+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_date+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_seat+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_price+2; k++) printf("-"); printf("+\n");
 
-    printf("--------------------------------------------\n");
+        /* Cetak Header */
+        printf("| %-*s | %-*s | %-*s | %-*s | %-*s |\n", w_code, "Code", w_film, "Film", w_date, "Date", w_seat, "Seat", w_price, "Price");
 
-    /* Input booking code yang ingin dibatalkan */
-    char code_input[20];
-    printf("  Masukkan Booking Code yang ingin dibatalkan : ");
-    scanf("%s", code_input);
+        /* Cetak Garis Tengah */
+        printf("+"); for(int k=0; k<w_code+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_film+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_date+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_seat+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_price+2; k++) printf("-"); printf("+\n");
 
-    /* Konversi ke huruf besar (BK-xxxxx) */
-    for (int i = 0; code_input[i]; i++)
-        code_input[i] = toupper(code_input[i]);
+        /* Cetak Konten Tabel */
+        for (int i = 0; i < active_count; i++) {
+            int idx = active_idx[i];
+            Schedule sch;
+            char film_title[100] = "Unknown";
+            char date_str[20]    = "-";
 
-    /* Cari booking */
-    Booking target;
-    if (!find_booking(code_input, &target)) {
-        printf("  Booking code \"%s\" tidak ditemukan!\n", code_input);
-        system("pause");
-        menu_cust();
-        return;
-    }
+            if (find_schedule(bookings[idx].schedule_id, &sch)) {
+                Film* f = btree_search(film_tree, sch.film_id);
+                if (f != NULL) strcpy(film_title, f->title);
+                strcpy(date_str, sch.date);
+            }
 
-    /* Pastikan booking milik user yang login */
-    if (strcmp(target.username, current_user) != 0) {
-        printf("  Booking ini bukan milik Anda!\n");
-        system("pause");
-        menu_cust();
-        return;
-    }
+            char price_str[30];
+            sprintf(price_str, "Rp %.0f", bookings[idx].total_price);
 
-    /* Pastikan booking masih aktif */
-    if (target.status != 1) {
-        printf("  Booking %s sudah dibatalkan sebelumnya.\n", code_input);
-        system("pause");
-        menu_cust();
-        return;
-    }
+            printf("| %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+                   w_code, bookings[idx].booking_code,
+                   w_film, film_title,
+                   w_date, date_str,
+                   w_seat, bookings[idx].seat,
+                   w_price, price_str);
+        }
 
-    /* Tampilkan detail sebelum konfirmasi */
+        /* Cetak Garis Bawah */
+        printf("+"); for(int k=0; k<w_code+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_film+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_date+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_seat+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_price+2; k++) printf("-"); printf("+\n\n");
+
+        printf("Masukkan Booking Code yang ingin dibatalkan\n");
+        printf("(Ketik '0' untuk membatalkan dan kembali) : ");
+        
+        fgets(code_input, sizeof(code_input), stdin);
+        code_input[strcspn(code_input, "\n")] = '\0';
+
+        /* Fitur Back */
+        if (strcmp(code_input, "0") == 0) {
+            menu_cust();
+            return;
+        }
+
+        if (strlen(code_input) == 0) {
+            printf("[ERROR] Booking code tidak boleh kosong!\n");
+            system("pause");
+            continue;
+        }
+
+        /* Konversi input ke huruf kapital */
+        for (int i = 0; code_input[i]; i++)
+            code_input[i] = toupper(code_input[i]);
+
+        if (!find_booking(code_input, &target)) {
+            printf("[ERROR] Booking code \"%s\" tidak ditemukan!\n", code_input);
+            system("pause");
+            continue;
+        }
+
+        if (strcmp(target.username, current_user) != 0) {
+            printf("[ERROR] Booking ini bukan milik Anda!\n");
+            system("pause");
+            continue;
+        }
+
+        if (target.status != 1) {
+            printf("[ERROR] Booking %s sudah dibatalkan sebelumnya.\n", code_input);
+            system("pause");
+            continue;
+        }
+
+        target_found = 1;
+    } while (!target_found);
+
+
+    /* ==========================================
+       PAGE 2: KONFIRMASI PEMBATALAN
+       ========================================== */
     Schedule sch;
     char film_title[100]  = "Unknown";
     char studio_name[50]  = "Unknown";
@@ -3824,29 +4307,54 @@ void cancel() {
         if (find_studio(sch.studio_id, &st)) strcpy(studio_name, st.name);
     }
 
-    printf("--------------------------------------------\n");
-    printf("  Detail Booking:\n");
-    printf("  Code    : %s\n", target.booking_code);
-    printf("  Film    : %s\n", film_title);
-    printf("  Studio  : %s\n", studio_name);
-    printf("  Tanggal : %s\n", (find_schedule(target.schedule_id, &sch)) ? sch.date : "-");
-    printf("  Kursi   : %s\n", target.seat);
-    printf("  Harga   : Rp %.0f\n", target.total_price);
-    printf("--------------------------------------------\n");
-    printf("  Yakin ingin membatalkan booking %s? (Y/N) : ",
-           target.booking_code);
+    int conf_valid = 0;
+    char confirm_char;
+    char confirm_str[10];
 
-    char confirm;
-    scanf(" %c", &confirm);
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("           KONFIRMASI PEMBATALAN            \n");
+        printf("============================================\n");
+        printf("  Detail Booking:\n");
+        printf("  Code    : %s\n", target.booking_code);
+        printf("  Film    : %s\n", film_title);
+        printf("  Studio  : %s\n", studio_name);
+        printf("  Tanggal : %s\n", (find_schedule(target.schedule_id, &sch)) ? sch.date : "-");
+        printf("  Kursi   : %s\n", target.seat);
+        printf("  Harga   : Rp %.0f\n", target.total_price);
+        printf("--------------------------------------------\n");
+        printf("Yakin ingin membatalkan booking %s? (Y/N) : ", target.booking_code);
 
-    if (confirm != 'Y' && confirm != 'y') {
-        printf("  Pembatalan dibatalkan.\n");
+        fgets(confirm_str, sizeof(confirm_str), stdin);
+        confirm_str[strcspn(confirm_str, "\n")] = '\0';
+
+        if (strlen(confirm_str) == 0) {
+            printf("[ERROR] Input tidak boleh kosong! Masukkan huruf Y atau N.\n");
+            system("pause");
+            continue;
+        }
+
+        if (strcmp(confirm_str, "Y") == 0 || strcmp(confirm_str, "y") == 0) {
+            confirm_char = 'y';
+            conf_valid = 1;
+        } else if (strcmp(confirm_str, "N") == 0 || strcmp(confirm_str, "n") == 0) {
+            confirm_char = 'n';
+            conf_valid = 1;
+        } else {
+            printf("[ERROR] Input tidak valid! Masukkan hanya huruf Y atau N.\n");
+            system("pause");
+        }
+    } while (!conf_valid);
+
+    if (confirm_char == 'n') {
+        printf("Pembatalan diurungkan.\n");
         system("pause");
         menu_cust();
         return;
     }
 
-    /* Tulis ulang file: ubah status booking menjadi 0 */
+    /* Proses Tulis Ulang File (Ubah status = 0) */
     FILE* in  = fopen(booking_file, "r");
     FILE* tmp = fopen("temp_booking.txt", "w");
     if (in == NULL || tmp == NULL) { invalid_file(); return; }
@@ -3861,7 +4369,6 @@ void cancel() {
                &bk.total_price, &bk.status);
 
         if (strcmp(bk.booking_code, code_input) == 0) {
-            /* Ubah status menjadi 0 (dibatalkan) */
             fprintf(tmp, "%s=%s=%d=%s=%.0f=0\n",
                     bk.booking_code, bk.username,
                     bk.schedule_id, bk.seat, bk.total_price);
@@ -3874,9 +4381,17 @@ void cancel() {
     remove(booking_file);
     rename("temp_booking.txt", booking_file);
 
-    printf("--------------------------------------------\n");
+    /* ==========================================
+       PAGE 3: SUCCESS INVOICE
+       ========================================== */
+    system("cls");
+    printf("============================================\n");
+    printf("          PEMBATALAN BERHASIL!              \n");
+    printf("============================================\n");
+    printf("\n");
     printf("  Booking %s berhasil dibatalkan.\n", code_input);
     printf("  Kursi %s sekarang tersedia kembali.\n", target.seat);
+    printf("\n");
     printf("============================================\n");
     system("pause");
     menu_cust();
@@ -3951,182 +4466,16 @@ void edit_profile() {
     }
 }
 
-void delete_account_cust() {
-    char buffer[1024];
-    Account acc;
-    char current_pass[100] = "";
-    char input_pass[100];
-    char confirm_pass_input[100]; // Untuk konfirmasi input password
-    char confirm[100];
-    char lower_confirm[100];
-    int pass_match = 0;
-    int confirmed = 0;
-
-    // Ambil password saat ini dari file
-    FILE* check = fopen(account_file, "r");
-    if (check != NULL) {
-        while (fgets(buffer, sizeof(buffer), check)) {
-            buffer[strcspn(buffer, "\n")] = 0;
-            sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", acc.username, acc.password, acc.name, acc.email);
-            if (strcmp(acc.username, current_user) == 0) {
-                strcpy(current_pass, acc.password);
-                break;
-            }
-        }
-        fclose(check);
-    }
-
-    // ==========================================
-    // PAGE 1 : PASSWORD VERIFICATION
-    // ==========================================
-    do {
-        system("cls");
-        printf("============================================\n");
-        printf("               DELETE ACCOUNT               \n");
-        printf("============================================\n");
-        printf(" [WARNING] This action cannot be undone!    \n");
-        printf("--------------------------------------------\n");
-        printf(" (Enter '0' at any prompt to go back)\n");
-        printf("--------------------------------------------\n");
-
-        printf("Enter your password : ");
-        fgets(input_pass, sizeof(input_pass), stdin);
-        input_pass[strcspn(input_pass, "\n")] = '\0';
-
-        // Fitur Back
-        if (strcmp(input_pass, "0") == 0) {
-            edit_profile();
-            return;
-        }
-
-        if (strlen(input_pass) == 0) {
-            printf("Password cannot be empty!\n");
-            system("pause");
-            continue;
-        }
-
-        printf("Confirm password    : ");
-        fgets(confirm_pass_input, sizeof(confirm_pass_input), stdin);
-        confirm_pass_input[strcspn(confirm_pass_input, "\n")] = '\0';
-
-        // Fitur Back
-        if (strcmp(confirm_pass_input, "0") == 0) {
-            edit_profile();
-            return;
-        }
-
-        if (strcmp(input_pass, confirm_pass_input) != 0) {
-            printf("\nPasswords do not match! Please try again.\n");
-            system("pause");
-            continue;
-        }
-
-        if (strcmp(input_pass, current_pass) != 0) {
-            printf("\nIncorrect password! Please try again.\n");
-            system("pause");
-            continue;
-        }
-
-        pass_match = 1; // Jika semua validasi lolos
-    } while (!pass_match);
-
-
-    // ==========================================
-    // PAGE 2 : FINAL CONFIRMATION
-    // ==========================================
-    do {
-        system("cls");
-        printf("============================================\n");
-        printf("             FINAL CONFIRMATION             \n");
-        printf("============================================\n");
-        printf(" Are you absolutely sure you want to delete \n");
-        printf(" your account? All data will be lost.       \n");
-        printf("--------------------------------------------\n");
-        printf(" Type 'Yes' to permanently delete.\n");
-        printf(" Type 'No' or '0' to cancel and go back.\n");
-        printf("--------------------------------------------\n");
-        printf("Your Choice : ");
-
-        fgets(confirm, sizeof(confirm), stdin);
-        confirm[strcspn(confirm, "\n")] = '\0';
-
-        if (strlen(confirm) == 0) {
-            printf("\nInput cannot be empty!\n");
-            system("pause");
-            continue;
-        }
-
-        // Konversi input konfirmasi ke huruf kecil (lowercase)
-        for (int i = 0; confirm[i] != '\0'; i++) {
-            lower_confirm[i] = tolower(confirm[i]);
-        }
-        lower_confirm[strlen(confirm)] = '\0';
-
-        // Logika Pilihan
-        if (strcmp(lower_confirm, "yes") == 0) {
-            confirmed = 1;
-        } else if (strcmp(lower_confirm, "no") == 0 || strcmp(lower_confirm, "0") == 0) {
-            printf("\nAccount deletion cancelled.\n");
-            system("pause");
-            edit_profile();
-            return;
-        } else {
-            printf("\nInvalid input. Please type 'Yes', 'No', or '0'.\n");
-            system("pause");
-        }
-    } while (!confirmed);
-
-
-    // ==========================================
-    // DATA DELETION PROCESS (File Handling)
-    // ==========================================
-    FILE* data = fopen(account_file, "r");
-    FILE* temp = fopen("temp.txt", "w");
-    if (!data || !temp) { invalid_file(); return; }
-
-    while (fgets(buffer, sizeof(buffer), data)) {
-        buffer[strcspn(buffer, "\n")] = 0;
-        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", acc.username, acc.password, acc.name, acc.email);
-
-        // Salin semua akun KECUALI akun user yang sedang login
-        if (strcmp(acc.username, current_user) != 0) {
-            fprintf(temp, "%s,%s,%s,%s\n", acc.username, acc.password, acc.name, acc.email);
-        }
-    }
-
-    fclose(data);
-    fclose(temp);
-    remove(account_file);
-    rename("temp.txt", account_file);
-
-    // Kosongkan variabel current_user karena akun sudah tidak ada
-    memset(current_user, 0, sizeof(current_user));
-
-
-    // ==========================================
-    // PAGE 3 : SUCCESS MESSAGE
-    // ==========================================
-    system("cls");
-    printf("============================================\n");
-    printf("              ACCOUNT DELETED               \n");
-    printf("============================================\n");
-    printf("\n");
-    printf("       Account deleted successfully!        \n");
-    printf("\n");
-    printf("============================================\n");
-    system("pause");
-    
-    // Langsung arahkan kembali ke menu utama (Main Menu)
-    main_menu();
-}
+// ============================================================
+// !! EDIT PROFILE FUNCTIONS !!
+// ============================================================
 
 void change_name() {
-    system("cls");
     char buffer[1024];
     Account acc;
     char current_name[100] = "";
     char new_name[100];
-    int valid;
+    int valid = 0;
 
     FILE* check = fopen(account_file, "r");
     if (check != NULL) {
@@ -4141,17 +4490,18 @@ void change_name() {
         fclose(check);
     }
 
-    printf("============================================\n");
-    printf("              CHANGE FULL NAME              \n");
-    printf("============================================\n");
-    printf("Current Full Name : %s\n", current_name);
-    printf("--------------------------------------------\n");
-    printf(" (Enter '0' to go back)\n");
-    printf("--------------------------------------------\n");
-
-
+    // Pindahkan UI dan cls ke dalam do-while loop
     do {
+        system("cls");
+        printf("============================================\n");
+        printf("              CHANGE FULL NAME              \n");
+        printf("============================================\n");
+        printf("Current Full Name : %s\n", current_name);
+        printf("--------------------------------------------\n");
+        printf(" (Enter '0' to go back)\n");
+        printf("--------------------------------------------\n");
         printf("Enter new Full Name : ");
+        
         fgets(new_name, sizeof(new_name), stdin);
         new_name[strcspn(new_name, "\n")] = '\0';
 
@@ -4161,17 +4511,22 @@ void change_name() {
         }
         if (strlen(new_name) == 0) {
             printf("Full Name cannot be empty!\n");
-            system("pause"); edit_profile(); return;
+            system("pause"); 
+            continue; // Ulangi loop tanpa kembali ke menu
         }
         if (strcmp(current_name, new_name) == 0) {
             printf("New Full Name cannot be the same as current!\n");
-            system("pause"); edit_profile(); return;
+            system("pause"); 
+            continue;
         }
-        valid = 1;
+        
+        valid = 1; // Asumsi valid
         for (int i = 0; new_name[i] != '\0'; i++) {
             if (isdigit(new_name[i])) {
                 printf("Full name cannot contain numbers!\n");
-                valid = 0; break;
+                system("pause"); 
+                valid = 0; 
+                break;
             }
         }
     } while (!valid);
@@ -4195,57 +4550,74 @@ void change_name() {
     edit_profile();
 }
 
+
 void change_usn() {
-    system("cls");
     char buffer[1024];
     Account acc;
     char new_usn[100];
-    int found, has_space;
-
-    printf("============================================\n");
-    printf("              CHANGE USERNAME               \n");
-    printf("============================================\n");
-    printf("Current Username : %s\n", current_user);
-    printf("--------------------------------------------\n");
-    printf(" (Enter '0' to go back)\n");
-    printf("--------------------------------------------\n");
+    int valid = 0;
 
     do {
+        system("cls");
+        printf("============================================\n");
+        printf("              CHANGE USERNAME               \n");
+        printf("============================================\n");
+        printf("Current Username : %s\n", current_user);
+        printf("--------------------------------------------\n");
+        printf(" (Enter '0' to go back)\n");
+        printf("--------------------------------------------\n");
         printf("Enter new Username : ");
+        
         fgets(new_usn, sizeof(new_usn), stdin);
         new_usn[strcspn(new_usn, "\n")] = '\0';
-        // Fitur Back
+        
         if (strcmp(new_usn, "0") == 0) {
             edit_profile();
             return;
         }
         if (strlen(new_usn) == 0) {
             printf("Username cannot be empty!\n");
-            system("pause"); edit_profile(); return;
+            system("pause"); 
+            continue;
         }
         if (strcmp(current_user, new_usn) == 0) {
             printf("New Username cannot be the same as current!\n");
-            system("pause"); edit_profile(); return;
+            system("pause"); 
+            continue;
         }
-        has_space = 0;
-        for (int i = 0; new_usn[i] != '\0'; i++)
+        
+        int has_space = 0;
+        for (int i = 0; new_usn[i] != '\0'; i++) {
             if (isspace(new_usn[i])) { has_space = 1; break; }
-        if (has_space) { printf("Username cannot contain spaces!\n"); found = 1; continue; }
+        }
+        if (has_space) { 
+            printf("Username cannot contain spaces!\n"); 
+            system("pause"); 
+            continue; 
+        }
 
-        found = 0;
+        int found = 0;
         FILE* chk = fopen(account_file, "r");
         if (chk != NULL) {
             char tb[1024], cu[100];
             while (fgets(tb, sizeof(tb), chk)) {
                 sscanf(tb, "%[^,]", cu);
                 if (strcmp(cu, new_usn) == 0) {
-                    found = 1;
-                    printf("Username already exists!\n"); break;
+                    found = 1; 
+                    break;
                 }
             }
             fclose(chk);
         }
-    } while (found);
+        
+        if (found) {
+            printf("Username already exists!\n");
+            system("pause");
+            continue;
+        }
+        
+        valid = 1;
+    } while (!valid);
 
     FILE* data = fopen(account_file, "r");
     FILE* temp = fopen("temp.txt", "w");
@@ -4267,14 +4639,14 @@ void change_usn() {
     edit_profile();
 }
 
+
 void change_email() {
-    system("cls");
     char buffer[1024];
     Account acc;
     char current_email[100] = "";
     char new_email[100];
     char confirm_email[100];
-    int validasi_at;
+    int valid = 0;
 
     FILE* check = fopen(account_file, "r");
     if (check != NULL) {
@@ -4289,46 +4661,62 @@ void change_email() {
         fclose(check);
     }
 
-    printf("============================================\n");
-    printf("                CHANGE EMAIL                \n");
-    printf("============================================\n");
-    printf("Current Email : %s\n", current_email);
-    printf("--------------------------------------------\n");
-    printf(" (Enter '0' to go back)\n");
-    printf("--------------------------------------------\n");
-
     do {
+        system("cls");
+        printf("============================================\n");
+        printf("                CHANGE EMAIL                \n");
+        printf("============================================\n");
+        printf("Current Email : %s\n", current_email);
+        printf("--------------------------------------------\n");
+        printf(" (Enter '0' to go back)\n");
+        printf("--------------------------------------------\n");
         printf("Enter new Email : ");
+        
         fgets(new_email, sizeof(new_email), stdin);
         new_email[strcspn(new_email, "\n")] = '\0';
-         // Fitur Back
+        
         if (strcmp(new_email, "0") == 0) {
             edit_profile();
             return;
         }
         if (strlen(new_email) == 0) {
             printf("Email cannot be empty!\n");
-            system("pause"); edit_profile(); return;
+            system("pause"); 
+            continue;
         }
         if (strcmp(current_email, new_email) == 0) {
             printf("New Email cannot be the same as current!\n");
-            system("pause"); edit_profile(); return;
+            system("pause"); 
+            continue;
         }
-        validasi_at = 0;
-        for (int i = 0; new_email[i] != '\0'; i++)
+        
+        int validasi_at = 0;
+        for (int i = 0; new_email[i] != '\0'; i++) {
             if (new_email[i] == '@') { validasi_at = 1; break; }
-        if (!validasi_at) { printf("Email must contain '@'!\n"); continue; }
+        }
+        if (!validasi_at) { 
+            printf("Email must contain '@'!\n"); 
+            system("pause"); 
+            continue; 
+        }
 
         printf("Confirm new Email : ");
         fgets(confirm_email, sizeof(confirm_email), stdin);
         confirm_email[strcspn(confirm_email, "\n")] = '\0';
+        
         if (strcmp(confirm_email, "0") == 0) {
             edit_profile();
             return;
         }
-        if (strcmp(new_email, confirm_email) != 0)
+        
+        if (strcmp(new_email, confirm_email) != 0) {
             printf("Email does not match! Try again!\n");
-    } while (!validasi_at || strcmp(new_email, confirm_email) != 0);
+            system("pause");
+            continue;
+        }
+        
+        valid = 1;
+    } while (!valid);
 
     FILE* data = fopen(account_file, "r");
     FILE* temp = fopen("temp.txt", "w");
@@ -4349,13 +4737,14 @@ void change_email() {
     edit_profile();
 }
 
+
 void change_pass() {
-    system("cls");
     char buffer[1024];
     Account acc;
     char current_pass[100] = "";
     char new_pass[100];
     char confirm_pass[100];
+    int valid = 0;
 
     FILE* check = fopen(account_file, "r");
     if (check != NULL) {
@@ -4370,44 +4759,58 @@ void change_pass() {
         fclose(check);
     }
 
-    printf("============================================\n");
-    printf("              CHANGE PASSWORD               \n");
-    printf("============================================\n");
-    printf("Current Password : ");
-    for (int i = 0; i < (int)strlen(current_pass); i++) printf("*");
-    printf("\n--------------------------------------------\n");
-    printf(" (Enter '0' to go back)\n");
-    printf("--------------------------------------------\n");
-
     do {
+        system("cls");
+        printf("============================================\n");
+        printf("              CHANGE PASSWORD               \n");
+        printf("============================================\n");
+        printf("Current Password : ");
+        for (int i = 0; i < (int)strlen(current_pass); i++) printf("*");
+        printf("\n--------------------------------------------\n");
+        printf(" (Enter '0' to go back)\n");
+        printf("--------------------------------------------\n");
         printf("Enter new Password : ");
+        
         fgets(new_pass, sizeof(new_pass), stdin);
         new_pass[strcspn(new_pass, "\n")] = '\0';
+        
         if (strcmp(new_pass, "0") == 0) {
             edit_profile();
             return;
         }
         if (strlen(new_pass) == 0) {
             printf("Password cannot be empty!\n");
-            system("pause"); edit_profile(); return;
+            system("pause"); 
+            continue;
         }
         if (strcmp(current_pass, new_pass) == 0) {
             printf("New Password cannot be the same as current!\n");
-            system("pause"); edit_profile(); return;
+            system("pause"); 
+            continue;
         }
         if (strlen(new_pass) < 5) {
-            printf("Password must be at least 5 characters long!\n"); continue;
+            printf("Password must be at least 5 characters long!\n"); 
+            system("pause"); 
+            continue;
         }
+        
         printf("Confirm new Password : ");
         fgets(confirm_pass, sizeof(confirm_pass), stdin);
         confirm_pass[strcspn(confirm_pass, "\n")] = '\0';
+        
         if (strcmp(confirm_pass, "0") == 0) {
             edit_profile();
             return;
         }
-        if (strcmp(new_pass, confirm_pass) != 0)
+        
+        if (strcmp(new_pass, confirm_pass) != 0) {
             printf("Password does not match! Try again!\n");
-    } while (strlen(new_pass) < 5 || strcmp(new_pass, confirm_pass) != 0);
+            system("pause"); 
+            continue;
+        }
+        
+        valid = 1;
+    } while (!valid);
 
     FILE* data = fopen(account_file, "r");
     FILE* temp = fopen("temp.txt", "w");
@@ -4426,6 +4829,157 @@ void change_pass() {
     printf("Password successfully updated!\n");
     system("pause");
     edit_profile();
+}
+
+
+void delete_account_cust() {
+    char buffer[1024];
+    Account acc;
+    char current_pass[100] = "";
+    char input_pass[100];
+    char confirm_pass_input[100]; 
+    char confirm[100];
+    char lower_confirm[100];
+    int pass_match = 0;
+    int confirmed = 0;
+
+    FILE* check = fopen(account_file, "r");
+    if (check != NULL) {
+        while (fgets(buffer, sizeof(buffer), check)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", 
+                   acc.username, acc.password, acc.name, acc.email);
+            if (strcmp(acc.username, current_user) == 0) {
+                strcpy(current_pass, acc.password);
+                break;
+            }
+        }
+        fclose(check);
+    }
+
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("               DELETE ACCOUNT               \n");
+        printf("============================================\n");
+        printf(" [WARNING] This action cannot be undone!    \n");
+        printf("--------------------------------------------\n");
+        printf(" (Enter '0' at any prompt to go back)\n");
+        printf("--------------------------------------------\n");
+
+        printf("Enter your password : ");
+        fgets(input_pass, sizeof(input_pass), stdin);
+        input_pass[strcspn(input_pass, "\n")] = '\0';
+
+        if (strcmp(input_pass, "0") == 0) {
+            edit_profile();
+            return;
+        }
+
+        if (strlen(input_pass) == 0) {
+            printf("Password cannot be empty!\n");
+            system("pause");
+            continue;
+        }
+
+        printf("Confirm password    : ");
+        fgets(confirm_pass_input, sizeof(confirm_pass_input), stdin);
+        confirm_pass_input[strcspn(confirm_pass_input, "\n")] = '\0';
+
+        if (strcmp(confirm_pass_input, "0") == 0) {
+            edit_profile();
+            return;
+        }
+
+        if (strcmp(input_pass, confirm_pass_input) != 0) {
+            printf("\nPasswords do not match! Please try again.\n");
+            system("pause");
+            continue;
+        }
+
+        if (strcmp(input_pass, current_pass) != 0) {
+            printf("\nIncorrect password! Please try again.\n");
+            system("pause");
+            continue;
+        }
+
+        pass_match = 1; 
+    } while (!pass_match);
+
+
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("             FINAL CONFIRMATION             \n");
+        printf("============================================\n");
+        printf(" Are you absolutely sure you want to delete \n");
+        printf(" your account? All data will be lost.       \n");
+        printf("--------------------------------------------\n");
+        printf(" Type 'Yes' to permanently delete.\n");
+        printf(" Type 'No' or '0' to cancel and go back.\n");
+        printf("--------------------------------------------\n");
+        printf("Your Choice : ");
+
+        fgets(confirm, sizeof(confirm), stdin);
+        confirm[strcspn(confirm, "\n")] = '\0';
+
+        if (strlen(confirm) == 0) {
+            printf("\nInput cannot be empty!\n");
+            system("pause");
+            continue;
+        }
+
+        for (int i = 0; confirm[i] != '\0'; i++) {
+            lower_confirm[i] = tolower(confirm[i]);
+        }
+        lower_confirm[strlen(confirm)] = '\0';
+
+        if (strcmp(lower_confirm, "yes") == 0) {
+            confirmed = 1;
+        } else if (strcmp(lower_confirm, "no") == 0 || strcmp(lower_confirm, "0") == 0) {
+            printf("\nAccount deletion cancelled.\n");
+            system("pause");
+            edit_profile();
+            return;
+        } else {
+            printf("\nInvalid input. Please type 'Yes', 'No', or '0'.\n");
+            system("pause");
+        }
+    } while (!confirmed);
+
+    FILE* data = fopen(account_file, "r");
+    FILE* temp = fopen("temp.txt", "w");
+    if (!data || !temp) { invalid_file(); return; }
+
+    while (fgets(buffer, sizeof(buffer), data)) {
+        buffer[strcspn(buffer, "\n")] = 0;
+        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]", 
+               acc.username, acc.password, acc.name, acc.email);
+        
+        if (strcmp(acc.username, current_user) != 0) {
+            fprintf(temp, "%s,%s,%s,%s\n", 
+                    acc.username, acc.password, acc.name, acc.email);
+        }
+    }
+
+    fclose(data);
+    fclose(temp);
+    remove(account_file);
+    rename("temp.txt", account_file);
+
+    memset(current_user, 0, sizeof(current_user));
+
+    system("cls");
+    printf("============================================\n");
+    printf("               ACCOUNT DELETED              \n");
+    printf("============================================\n");
+    printf("\n");
+    printf("       Account deleted successfully!        \n");
+    printf("\n");
+    printf("============================================\n");
+    system("pause");
+    
+    main_menu();
 }
 
 void view_profile() {
