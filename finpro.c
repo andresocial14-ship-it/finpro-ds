@@ -1423,7 +1423,7 @@ void film_manage() {
         printf("               FILM MANAGEMENT              \n");
         printf("--------------------------------------------\n");
         printf("[1] View All Films\n");
-        printf("[2] Search Film by ID\n");
+        printf("[2] Search Film\n");
         printf("[3] Add New Film\n");
         printf("[4] Delete Film\n");
         printf("[5] Edit Film Info\n");
@@ -1443,7 +1443,7 @@ void film_manage() {
 
         if (strcmp(lower_input, "1") == 0 || strcmp(lower_input, "view all films") == 0) {
             choice = 1;
-        } else if (strcmp(lower_input, "2") == 0 || strcmp(lower_input, "search film by id") == 0) {
+        } else if (strcmp(lower_input, "2") == 0 || strcmp(lower_input, "search film") == 0) {
             choice = 2;
         } else if (strcmp(lower_input, "3") == 0 || strcmp(lower_input, "add new film") == 0) {
             choice = 3;
@@ -2377,6 +2377,9 @@ void search_film() {
     film_manage();
 }
 
+// ============================================================
+// !! VIEW ALL FILMS !!
+// ============================================================
 void view_film() {
     system("cls");
     Film result[200];
@@ -2399,15 +2402,15 @@ void view_film() {
         sprintf(temp_id, "%d", result[i].id);
         sprintf(temp_dur, "%d", result[i].duration);
         sprintf(temp_age, "%d", result[i].age_rating);
-        if (strlen(temp_id) > w_id) w_id = strlen(temp_id);
-        if (strlen(result[i].title) > w_title) w_title = strlen(result[i].title);
-        if (strlen(result[i].genre) > w_genre) w_genre = strlen(result[i].genre);
-        if (strlen(temp_dur) > w_dur) w_dur = strlen(temp_dur);
-        if (strlen(temp_age) > w_age) w_age = strlen(temp_age);
-        if (strlen(result[i].detail) > w_detail) w_detail = strlen(result[i].detail);
+        if ((int)strlen(temp_id) > w_id) w_id = strlen(temp_id);
+        if ((int)strlen(result[i].title) > w_title) w_title = strlen(result[i].title);
+        if ((int)strlen(result[i].genre) > w_genre) w_genre = strlen(result[i].genre);
+        if ((int)strlen(temp_dur) > w_dur) w_dur = strlen(temp_dur);
+        if ((int)strlen(temp_age) > w_age) w_age = strlen(temp_age);
+        if ((int)strlen(result[i].detail) > w_detail) w_detail = strlen(result[i].detail);
     }
 
-     int total_width = w_id + w_title + w_genre + w_dur + w_age + w_detail + 19;
+    int total_width = w_id + w_title + w_genre + w_dur + w_age + w_detail + 19;
 
     printf("\n");
     for(int i = 0; i < total_width; i++) printf("="); printf("\n");
@@ -2448,20 +2451,10 @@ void view_film() {
     printf("Total: %d film(s)\n", count);
     for(int i = 0; i < total_width; i++) printf("="); printf("\n\n");
 
-    // Mengganti system("pause") dengan prompt Back (0)
-    char input[50];
-    do {
-        printf("Type '0' to go back : ");
-        fgets(input, sizeof(input), stdin);
-        input[strcspn(input, "\n")] = '\0';
-        
-        if (strlen(input) == 0) {
-            printf("Input cannot be empty!\n");
-        } else if (strcmp(input, "0") != 0) {
-            printf("Invalid input! Please type '0' to go back.\n");
-        }
-    } while (strcmp(input, "0") != 0);
-
+    // ==========================================
+    // KEMBALI KE MENU (PRESS ANY KEY)
+    // ==========================================
+    system("pause");
     film_manage();
 }
 
@@ -2540,64 +2533,553 @@ void schedule_manage() {
     }
 }
 
-// EDIT STUDIO
+// ============================================================
+// !! EDIT STUDIO !!
+// ============================================================
 void edit_studio() {
+    Studio studios[100];
+    char buffer[1024];
+    int count = 0;
+
+    // ==========================================
+    // TAHAP 1: BACA DATA KE DALAM ARRAY
+    // ==========================================
+    FILE* file = fopen(studio_file, "r");
+    if (file != NULL) {
+        while (fgets(buffer, sizeof(buffer), file)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            if (strlen(buffer) == 0) continue;
+            if (sscanf(buffer, "%d=%[^=]=%d=%d=%d",
+                   &studios[count].id, studios[count].name,
+                   &studios[count].capacity, &studios[count].rows, &studios[count].cols) == 5) {
+                count++;
+            }
+        }
+        fclose(file);
+    }
+
+    if (count == 0) {
+        system("cls");
+        printf("============================================\n");
+        printf("                EDIT STUDIO                 \n");
+        printf("============================================\n");
+        printf("No studios available.\n");
+        system("pause");
+        schedule_manage();
+        return;
+    }
+
+    // ==========================================
+    // HITUNG LEBAR KOLOM DINAMIS
+    // ==========================================
+    int w_id = 2, w_name = 4, w_cap = 8, w_rows = 4, w_cols = 4;
+    for (int i = 0; i < count; i++) {
+        char t_id[20], t_cap[20], t_rows[20], t_cols[20];
+        sprintf(t_id, "%d", studios[i].id);
+        sprintf(t_cap, "%d", studios[i].capacity);
+        sprintf(t_rows, "%d", studios[i].rows);
+        sprintf(t_cols, "%d", studios[i].cols);
+
+        if ((int)strlen(t_id) > w_id) w_id = strlen(t_id);
+        if ((int)strlen(studios[i].name) > w_name) w_name = strlen(studios[i].name);
+        if ((int)strlen(t_cap) > w_cap) w_cap = strlen(t_cap);
+        if ((int)strlen(t_rows) > w_rows) w_rows = strlen(t_rows);
+        if ((int)strlen(t_cols) > w_cols) w_cols = strlen(t_cols);
+    }
+
+    #define PRINT_STUDIO_LINE() \
+        do { \
+            printf("+"); \
+            for(int k = 0; k < w_id + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_name + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_cap + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_rows + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_cols + 2; k++) printf("-"); printf("+\n"); \
+        } while(0)
+
+    char input[100];
+    char lower_input[100];
+    int edit_id = -1;
+    Studio target_studio;
+    int target_found = 0;
+
+    // ==========================================
+    // PAGE 1: PILIH STUDIO YANG INGIN DIEDIT
+    // ==========================================
+    do {
+        system("cls");
+        printf("=================================================================\n");
+        printf("                           EDIT STUDIO                           \n");
+        printf("=================================================================\n");
+
+        PRINT_STUDIO_LINE();
+        printf("| %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+               w_id, "ID", w_name, "Name", w_cap, "Capacity", w_rows, "Rows", w_cols, "Cols");
+        PRINT_STUDIO_LINE();
+
+        for (int i = 0; i < count; i++) {
+            char t_cap[20], t_rows[20], t_cols[20];
+            sprintf(t_cap, "%d", studios[i].capacity);
+            sprintf(t_rows, "%d", studios[i].rows);
+            sprintf(t_cols, "%d", studios[i].cols);
+
+            printf("| %-*d | %-*s | %-*s | %-*s | %-*s |\n",
+                   w_id, studios[i].id, w_name, studios[i].name,
+                   w_cap, t_cap, w_rows, t_rows, w_cols, t_cols);
+        }
+        PRINT_STUDIO_LINE();
+        
+        printf(" (Enter '0' to go back)\n");
+        printf("-----------------------------------------------------------------\n");
+        printf("Enter Studio ID or Name to edit : ");
+
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(input) == 0) {
+            printf("[ERROR] Input cannot be empty!\n");
+            system("pause");
+            continue;
+        }
+
+        // Konversi ke lowercase untuk pencarian string
+        for (int i = 0; input[i] != '\0'; i++) lower_input[i] = tolower(input[i]);
+        lower_input[strlen(input)] = '\0';
+
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i])) { is_num = 0; break; }
+        }
+
+        Studio matched[100];
+        int match_count = 0;
+
+        if (is_num) {
+            int input_id = atoi(input);
+            for (int i = 0; i < count; i++) {
+                if (studios[i].id == input_id) { matched[match_count++] = studios[i]; break; }
+            }
+        } else {
+            for (int i = 0; i < count; i++) {
+                char lower_name[100];
+                strcpy(lower_name, studios[i].name);
+                for (int j = 0; lower_name[j] != '\0'; j++) lower_name[j] = tolower(lower_name[j]);
+                if (strstr(lower_name, lower_input) != NULL) matched[match_count++] = studios[i];
+            }
+        }
+
+        if (match_count == 0) {
+            printf("[ERROR] Studio \"%s\" not found!\n", input);
+            system("pause");
+        } else if (match_count == 1) {
+            edit_id = matched[0].id;
+            target_studio = matched[0];
+            target_found = 1;
+        } else {
+            int resolved = 0;
+            do {
+                system("cls");
+                printf("============================================\n");
+                printf("      EDIT STUDIO - MULTIPLE MATCHES        \n");
+                printf("============================================\n");
+                for (int i = 0; i < match_count; i++) printf("ID: %-4d | Name: %s\n", matched[i].id, matched[i].name);
+                printf("--------------------------------------------\n");
+                printf("Enter EXACT ID (or '0' to go back) : ");
+                
+                char id_input[100];
+                fgets(id_input, sizeof(id_input), stdin);
+                id_input[strcspn(id_input, "\n")] = '\0';
+
+                if (strcmp(id_input, "0") == 0) { schedule_manage(); return; }
+                if (strlen(id_input) == 0) { printf("[ERROR] Empty input!\n"); system("pause"); continue; }
+
+                int id_is_num = 1;
+                for (int i = 0; id_input[i] != '\0'; i++) if (!isdigit(id_input[i])) id_is_num = 0;
+                if (!id_is_num) { printf("[ERROR] Enter a numeric ID.\n"); system("pause"); continue; }
+
+                int selected_id = atoi(id_input);
+                for (int i = 0; i < match_count; i++) {
+                    if (matched[i].id == selected_id) {
+                        edit_id = selected_id;
+                        target_studio = matched[i];
+                        resolved = 1; target_found = 1; break;
+                    }
+                }
+                if (!resolved) { printf("[ERROR] ID %d not in list!\n", selected_id); system("pause"); }
+            } while (!resolved);
+        }
+    } while (!target_found);
+
+
+    // ==========================================
+    // PAGE 2: EDIT NAMA STUDIO
+    // ==========================================
+    int name_done = 0;
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("          EDIT STUDIO ID: %d (NAME)         \n", edit_id);
+        printf("============================================\n");
+        printf("Leave blank (Press Enter) to keep current Name [%s]\n", target_studio.name);
+        printf("(Enter '0' to Cancel & Go Back)\n");
+        printf("--------------------------------------------\n");
+        printf("Enter Studio Name : ");
+
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(input) == 0) { 
+            name_done = 1; break; // Keep current
+        }
+
+        // Format Title Case
+        int capitalize_next = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (isspace(input[i])) { capitalize_next = 1; } 
+            else if (capitalize_next) { input[i] = toupper(input[i]); capitalize_next = 0; } 
+            else { input[i] = tolower(input[i]); }
+        }
+
+        // Cek Duplikat (kecuali studio ini sendiri)
+        int is_duplicate = 0;
+        for (int i = 0; i < count; i++) {
+            if (studios[i].id != edit_id) {
+                char temp_in[100], temp_ext[100];
+                strcpy(temp_in, input); strcpy(temp_ext, studios[i].name);
+                for(int j=0; temp_in[j]; j++) temp_in[j] = tolower(temp_in[j]);
+                for(int j=0; temp_ext[j]; j++) temp_ext[j] = tolower(temp_ext[j]);
+                
+                if (strcmp(temp_in, temp_ext) == 0) {
+                    is_duplicate = 1; break;
+                }
+            }
+        }
+
+        if (is_duplicate) {
+            printf("[ERROR] Studio name \"%s\" already exists!\n", input);
+            system("pause");
+        } else {
+            strcpy(target_studio.name, input);
+            name_done = 1;
+        }
+    } while (!name_done);
+
+
+    // ==========================================
+    // PAGE 3: EDIT ROWS (BARIS)
+    // ==========================================
+    int rows_done = 0;
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("          EDIT STUDIO ID: %d (ROWS)         \n", edit_id);
+        printf("============================================\n");
+        printf("Studio Name : %s\n", target_studio.name);
+        printf("--------------------------------------------\n");
+        printf("Leave blank (Press Enter) to keep current Rows [%d]\n", target_studio.rows);
+        printf("(Enter '0' to Cancel & Go Back)\n");
+        printf("--------------------------------------------\n");
+        printf("Enter Rows (Max 25) : ");
+
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+        if (strlen(input) == 0) { rows_done = 1; break; }
+
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) if (!isdigit(input[i])) { is_num = 0; break; }
+
+        if (is_num) {
+            int r = atoi(input);
+            if (r > 0 && r <= 25) { target_studio.rows = r; rows_done = 1; }
+            else { printf("[ERROR] Rows must be between 1 and 25!\n"); system("pause"); }
+        } else {
+            printf("[ERROR] Rows must be a valid number!\n");
+            system("pause");
+        }
+    } while (!rows_done);
+
+
+    // ==========================================
+    // PAGE 4: EDIT COLS (KOLOM)
+    // ==========================================
+    int cols_done = 0;
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("          EDIT STUDIO ID: %d (COLS)         \n", edit_id);
+        printf("============================================\n");
+        printf("Studio Name : %s\n", target_studio.name);
+        printf("Rows        : %d\n", target_studio.rows);
+        printf("--------------------------------------------\n");
+        printf("Leave blank (Press Enter) to keep current Cols [%d]\n", target_studio.cols);
+        printf("(Enter '0' to Cancel & Go Back)\n");
+        printf("--------------------------------------------\n");
+        printf("Enter Cols (Max 25) : ");
+
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+        if (strlen(input) == 0) { cols_done = 1; break; }
+
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) if (!isdigit(input[i])) { is_num = 0; break; }
+
+        if (is_num) {
+            int c = atoi(input);
+            if (c > 0 && c <= 25) { target_studio.cols = c; cols_done = 1; }
+            else { printf("[ERROR] Cols must be between 1 and 25!\n"); system("pause"); }
+        } else {
+            printf("[ERROR] Cols must be a valid number!\n");
+            system("pause");
+        }
+    } while (!cols_done);
+
+
+    // ==========================================
+    // TAHAP 5: KALKULASI & SIMPAN PERUBAHAN
+    // ==========================================
+    target_studio.capacity = target_studio.rows * target_studio.cols;
+
+    FILE* in  = fopen(studio_file, "r");
+    FILE* tmp = fopen("temp_studio.txt", "w");
+    if (in == NULL || tmp == NULL) { invalid_file(); return; }
+    
+    char sbuf[300];
+    while (fgets(sbuf, sizeof(sbuf), in)) {
+        sbuf[strcspn(sbuf, "\n")] = 0;
+        int id; sscanf(sbuf, "%d=", &id);
+        if (id == edit_id)
+            fprintf(tmp, "%d=%s=%d=%d=%d\n",
+                    target_studio.id, target_studio.name, target_studio.capacity,
+                    target_studio.rows, target_studio.cols);
+        else
+            fprintf(tmp, "%s\n", sbuf);
+    }
+    fclose(in); fclose(tmp);
+    remove(studio_file);
+    rename("temp_studio.txt", studio_file);
+
+
+    // ==========================================
+    // PAGE 6: TAMPILAN INVOICE / SUCCESS DETAIL
+    // ==========================================
     system("cls");
     printf("============================================\n");
-    printf("                EDIT STUDIO                 \n");
-    printf("============================================\n");
-    printf(" This feature is currently under development.\n");
+    printf("         Studio ID %d updated!              \n", edit_id);
     printf("--------------------------------------------\n");
+    printf("  Detail Studio:\n");
+    printf("  ID       : %d\n", target_studio.id);
+    printf("  Name     : %s\n", target_studio.name);
+    printf("  Rows     : %d\n", target_studio.rows);
+    printf("  Cols     : %d\n", target_studio.cols);
+    printf("  Capacity : %d (Auto: %d x %d)\n", target_studio.capacity, target_studio.rows, target_studio.cols);
+    printf("============================================\n");
     system("pause");
     schedule_manage();
 }
 
-// ADD STUDIO
+// ============================================================
+// !! ADD STUDIO !!
+// ============================================================
 void add_studio() {
-    system("cls");
-    printf("============================================\n");
-    printf("               ADD NEW STUDIO               \n");
-    printf("--------------------------------------------\n");
-
     Studio s;
+    int valid;
+    char input[300];
 
+    /* --- INPUT NAMA STUDIO --- */
     do {
+        system("cls");
+        printf("============================================\n");
+        printf("               ADD NEW STUDIO               \n");
+        printf(" (Enter '0' at any prompt to go back)\n");
+        printf("--------------------------------------------\n");
+
         printf("Studio Name : ");
-        scanf(" %[^\n]", s.name);
-        if (strlen(s.name) == 0) printf("Name cannot be empty!\n");
-    } while (strlen(s.name) == 0);
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
 
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+        
+        if (strlen(input) == 0) { 
+            printf("[ERROR] Name cannot be empty!\n");
+            system("pause");
+            valid = 0; 
+            continue;
+        }
+
+        // 1. Format ke Title Case (Kapital di awal setiap kata)
+        int capitalize_next = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (isspace(input[i])) {
+                capitalize_next = 1; 
+            } else if (capitalize_next) {
+                input[i] = toupper(input[i]);
+                capitalize_next = 0;
+            } else {
+                input[i] = tolower(input[i]);
+            }
+        }
+
+        // 2. Cek Duplikat di Database (Case-Insensitive)
+        int is_duplicate = 0;
+        FILE* check_fp = fopen(studio_file, "r");
+        if (check_fp != NULL) {
+            char s_buf[300];
+            while (fgets(s_buf, sizeof(s_buf), check_fp)) {
+                s_buf[strcspn(s_buf, "\n")] = 0;
+                if (strlen(s_buf) == 0) continue;
+                
+                Studio ext_s;
+                if (sscanf(s_buf, "%d=%[^=]=%d=%d=%d", 
+                           &ext_s.id, ext_s.name, 
+                           &ext_s.capacity, &ext_s.rows, &ext_s.cols) == 5) {
+                    
+                    char temp_in[100], temp_ext[100];
+                    strcpy(temp_in, input);
+                    strcpy(temp_ext, ext_s.name);
+                    
+                    for(int j = 0; temp_in[j]; j++) temp_in[j] = tolower(temp_in[j]);
+                    for(int j = 0; temp_ext[j]; j++) temp_ext[j] = tolower(temp_ext[j]);
+                    
+                    if (strcmp(temp_in, temp_ext) == 0) {
+                        is_duplicate = 1;
+                        break;
+                    }
+                }
+            }
+            fclose(check_fp);
+        }
+
+        if (is_duplicate) {
+            printf("[ERROR] Studio name \"%s\" already exists! Please try another.\n", input);
+            system("pause");
+            valid = 0;
+        } else {
+            strcpy(s.name, input); 
+            valid = 1;
+        }
+    } while (!valid);
+
+
+    /* --- INPUT ROWS (BARIS) --- */
     do {
+        system("cls");
+        printf("============================================\n");
+        printf("               ADD NEW STUDIO               \n");
+        printf(" (Enter '0' at any prompt to go back)\n");
+        printf("--------------------------------------------\n");
+        printf("Studio Name : %s\n", s.name);
+        printf("--------------------------------------------\n");
+
         printf("Rows        : ");
-        scanf("%d", &s.rows);
-        if (s.rows <= 0) printf("Rows must be greater than 0!\n");
-    } while (s.rows <= 0);
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
 
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+        
+        if (strlen(input) == 0) { 
+            printf("[ERROR] Rows cannot be empty!\n");
+            system("pause");
+            valid = 0; 
+            continue; 
+        }
+
+        valid = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i])) { valid = 0; break; }
+        }
+
+        if (valid) {
+            s.rows = atoi(input);
+            if (s.rows <= 0 || s.rows > 25) { 
+                printf("[ERROR] Rows must be between 1 and 25!\n");
+                system("pause");
+                valid = 0; 
+            }
+        } else {
+            printf("[ERROR] Rows must be a number!\n");
+            system("pause");
+        }
+    } while (!valid);
+
+
+    /* --- INPUT COLS (KOLOM) --- */
     do {
-        printf("Cols        : ");
-        scanf("%d", &s.cols);
-        if (s.cols <= 0) printf("Cols must be greater than 0!\n");
-    } while (s.cols <= 0);
+        system("cls");
+        printf("============================================\n");
+        printf("               ADD NEW STUDIO               \n");
+        printf(" (Enter '0' at any prompt to go back)\n");
+        printf("--------------------------------------------\n");
+        printf("Studio Name : %s\n", s.name);
+        printf("Rows        : %d\n", s.rows);
+        printf("--------------------------------------------\n");
 
+        printf("Cols        : ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+        
+        if (strlen(input) == 0) { 
+            printf("[ERROR] Cols cannot be empty!\n");
+            system("pause");
+            valid = 0; 
+            continue; 
+        }
+
+        valid = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i])) { valid = 0; break; }
+        }
+
+        if (valid) {
+            s.cols = atoi(input);
+            if (s.cols <= 0 || s.cols > 25) { 
+                printf("[ERROR] Cols must be between 1 and 25!\n");
+                system("pause");
+                valid = 0; 
+            }
+        } else {
+            printf("[ERROR] Cols must be a number!\n");
+            system("pause");
+        }
+    } while (!valid);
+
+
+    /* --- PROSES PENYIMPANAN --- */
     s.capacity = s.rows * s.cols;
     s.id = auto_id_studio();
-
-    printf("Capacity    : %d (auto = %d rows x %d cols)\n",
-           s.capacity, s.rows, s.cols);
 
     FILE* fp = fopen(studio_file, "a");
     if (fp == NULL) { invalid_file(); return; }
     fprintf(fp, "%d=%s=%d=%d=%d\n", s.id, s.name, s.capacity, s.rows, s.cols);
     fclose(fp);
 
+    /* --- PESAN SUKSES --- */
+    system("cls");
+    printf("============================================\n");
+    printf("        Studio added successfully!          \n");
     printf("--------------------------------------------\n");
-    printf("Studio \"%s\" added successfully! (ID: %d)\n", s.name, s.id);
+    printf("  ID       : %d\n", s.id);
+    printf("  Name     : %s\n", s.name);
+    printf("  Rows     : %d\n", s.rows);
+    printf("  Cols     : %d\n", s.cols);
+    printf("  Capacity : %d (Auto: %d x %d)\n", s.capacity, s.rows, s.cols);
     printf("============================================\n");
     system("pause");
     schedule_manage();
 }
 
-// VIEW ALL STUDIOS
+// ============================================================
+// !! VIEW ALL STUDIOS !!
+// ============================================================
 void view_studios() {
     system("cls");
     Studio result[100];
@@ -2642,23 +3124,25 @@ void view_studios() {
         sprintf(t_rows, "%d", result[i].rows);
         sprintf(t_cols, "%d", result[i].cols);
 
-        if (strlen(t_id) > w_id) w_id = strlen(t_id);
-        if (strlen(result[i].name) > w_name) w_name = strlen(result[i].name);
-        if (strlen(t_cap) > w_cap) w_cap = strlen(t_cap);
-        if (strlen(t_rows) > w_rows) w_rows = strlen(t_rows);
-        if (strlen(t_cols) > w_cols) w_cols = strlen(t_cols);
+        if ((int)strlen(t_id) > w_id) w_id = strlen(t_id);
+        if ((int)strlen(result[i].name) > w_name) w_name = strlen(result[i].name);
+        if ((int)strlen(t_cap) > w_cap) w_cap = strlen(t_cap);
+        if ((int)strlen(t_rows) > w_rows) w_rows = strlen(t_rows);
+        if ((int)strlen(t_cols) > w_cols) w_cols = strlen(t_cols);
     }
 
     int total_width = w_id + w_name + w_cap + w_rows + w_cols + 16;
 
     // Macro untuk mencetak garis tabel
     #define PRINT_STUDIO_LINE() \
-        printf("+"); \
-        for(int k = 0; k < w_id + 2; k++) printf("-"); printf("+"); \
-        for(int k = 0; k < w_name + 2; k++) printf("-"); printf("+"); \
-        for(int k = 0; k < w_cap + 2; k++) printf("-"); printf("+"); \
-        for(int k = 0; k < w_rows + 2; k++) printf("-"); printf("+"); \
-        for(int k = 0; k < w_cols + 2; k++) printf("-"); printf("+\n")
+        do { \
+            printf("+"); \
+            for(int k = 0; k < w_id + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_name + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_cap + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_rows + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_cols + 2; k++) printf("-"); printf("+\n"); \
+        } while(0)
 
     // ==========================================
     // TAHAP 3: CETAK TABEL
@@ -2705,254 +3189,840 @@ void view_studios() {
     printf("\n");
 
     // ==========================================
-    // TAHAP 4: FITUR BACK (0)
+    // TAHAP 4: KEMBALI KE MENU (PRESS ANY KEY)
     // ==========================================
-    char input[50];
-    do {
-        printf("Type '0' to go back : ");
-        fgets(input, sizeof(input), stdin);
-        input[strcspn(input, "\n")] = '\0';
-        
-        if (strlen(input) == 0) {
-            printf("Input cannot be empty!\n");
-        } else if (strcmp(input, "0") != 0) {
-            printf("Invalid input! Please type '0' to go back.\n");
-        }
-    } while (strcmp(input, "0") != 0);
+    system("pause");
     schedule_manage();
 }
 
-// DELETE STUDIO
+// ============================================================
+// !! DELETE STUDIO !!
+// ============================================================
 void del_studio() {
-    system("cls");
-    printf("============================================\n");
-    printf("               DELETE STUDIO                \n");
-    printf("--------------------------------------------\n");
-    print_all_studios();
-    printf("============================================\n");
+    Studio studios[100];
+    char buffer[1024];
+    int count = 0;
 
-    FILE* fp = fopen(studio_file, "r");
-    if (fp == NULL) {
+    // ==========================================
+    // TAHAP 1: BACA DATA & CEK KETERSEDIAAN
+    // ==========================================
+    FILE* file = fopen(studio_file, "r");
+    if (file != NULL) {
+        while (fgets(buffer, sizeof(buffer), file)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            if (strlen(buffer) == 0) continue;
+            if (sscanf(buffer, "%d=%[^=]=%d=%d=%d",
+                   &studios[count].id, studios[count].name,
+                   &studios[count].capacity, &studios[count].rows, &studios[count].cols) == 5) {
+                count++;
+            }
+        }
+        fclose(file);
+    }
+
+    if (count == 0) {
+        system("cls");
+        printf("============================================\n");
+        printf("               DELETE STUDIO                \n");
+        printf("============================================\n");
         printf("No studios available.\n");
+        printf("============================================\n");
         system("pause");
         schedule_manage();
         return;
     }
-    char buf[10];
-    int empty = (fgets(buf, sizeof(buf), fp) == NULL);
-    fclose(fp);
-    if (empty) {
-        printf("No studios available.\n");
+
+    // [Hitung Lebar Kolom Dinamis]
+    int w_id = 2, w_name = 4, w_cap = 8, w_rows = 4, w_cols = 4;
+    for (int i = 0; i < count; i++) {
+        char t_id[20], t_cap[20], t_rows[20], t_cols[20];
+        sprintf(t_id, "%d", studios[i].id);
+        sprintf(t_cap, "%d", studios[i].capacity);
+        sprintf(t_rows, "%d", studios[i].rows);
+        sprintf(t_cols, "%d", studios[i].cols);
+
+        if ((int)strlen(t_id) > w_id) w_id = strlen(t_id);
+        if ((int)strlen(studios[i].name) > w_name) w_name = strlen(studios[i].name);
+        if ((int)strlen(t_cap) > w_cap) w_cap = strlen(t_cap);
+        if ((int)strlen(t_rows) > w_rows) w_rows = strlen(t_rows);
+        if ((int)strlen(t_cols) > w_cols) w_cols = strlen(t_cols);
+    }
+
+    #define PRINT_STUDIO_LINE() \
+        do { \
+            printf("+"); \
+            for(int k = 0; k < w_id + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_name + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_cap + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_rows + 2; k++) printf("-"); printf("+"); \
+            for(int k = 0; k < w_cols + 2; k++) printf("-"); printf("+\n"); \
+        } while(0)
+
+    char input[100];
+    char lower_input[100];
+    int target_id = -1;
+    Studio matched[100];
+    int match_count = 0;
+
+    // ==========================================
+    // PAGE 1 : PILIH STUDIO
+    // ==========================================
+    do {
+        match_count = 0;
+        system("cls");
+        printf("=================================================================\n");
+        printf("                          DELETE STUDIO                          \n");
+        printf("=================================================================\n");
+
+        PRINT_STUDIO_LINE();
+        printf("| %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+               w_id, "ID", w_name, "Name", w_cap, "Capacity", w_rows, "Rows", w_cols, "Cols");
+        PRINT_STUDIO_LINE();
+
+        for (int i = 0; i < count; i++) {
+            char t_cap[20], t_rows[20], t_cols[20];
+            sprintf(t_cap, "%d", studios[i].capacity);
+            sprintf(t_rows, "%d", studios[i].rows);
+            sprintf(t_cols, "%d", studios[i].cols);
+
+            printf("| %-*d | %-*s | %-*s | %-*s | %-*s |\n",
+                   w_id, studios[i].id,
+                   w_name, studios[i].name,
+                   w_cap, t_cap,
+                   w_rows, t_rows,
+                   w_cols, t_cols);
+        }
+        PRINT_STUDIO_LINE();
+        
+        printf(" (Enter '0' to go back)\n");
+        printf("-----------------------------------------------------------------\n");
+        printf("Enter Studio ID or Name to delete : ");
+
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(input) == 0) {
+            printf("[ERROR] Input cannot be empty!\n");
+            system("pause");
+            continue;
+        }
+
+        // Konversi ke lowercase untuk pencarian string
+        for (int i = 0; input[i] != '\0'; i++) {
+            lower_input[i] = tolower(input[i]);
+        }
+        lower_input[strlen(input)] = '\0';
+
+        // Deteksi apakah input berupa angka murni
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i])) { is_num = 0; break; }
+        }
+
+        if (is_num) {
+            int input_id = atoi(input);
+            for (int i = 0; i < count; i++) {
+                if (studios[i].id == input_id) {
+                    matched[match_count] = studios[i];
+                    match_count++;
+                    break;
+                }
+            }
+        } else {
+            for (int i = 0; i < count; i++) {
+                char lower_name[100];
+                strcpy(lower_name, studios[i].name);
+                for (int j = 0; lower_name[j] != '\0'; j++) {
+                    lower_name[j] = tolower(lower_name[j]);
+                }
+                if (strstr(lower_name, lower_input) != NULL) {
+                    matched[match_count] = studios[i];
+                    match_count++;
+                }
+            }
+        }
+
+        if (match_count == 0) {
+            printf("[ERROR] Studio \"%s\" not found! Please try again.\n", input);
+            system("pause");
+        } else if (match_count == 1) {
+            target_id = matched[0].id;
+        } else {
+            // ==========================================
+            // RESOLUSI AMBIGUITAS (Jika lebih dari 1 mirip)
+            // ==========================================
+            int resolved = 0;
+            do {
+                system("cls");
+                printf("============================================\n");
+                printf("     DELETE STUDIO - MULTIPLE MATCHES       \n");
+                printf("============================================\n");
+                printf("Multiple studios found for \"%s\":\n", input);
+                printf("--------------------------------------------\n");
+                for (int i = 0; i < match_count; i++) {
+                    printf("ID: %-4d | Name: %s\n", matched[i].id, matched[i].name);
+                }
+                printf("--------------------------------------------\n");
+                printf("Enter the EXACT ID from the list above\n");
+                printf(" (or '0' to go back) : ");
+
+                char id_input[100];
+                fgets(id_input, sizeof(id_input), stdin);
+                id_input[strcspn(id_input, "\n")] = '\0';
+
+                if (strcmp(id_input, "0") == 0) { schedule_manage(); return; }
+
+                if (strlen(id_input) == 0) {
+                    printf("[ERROR] Input cannot be empty!\n");
+                    system("pause");
+                    continue;
+                }
+
+                int id_is_num = 1;
+                for (int i = 0; id_input[i] != '\0'; i++) {
+                    if (!isdigit(id_input[i])) { id_is_num = 0; break; }
+                }
+
+                if (!id_is_num) {
+                    printf("[ERROR] Invalid input! Please enter a numeric ID.\n");
+                    system("pause");
+                    continue;
+                }
+
+                int selected_id = atoi(id_input);
+                for (int i = 0; i < match_count; i++) {
+                    if (matched[i].id == selected_id) {
+                        target_id = selected_id;
+                        resolved = 1;
+                        break;
+                    }
+                }
+
+                if (!resolved) {
+                    printf("[ERROR] ID %d is not on the list! Please type the exact ID.\n", selected_id);
+                    system("pause");
+                }
+            } while (!resolved);
+        }
+    } while (target_id == -1);
+
+
+    // ==========================================
+    // TAHAP 2: CEK DEPENDENCY (Jadwal Aktif)
+    // ==========================================
+    Studio target_studio;
+    find_studio(target_id, &target_studio);
+
+    if (studio_in_use(target_id)) {
+        printf("-----------------------------------------------------------------\n");
+        printf("[ERROR] Cannot delete studio \"%s\"!\n", target_studio.name);
+        printf("This studio is currently being used by active schedules.\n");
+        printf("Please delete the related schedules before deleting this studio.\n");
+        printf("-----------------------------------------------------------------\n");
         system("pause");
         schedule_manage();
         return;
     }
 
-    char input[10];
-    int del_id, valid;
+
+    // ==========================================
+    // PAGE 2 : KONFIRMASI Y/N
+    // ==========================================
+    char confirm_str[10];
+    char confirm_char;
+    int conf_valid = 0;
 
     do {
-        printf("Enter Studio ID to delete : ");
-        scanf("%s", input);
-        valid = 1;
-        for (int i = 0; input[i] != '\0'; i++)
-            if (!isdigit(input[i])) { valid = 0; break; }
-        if (!valid) printf("ID must be a number!\n");
-    } while (!valid);
-
-    del_id = atoi(input);
-
-    Studio s;
-    if (!find_studio(del_id, &s)) {
-        printf("Studio with ID %d not found!\n", del_id);
-        system("pause");
-        schedule_manage();
-        return;
-    }
-
-    if (studio_in_use(del_id)) {
+        system("cls");
+        printf("============================================\n");
+        printf("            CONFIRM DELETION                \n");
+        printf("============================================\n");
+        printf("  Detail Studio:\n");
+        printf("  ID       : %d\n", target_studio.id);
+        printf("  Name     : %s\n", target_studio.name);
+        printf("  Capacity : %d\n", target_studio.capacity);
+        printf("  Rows     : %d\n", target_studio.rows);
+        printf("  Cols     : %d\n", target_studio.cols);
         printf("--------------------------------------------\n");
-        printf("Cannot delete \"%s\"!\n", s.name);
-        printf("This studio is still used by active schedules.\n");
-        printf("Please delete the related schedules first.\n");
-        printf("--------------------------------------------\n");
-        system("pause");
-        schedule_manage();
-        return;
-    }
+        printf("Are you sure you want to delete this studio?\n");
+        printf("Type (Y/N) or '0' to go back : ");
 
-    printf("Are you sure you want to delete studio \"%s\"? (y/n) : ", s.name);
-    char confirm;
-    scanf(" %c", &confirm);
-    if (confirm != 'y' && confirm != 'Y') {
+        fgets(confirm_str, sizeof(confirm_str), stdin);
+        confirm_str[strcspn(confirm_str, "\n")] = '\0';
+
+        if (strcmp(confirm_str, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(confirm_str) == 0) {
+            printf("[ERROR] Input cannot be empty! Enter Y or N.\n");
+            system("pause");
+            continue;
+        }
+
+        if (strcmp(confirm_str, "Y") == 0 || strcmp(confirm_str, "y") == 0) {
+            confirm_char = 'y';
+            conf_valid = 1;
+        } else if (strcmp(confirm_str, "N") == 0 || strcmp(confirm_str, "n") == 0) {
+            confirm_char = 'n';
+            conf_valid = 1;
+        } else {
+            printf("[ERROR] Invalid input! Enter Y or N.\n");
+            system("pause");
+        }
+    } while (!conf_valid);
+
+    if (confirm_char == 'n') {
         printf("Deletion cancelled.\n");
         system("pause");
         schedule_manage();
         return;
     }
 
+
+    // ==========================================
+    // PAGE 3 : KONFIRMASI PASSWORD ADMIN
+    // ==========================================
+    char input_pass[100];
+    char confirm_pass_input[100]; 
+    int pass_match = 0;
+
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("         ADMIN PASSWORD CONFIRMATION        \n");
+        printf("============================================\n");
+        printf(" [WARNING] This action cannot be undone!    \n");
+        printf("--------------------------------------------\n");
+        printf(" (Enter '0' at any prompt to go back)\n");
+        printf("--------------------------------------------\n");
+
+        printf("Enter Admin password : ");
+        fgets(input_pass, sizeof(input_pass), stdin);
+        input_pass[strcspn(input_pass, "\n")] = '\0';
+
+        if (strcmp(input_pass, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(input_pass) == 0) {
+            printf("[ERROR] Password cannot be empty!\n");
+            system("pause");
+            continue;
+        }
+
+        printf("Confirm Admin password : ");
+        fgets(confirm_pass_input, sizeof(confirm_pass_input), stdin);
+        confirm_pass_input[strcspn(confirm_pass_input, "\n")] = '\0';
+
+        if (strcmp(confirm_pass_input, "0") == 0) { schedule_manage(); return; }
+
+        if (strcmp(input_pass, confirm_pass_input) != 0) {
+            printf("\n[ERROR] Passwords do not match! Please try again.\n");
+            system("pause");
+            continue;
+        }
+
+        // Hardcoded admin password validation
+        if (strcmp(input_pass, "admin123@") != 0) {
+            printf("\n[ERROR] Incorrect password! Please try again.\n");
+            system("pause");
+            continue;
+        }
+
+        pass_match = 1; 
+    } while (!pass_match);
+
+
+    // ==========================================
+    // PAGE 4 : PROSES PENGHAPUSAN FILE
+    // ==========================================
     FILE* in  = fopen(studio_file, "r");
     FILE* tmp = fopen("temp_studio.txt", "w");
     if (in == NULL || tmp == NULL) { invalid_file(); return; }
 
-    char buffer[200];
-    while (fgets(buffer, sizeof(buffer), in)) {
-        buffer[strcspn(buffer, "\n")] = 0;
-        int id; sscanf(buffer, "%d=", &id);
-        if (id != del_id) fprintf(tmp, "%s\n", buffer);
+    char sbuf[300];
+    while (fgets(sbuf, sizeof(sbuf), in)) {
+        sbuf[strcspn(sbuf, "\n")] = 0;
+        if(strlen(sbuf) == 0) continue;
+        
+        int sid; 
+        sscanf(sbuf, "%d=", &sid);
+        if (sid != target_id) {
+            fprintf(tmp, "%s\n", sbuf);
+        }
     }
-    fclose(in); fclose(tmp);
+    fclose(in); 
+    fclose(tmp);
     remove(studio_file);
     rename("temp_studio.txt", studio_file);
 
-    printf("Studio \"%s\" deleted successfully!\n", s.name);
+
+    // ==========================================
+    // PAGE 5 : SUCCESS INVOICE
+    // ==========================================
+    system("cls");
+    printf("============================================\n");
+    printf("               STUDIO DELETED               \n");
+    printf("============================================\n");
+    printf("\n");
+    printf("   Studio \"%s\" (ID: %d)     \n", target_studio.name, target_id);
+    printf("       deleted successfully!                \n");
+    printf("\n");
+    printf("============================================\n");
     system("pause");
     schedule_manage();
 }
 
-// ADD SCHEDULE
+// ============================================================
+// !! ADD SCHEDULE !!
+// ============================================================
 void add_schedule() {
-    system("cls");
-    printf("============================================\n");
-    printf("               ADD SCHEDULE                 \n");
-    printf("--------------------------------------------\n");
+    char input[100];
+    char lower_input[100];
+    int valid;
 
+    /* ==========================================
+       STEP 1: PILIH FILM (Dynamic Table & Search)
+       ========================================== */
     Film all_films[200];
     int film_count = 0;
     btree_inorder(film_tree, all_films, &film_count);
+
     if (film_count == 0) {
+        system("cls");
+        printf("============================================\n");
+        printf("               ADD SCHEDULE                 \n");
+        printf("============================================\n");
         printf("No films available. Please add a film first.\n");
         system("pause");
         schedule_manage();
         return;
     }
 
-    Schedule sch;
-    char input[20];
-    int valid;
+    int w_id = 2, w_title = 5, w_genre = 5, w_dur = 8, w_age = 3;
+    for (int i = 0; i < film_count; i++) {
+        char temp_id[20], temp_dur[20], temp_age[20];
+        sprintf(temp_id, "%d", all_films[i].id);
+        sprintf(temp_dur, "%d", all_films[i].duration);
+        sprintf(temp_age, "%d+", all_films[i].age_rating);
 
-    // Pilih Film
-    printf("=== SELECT FILM ===\n");
-    print_all_films_simple();
-    printf("--------------------------------------------\n");
+        if ((int)strlen(temp_id) > w_id) w_id = strlen(temp_id);
+        if ((int)strlen(all_films[i].title) > w_title) w_title = strlen(all_films[i].title);
+        if ((int)strlen(all_films[i].genre) > w_genre) w_genre = strlen(all_films[i].genre);
+        if ((int)strlen(temp_dur) > w_dur) w_dur = strlen(temp_dur);
+        if ((int)strlen(temp_age) > w_age) w_age = strlen(temp_age);
+    }
+
+    int film_id = -1;
+    Film* selected_film = NULL;
+
     do {
-        printf("Enter Film ID : ");
-        scanf("%s", input);
-        valid = 1;
-        for (int i = 0; input[i] != '\0'; i++)
-            if (!isdigit(input[i])) { valid = 0; break; }
-        if (!valid) { printf("ID must be a number!\n"); continue; }
-        sch.film_id = atoi(input);
-        if (btree_search(film_tree, sch.film_id) == NULL) {
-            printf("Film with ID %d not found!\n", sch.film_id);
-            valid = 0;
+        system("cls");
+        printf("======================================================================================================\n");
+        printf("                                              ADD SCHEDULE                                            \n");
+        printf("======================================================================================================\n");
+        printf("\n[ STEP 1 ] Select Film\n");
+
+        printf("+"); for(int k=0; k<w_id+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_title+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_genre+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_dur+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_age+2; k++) printf("-"); printf("+\n");
+
+        printf("| %-*s | %-*s | %-*s | %-*s | %-*s |\n", w_id, "ID", w_title, "Title", w_genre, "Genre", w_dur, "Duration", w_age, "Age");
+
+        printf("+"); for(int k=0; k<w_id+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_title+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_genre+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_dur+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_age+2; k++) printf("-"); printf("+\n");
+
+        for (int i = 0; i < film_count; i++) {
+            char temp_dur[20], temp_age[20];
+            sprintf(temp_dur, "%d", all_films[i].duration);
+            sprintf(temp_age, "%d+", all_films[i].age_rating);
+            printf("| %-*d | %-*s | %-*s | %-*s | %-*s |\n", 
+                   w_id, all_films[i].id, w_title, all_films[i].title, w_genre, all_films[i].genre, w_dur, temp_dur, w_age, temp_age);
         }
-    } while (!valid);
 
-    Film* selected_film = btree_search(film_tree, sch.film_id);
+        printf("+"); for(int k=0; k<w_id+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_title+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_genre+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_dur+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_age+2; k++) printf("-"); printf("+\n");
 
-    // Pilih Studio
-    printf("\n=== SELECT STUDIO ===\n");
-    print_all_studios();
-    printf("--------------------------------------------\n");
+        printf("Enter Film ID or Title (Type '0' to Cancel) : ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
 
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+        if (strlen(input) == 0) { printf("[ERROR] Input cannot be empty!\n"); system("pause"); continue; }
+
+        for (int i = 0; input[i] != '\0'; i++) lower_input[i] = tolower(input[i]);
+        lower_input[strlen(input)] = '\0';
+
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i])) { is_num = 0; break; }
+        }
+
+        Film matched[200];
+        int match_count = 0;
+
+        if (is_num) {
+            int input_id = atoi(input);
+            for (int i = 0; i < film_count; i++) {
+                if (all_films[i].id == input_id) {
+                    matched[match_count++] = all_films[i];
+                    break;
+                }
+            }
+        } else {
+            for (int i = 0; i < film_count; i++) {
+                char lower_title[100];
+                strcpy(lower_title, all_films[i].title);
+                for (int j = 0; lower_title[j] != '\0'; j++) lower_title[j] = tolower(lower_title[j]);
+                if (strstr(lower_title, lower_input) != NULL) {
+                    matched[match_count++] = all_films[i];
+                }
+            }
+        }
+
+        if (match_count == 0) {
+            printf("[ERROR] Film \"%s\" not found!\n", input);
+            system("pause");
+        } else if (match_count == 1) {
+            film_id = matched[0].id;
+        } else {
+            int resolved = 0;
+            do {
+                system("cls");
+                printf("============================================\n");
+                printf("        SELECT FILM - MULTIPLE MATCHES      \n");
+                printf("============================================\n");
+                for (int i = 0; i < match_count; i++) {
+                    printf("ID: %-4d | Title: %s\n", matched[i].id, matched[i].title);
+                }
+                printf("--------------------------------------------\n");
+                printf("Enter EXACT ID (or '0' to go back) : ");
+                
+                char id_input[100];
+                fgets(id_input, sizeof(id_input), stdin);
+                id_input[strcspn(id_input, "\n")] = '\0';
+
+                if (strcmp(id_input, "0") == 0) { schedule_manage(); return; }
+                if (strlen(id_input) == 0) { printf("[ERROR] Empty input!\n"); system("pause"); continue; }
+
+                int id_is_num = 1;
+                for (int i = 0; id_input[i] != '\0'; i++) if (!isdigit(id_input[i])) id_is_num = 0;
+
+                if (!id_is_num) { printf("[ERROR] Enter a numeric ID.\n"); system("pause"); continue; }
+
+                int selected_id = atoi(id_input);
+                for (int i = 0; i < match_count; i++) {
+                    if (matched[i].id == selected_id) {
+                        film_id = selected_id;
+                        resolved = 1;
+                        break;
+                    }
+                }
+                if (!resolved) { printf("[ERROR] ID %d not in list!\n", selected_id); system("pause"); }
+            } while (!resolved);
+        }
+
+        if (film_id != -1) {
+            selected_film = btree_search(film_tree, film_id);
+            if (selected_film == NULL) film_id = -1;
+        }
+    } while (film_id == -1);
+
+
+    /* ==========================================
+       STEP 2: PILIH STUDIO (Dynamic Table & Search)
+       ========================================== */
+    Studio all_studios[100];
+    int studio_count = 0;
     FILE* sfp = fopen(studio_file, "r");
-    if (sfp == NULL) {
+    if (sfp != NULL) {
+        char sbuf[300];
+        while (fgets(sbuf, sizeof(sbuf), sfp)) {
+            sbuf[strcspn(sbuf, "\n")] = 0;
+            if (strlen(sbuf) == 0) continue;
+            if (sscanf(sbuf, "%d=%[^=]=%d=%d=%d", &all_studios[studio_count].id, all_studios[studio_count].name,
+                       &all_studios[studio_count].capacity, &all_studios[studio_count].rows, &all_studios[studio_count].cols) == 5) {
+                studio_count++;
+            }
+        }
+        fclose(sfp);
+    }
+
+    if (studio_count == 0) {
+        system("cls");
         printf("No studios available. Please add a studio first.\n");
         system("pause");
         schedule_manage();
         return;
     }
-    char sbuf[10];
-    int no_studio = (fgets(sbuf, sizeof(sbuf), sfp) == NULL);
-    fclose(sfp);
-    if (no_studio) {
-        printf("No studios available. Please add a studio first.\n");
-        system("pause");
-        schedule_manage();
-        return;
+
+    int w_sid = 2, w_sname = 4, w_cap = 8;
+    for (int i = 0; i < studio_count; i++) {
+        char t_id[20], t_cap[20];
+        sprintf(t_id, "%d", all_studios[i].id);
+        sprintf(t_cap, "%d", all_studios[i].capacity);
+        if ((int)strlen(t_id) > w_sid) w_sid = strlen(t_id);
+        if ((int)strlen(all_studios[i].name) > w_sname) w_sname = strlen(all_studios[i].name);
+        if ((int)strlen(t_cap) > w_cap) w_cap = strlen(t_cap);
     }
 
-    do {
-        printf("Enter Studio ID : ");
-        scanf("%s", input);
-        valid = 1;
-        for (int i = 0; input[i] != '\0'; i++)
-            if (!isdigit(input[i])) { valid = 0; break; }
-        if (!valid) { printf("ID must be a number!\n"); continue; }
-        sch.studio_id = atoi(input);
-        if (!find_studio(sch.studio_id, NULL)) {
-            printf("Studio with ID %d not found!\n", sch.studio_id);
-            valid = 0;
-        }
-    } while (!valid);
+    int studio_id = -1;
+    Studio selected_studio;
 
-    // Input Tanggal
-    printf("\n=== DATE & TIME ===\n");
     do {
-        printf("Date (YYYY-MM-DD) : ");
-        scanf("%s", sch.date);
-        if (!validate_date(sch.date)) {
-            printf("Invalid date! Format must be YYYY-MM-DD.\n");
-        }
-    } while (!validate_date(sch.date));
+        system("cls");
+        printf("======================================================================================================\n");
+        printf("                                              ADD SCHEDULE                                            \n");
+        printf("======================================================================================================\n");
+        printf("\n[ STEP 2 ] Select Studio for \"%s\"\n", selected_film->title);
 
-    // Input Jam + Cek Bentrok
+        printf("+"); for(int k=0; k<w_sid+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_sname+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_cap+2; k++) printf("-"); printf("+\n");
+
+        printf("| %-*s | %-*s | %-*s |\n", w_sid, "ID", w_sname, "Name", w_cap, "Capacity");
+
+        printf("+"); for(int k=0; k<w_sid+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_sname+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_cap+2; k++) printf("-"); printf("+\n");
+
+        for (int i = 0; i < studio_count; i++) {
+            char t_cap[20]; sprintf(t_cap, "%d", all_studios[i].capacity);
+            printf("| %-*d | %-*s | %-*s |\n", w_sid, all_studios[i].id, w_sname, all_studios[i].name, w_cap, t_cap);
+        }
+
+        printf("+"); for(int k=0; k<w_sid+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_sname+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_cap+2; k++) printf("-"); printf("+\n");
+
+        printf("Enter Studio ID or Name (Type '0' to Cancel) : ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+        if (strlen(input) == 0) { printf("[ERROR] Input cannot be empty!\n"); system("pause"); continue; }
+
+        for (int i = 0; input[i] != '\0'; i++) lower_input[i] = tolower(input[i]);
+        lower_input[strlen(input)] = '\0';
+
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) if (!isdigit(input[i])) { is_num = 0; break; }
+
+        Studio matched[100];
+        int match_count = 0;
+
+        if (is_num) {
+            int input_id = atoi(input);
+            for (int i = 0; i < studio_count; i++) {
+                if (all_studios[i].id == input_id) {
+                    matched[match_count++] = all_studios[i];
+                    break;
+                }
+            }
+        } else {
+            for (int i = 0; i < studio_count; i++) {
+                char lower_name[100]; strcpy(lower_name, all_studios[i].name);
+                for (int j = 0; lower_name[j] != '\0'; j++) lower_name[j] = tolower(lower_name[j]);
+                if (strstr(lower_name, lower_input) != NULL) matched[match_count++] = all_studios[i];
+            }
+        }
+
+        if (match_count == 0) {
+            printf("[ERROR] Studio \"%s\" not found!\n", input);
+            system("pause");
+        } else if (match_count == 1) {
+            studio_id = matched[0].id;
+            selected_studio = matched[0];
+        } else {
+            int resolved = 0;
+            do {
+                system("cls");
+                printf("============================================\n");
+                printf("       SELECT STUDIO - MULTIPLE MATCHES     \n");
+                printf("============================================\n");
+                for (int i = 0; i < match_count; i++) printf("ID: %-4d | Name: %s\n", matched[i].id, matched[i].name);
+                printf("--------------------------------------------\n");
+                printf("Enter EXACT ID (or '0' to go back) : ");
+                
+                char id_input[100];
+                fgets(id_input, sizeof(id_input), stdin);
+                id_input[strcspn(id_input, "\n")] = '\0';
+
+                if (strcmp(id_input, "0") == 0) { schedule_manage(); return; }
+                if (strlen(id_input) == 0) { printf("[ERROR] Empty input!\n"); system("pause"); continue; }
+
+                int id_is_num = 1;
+                for (int i = 0; id_input[i] != '\0'; i++) if (!isdigit(id_input[i])) id_is_num = 0;
+                if (!id_is_num) { printf("[ERROR] Enter a numeric ID.\n"); system("pause"); continue; }
+
+                int selected_id = atoi(id_input);
+                for (int i = 0; i < match_count; i++) {
+                    if (matched[i].id == selected_id) {
+                        studio_id = selected_id;
+                        selected_studio = matched[i];
+                        resolved = 1;
+                        break;
+                    }
+                }
+                if (!resolved) { printf("[ERROR] ID %d not in list!\n", selected_id); system("pause"); }
+            } while (!resolved);
+        }
+    } while (studio_id == -1);
+
+
+    /* ==========================================
+       STEP 3: TANGGAL & JAM (Dengan Validasi Fgets)
+       ========================================== */
+    Schedule sch;
+    sch.film_id = film_id;
+    sch.studio_id = studio_id;
+
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("            ADD SCHEDULE - DATE             \n");
+        printf("============================================\n");
+        printf("  Film   : %s\n", selected_film->title);
+        printf("  Studio : %s\n", selected_studio.name);
+        printf("--------------------------------------------\n");
+        printf("Date (YYYY-MM-DD) ['0' to cancel] : ");
+        
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+        
+        if (!validate_date(input)) {
+            printf("[ERROR] Invalid date! Format must be YYYY-MM-DD.\n");
+            system("pause");
+        } else {
+            strcpy(sch.date, input);
+            break;
+        }
+    } while (1);
+
     int conflict_id;
     do {
-        do {
-            printf("Time (HH:MM)      : ");
-            scanf("%s", sch.time);
-            if (!validate_time(sch.time)) {
-                printf("Invalid time! Format must be HH:MM (00:00-23:59).\n");
-            }
-        } while (!validate_time(sch.time));
+        system("cls");
+        printf("============================================\n");
+        printf("            ADD SCHEDULE - TIME             \n");
+        printf("============================================\n");
+        printf("  Film   : %s\n", selected_film->title);
+        printf("  Studio : %s\n", selected_studio.name);
+        printf("  Date   : %s\n", sch.date);
+        printf("--------------------------------------------\n");
+        printf("Time (HH:MM) ['0' to cancel] : ");
+        
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
 
-        conflict_id = check_schedule_conflict(
-            sch.studio_id, sch.date, sch.time,
-            selected_film->duration, -1);
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+
+        if (!validate_time(input)) {
+            printf("[ERROR] Invalid time! Format must be HH:MM (00:00-23:59).\n");
+            system("pause");
+            continue;
+        }
+
+        conflict_id = check_schedule_conflict(sch.studio_id, sch.date, input, selected_film->duration, -1);
 
         if (conflict_id != -1) {
             Schedule conflict_sch;
             find_schedule(conflict_id, &conflict_sch);
-            Film*  cf = btree_search(film_tree, conflict_sch.film_id);
-            Studio cs; find_studio(conflict_sch.studio_id, &cs);
+            Film* cf = btree_search(film_tree, conflict_sch.film_id);
             char end_time_str[10];
             int end_min = time_to_minutes(conflict_sch.time) + (cf ? cf->duration : 0);
             minutes_to_time_str(end_min, end_time_str);
-            printf("SCHEDULE CONFLICT detected! (ID %d: %s, %s-%s)\n",
-                   conflict_id, cf ? cf->title : "?",
-                   conflict_sch.time, end_time_str);
+            
+            printf("\n[ERROR] SCHEDULE CONFLICT DETECTED!\n");
+            printf("Studio is occupied by: [ID %d] %s (%s - %s)\n", conflict_id, cf ? cf->title : "?", conflict_sch.time, end_time_str);
             printf("Please enter a different time.\n");
+            system("pause");
+        } else {
+            strcpy(sch.time, input);
         }
     } while (conflict_id != -1);
 
-    // Input Harga
-    printf("\n=== PRICE ===\n");
-    do {
-        printf("Price (Rp) : ");
-        scanf("%f", &sch.price);
-        if (sch.price <= 0) printf("Price must be greater than 0!\n");
-    } while (sch.price <= 0);
 
+    /* ==========================================
+       STEP 4: HARGA
+       ========================================== */
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("            ADD SCHEDULE - PRICE            \n");
+        printf("============================================\n");
+        printf("  Film   : %s\n", selected_film->title);
+        printf("  Studio : %s\n", selected_studio.name);
+        printf("  Date   : %s\n", sch.date);
+        printf("  Time   : %s\n", sch.time);
+        printf("--------------------------------------------\n");
+        printf("Price (Rp) ['0' to cancel] : ");
+        
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+
+        int is_float = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i]) && input[i] != '.') { is_float = 0; break; }
+        }
+
+        if (is_float && strlen(input) > 0) {
+            sch.price = atof(input);
+            if (sch.price <= 0) {
+                printf("[ERROR] Price must be greater than 0!\n");
+                system("pause");
+            } else {
+                break; // Harga valid
+            }
+        } else {
+            printf("[ERROR] Price must be a valid number!\n");
+            system("pause");
+        }
+    } while (1);
+
+
+    /* ==========================================
+       STEP 5: SIMPAN DATA
+       ========================================== */
     sch.id = auto_id_schedule();
+
+    // Anti-Inline Append Fix
+    FILE* check_newline = fopen(schedule_file, "r");
+    int needs_newline = 0;
+    if (check_newline != NULL) {
+        fseek(check_newline, -1, SEEK_END);
+        int last_char = fgetc(check_newline);
+        if (last_char != '\n' && last_char != EOF) needs_newline = 1;
+        fclose(check_newline);
+    }
 
     FILE* fp = fopen(schedule_file, "a");
     if (fp == NULL) { invalid_file(); return; }
-    fprintf(fp, "%d=%d=%d=%s=%s=%.0f\n",
-            sch.id, sch.film_id, sch.studio_id,
-            sch.date, sch.time, sch.price);
+    
+    if (needs_newline) fprintf(fp, "\n");
+    fprintf(fp, "%d=%d=%d=%s=%s=%.0f\n", sch.id, sch.film_id, sch.studio_id, sch.date, sch.time, sch.price);
     fclose(fp);
 
     char end_time_str[10];
     minutes_to_time_str(time_to_minutes(sch.time) + selected_film->duration, end_time_str);
-    Studio stu; find_studio(sch.studio_id, &stu);
 
+    system("cls");
+    printf("============================================\n");
+    printf("        Schedule added successfully!        \n");
     printf("--------------------------------------------\n");
-    printf("Schedule added successfully!\n");
     printf("  ID      : %d\n", sch.id);
     printf("  Film    : %s\n", selected_film->title);
-    printf("  Studio  : %s\n", stu.name);
+    printf("  Studio  : %s\n", selected_studio.name);
     printf("  Date    : %s\n", sch.date);
     printf("  Time    : %s - %s\n", sch.time, end_time_str);
     printf("  Price   : Rp %.0f\n", sch.price);
@@ -2961,168 +4031,564 @@ void add_schedule() {
     schedule_manage();
 }
 
-// EDIT SCHEDULE
+// ============================================================
+// !! EDIT SCHEDULE !!
+// ============================================================
 void edit_schedule() {
-    system("cls");
-    printf("============================================\n");
-    printf("               EDIT SCHEDULE                \n");
-    printf("--------------------------------------------\n");
-
-    FILE* fp = fopen(schedule_file, "r");
-    if (fp == NULL) {
-        printf("No schedules available.\n");
-        system("pause");
-        schedule_manage();
-        return;
-    }
-
-    char buffer[300];
+    Schedule schedules[500];
     int count = 0;
-    printf("%-4s %-22s %-12s %-12s %-6s %s\n",
-           "ID", "Film", "Studio", "Date", "Time", "Price");
-    printf("--------------------------------------------\n");
-    while (fgets(buffer, sizeof(buffer), fp)) {
-        buffer[strcspn(buffer, "\n")] = 0;
-        Schedule sch;
-        sscanf(buffer, "%d=%d=%d=%[^=]=%[^=]=%f",
-               &sch.id, &sch.film_id, &sch.studio_id,
-               sch.date, sch.time, &sch.price);
-        Film*  f = btree_search(film_tree, sch.film_id);
-        Studio st; find_studio(sch.studio_id, &st);
-        printf("%-4d %-22s %-12s %-12s %-6s Rp %.0f\n",
-               sch.id, f ? f->title : "Unknown", st.name,
-               sch.date, sch.time, sch.price);
-        count++;
+
+    // ==========================================
+    // TAHAP 1: BACA DATA KE DALAM ARRAY
+    // ==========================================
+    FILE* fp = fopen(schedule_file, "r");
+    if (fp != NULL) {
+        char buffer[300];
+        while (fgets(buffer, sizeof(buffer), fp)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            if (strlen(buffer) == 0) continue;
+
+            if (sscanf(buffer, "%d=%d=%d=%[^=]=%[^=]=%f",
+                       &schedules[count].id, &schedules[count].film_id, &schedules[count].studio_id,
+                       schedules[count].date, schedules[count].time, &schedules[count].price) == 6) {
+                count++;
+            }
+        }
+        fclose(fp);
     }
-    fclose(fp);
 
     if (count == 0) {
+        system("cls");
+        printf("============================================\n");
+        printf("               EDIT SCHEDULE                \n");
+        printf("============================================\n");
         printf("No schedules available.\n");
         system("pause");
         schedule_manage();
         return;
     }
-    printf("--------------------------------------------\n");
 
-    char input[20];
-    int edit_id, valid;
+    // ==========================================
+    // HITUNG LEBAR KOLOM DINAMIS
+    // ==========================================
+    int w_id = 2, w_film = 4, w_studio = 6, w_date = 4, w_start = 5, w_end = 3, w_price = 5;
 
-    do {
-        printf("Enter Schedule ID to edit : ");
-        scanf("%s", input);
-        valid = 1;
-        for (int i = 0; input[i] != '\0'; i++)
-            if (!isdigit(input[i])) { valid = 0; break; }
-        if (!valid) { printf("ID must be a number!\n"); continue; }
-        edit_id = atoi(input);
-        Schedule tmp;
-        if (!find_schedule(edit_id, &tmp)) {
-            printf("Schedule with ID %d not found!\n", edit_id);
-            valid = 0;
+    for (int i = 0; i < count; i++) {
+        char t_id[20], t_price[30], t_end[20];
+        sprintf(t_id, "%d", schedules[i].id);
+        sprintf(t_price, "Rp %.0f", schedules[i].price);
+
+        Film* f = btree_search(film_tree, schedules[i].film_id);
+        char film_title[100] = "Unknown";
+        if (f != NULL) {
+            strcpy(film_title, f->title);
+            minutes_to_time_str(time_to_minutes(schedules[i].time) + f->duration, t_end);
+        } else {
+            strcpy(t_end, "?");
         }
-    } while (!valid);
 
-    Schedule sch;
-    find_schedule(edit_id, &sch);
+        Studio st;
+        char st_name[50] = "Unknown";
+        if (find_studio(schedules[i].studio_id, &st)) strcpy(st_name, st.name);
 
-    printf("--------------------------------------------\n");
-    printf("Leave blank to keep current value.\n");
-    printf("--------------------------------------------\n");
-
-    while (getchar() != '\n');
-    char new_val[50];
-
-    printf("\n=== STUDIO ===\n");
-    print_all_studios();
-    printf("Current Studio ID [%d] : ", sch.studio_id);
-    fgets(new_val, sizeof(new_val), stdin);
-    new_val[strcspn(new_val, "\n")] = '\0';
-    if (strlen(new_val) != 0) {
-        valid = 1;
-        for (int i = 0; new_val[i] != '\0'; i++)
-            if (!isdigit(new_val[i])) { valid = 0; break; }
-        if (valid) {
-            int ns = atoi(new_val);
-            if (find_studio(ns, NULL)) sch.studio_id = ns;
-            else printf("Studio ID %d not found. Keeping current.\n", ns);
-        } else printf("Invalid input. Keeping current studio.\n");
+        if ((int)strlen(t_id) > w_id) w_id = strlen(t_id);
+        if ((int)strlen(film_title) > w_film) w_film = strlen(film_title);
+        if ((int)strlen(st_name) > w_studio) w_studio = strlen(st_name);
+        if ((int)strlen(schedules[i].date) > w_date) w_date = strlen(schedules[i].date);
+        if ((int)strlen(schedules[i].time) > w_start) w_start = strlen(schedules[i].time);
+        if ((int)strlen(t_end) > w_end) w_end = strlen(t_end);
+        if ((int)strlen(t_price) > w_price) w_price = strlen(t_price);
     }
 
-    printf("\n=== FILM ===\n");
-    print_all_films_simple();
-    printf("Current Film ID [%d] : ", sch.film_id);
-    fgets(new_val, sizeof(new_val), stdin);
-    new_val[strcspn(new_val, "\n")] = '\0';
-    if (strlen(new_val) != 0) {
-        valid = 1;
-        for (int i = 0; new_val[i] != '\0'; i++)
-            if (!isdigit(new_val[i])) { valid = 0; break; }
-        if (valid) {
-            int nf = atoi(new_val);
-            if (btree_search(film_tree, nf) != NULL) sch.film_id = nf;
-            else printf("Film ID %d not found. Keeping current.\n", nf);
-        } else printf("Invalid input. Keeping current film.\n");
-    }
+    #define PRINT_SCH_LINE() \
+        do { \
+            printf("+"); \
+            for(int k=0; k<w_id+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_film+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_studio+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_date+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_start+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_end+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_price+2; k++) printf("-"); printf("+\n"); \
+        } while(0)
 
-    Film* selected_film = btree_search(film_tree, sch.film_id);
+    char input[100];
+    char lower_input[100];
+    int edit_id = -1;
+    Schedule target_sch;
+    int target_found = 0;
 
-    printf("\n=== DATE ===\n");
-    printf("Current Date [%s] : ", sch.date);
-    fgets(new_val, sizeof(new_val), stdin);
-    new_val[strcspn(new_val, "\n")] = '\0';
-    if (strlen(new_val) != 0) {
-        if (validate_date(new_val)) strcpy(sch.date, new_val);
-        else printf("Invalid date format. Keeping current date.\n");
-    }
+    // ==========================================
+    // PAGE 1: PILIH JADWAL YANG INGIN DIEDIT
+    // ==========================================
+    do {
+        system("cls");
+        printf("=================================================================================================\n");
+        printf("                                          EDIT SCHEDULE                                          \n");
+        printf("=================================================================================================\n");
+        
+        PRINT_SCH_LINE();
+        printf("| %-*s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+               w_id, "ID", w_film, "Film", w_studio, "Studio", 
+               w_date, "Date", w_start, "Start", w_end, "End", w_price, "Price");
+        PRINT_SCH_LINE();
 
-    printf("\n=== TIME ===\n");
-    char temp_time[20];
-    printf("Current Time [%s] (leave blank to keep) : ", sch.time);
-    fgets(new_val, sizeof(new_val), stdin);
-    new_val[strcspn(new_val, "\n")] = '\0';
-    strcpy(temp_time, (strlen(new_val) != 0) ? new_val : sch.time);
+        for (int i = 0; i < count; i++) {
+            char t_price[30], t_end[20];
+            sprintf(t_price, "Rp %.0f", schedules[i].price);
 
-    int conflict_id;
-    while (1) {
-        if (!validate_time(temp_time)) {
-            printf("Invalid time format (HH:MM).\n");
-            printf("Re-enter Time : ");
-            scanf("%s", temp_time);
-            while (getchar() != '\n');
+            Film* f = btree_search(film_tree, schedules[i].film_id);
+            char film_title[100] = "Unknown";
+            if (f != NULL) {
+                strcpy(film_title, f->title);
+                minutes_to_time_str(time_to_minutes(schedules[i].time) + f->duration, t_end);
+            } else {
+                strcpy(t_end, "?");
+            }
+
+            Studio st;
+            char st_name[50] = "Unknown";
+            if (find_studio(schedules[i].studio_id, &st)) strcpy(st_name, st.name);
+
+            printf("| %-*d | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+                   w_id, schedules[i].id, w_film, film_title, w_studio, st_name,
+                   w_date, schedules[i].date, w_start, schedules[i].time, w_end, t_end, w_price, t_price);
+        }
+        PRINT_SCH_LINE();
+        printf(" (Enter '0' to go back)\n");
+        printf("-------------------------------------------------------------------------------------------------\n");
+        
+        printf("Enter Schedule ID to edit : ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(input) == 0) {
+            printf("[ERROR] Input cannot be empty!\n");
+            system("pause");
             continue;
         }
+
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i])) { is_num = 0; break; }
+        }
+
+        if (!is_num) {
+            printf("[ERROR] ID must be a number!\n");
+            system("pause");
+            continue;
+        }
+
+        edit_id = atoi(input);
+        if (!find_schedule(edit_id, &target_sch)) {
+            printf("[ERROR] Schedule with ID %d not found!\n", edit_id);
+            system("pause");
+            edit_id = -1;
+        } else {
+            target_found = 1;
+        }
+    } while (!target_found);
+
+
+    // ==========================================
+    // PAGE 2: EDIT STUDIO (Dynamic Search)
+    // ==========================================
+    Studio all_studios[100];
+    int studio_count = 0;
+    FILE* sfp = fopen(studio_file, "r");
+    if (sfp != NULL) {
+        char sbuf[300];
+        while (fgets(sbuf, sizeof(sbuf), sfp)) {
+            sbuf[strcspn(sbuf, "\n")] = 0;
+            if (strlen(sbuf) == 0) continue;
+            if (sscanf(sbuf, "%d=%[^=]=%d=%d=%d", &all_studios[studio_count].id, all_studios[studio_count].name,
+                       &all_studios[studio_count].capacity, &all_studios[studio_count].rows, &all_studios[studio_count].cols) == 5) {
+                studio_count++;
+            }
+        }
+        fclose(sfp);
+    }
+
+    int w_sid = 2, w_sname = 4, w_cap = 8;
+    for (int i = 0; i < studio_count; i++) {
+        char t_id[20], t_cap[20];
+        sprintf(t_id, "%d", all_studios[i].id);
+        sprintf(t_cap, "%d", all_studios[i].capacity);
+        if ((int)strlen(t_id) > w_sid) w_sid = strlen(t_id);
+        if ((int)strlen(all_studios[i].name) > w_sname) w_sname = strlen(all_studios[i].name);
+        if ((int)strlen(t_cap) > w_cap) w_cap = strlen(t_cap);
+    }
+
+    int studio_done = 0;
+    do {
+        system("cls");
+        printf("=================================================================\n");
+        printf("                 EDIT SCHEDULE ID: %d (STUDIO)                   \n", edit_id);
+        printf("=================================================================\n");
+        
+        printf("+"); for(int k=0; k<w_sid+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_sname+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_cap+2; k++) printf("-"); printf("+\n");
+
+        printf("| %-*s | %-*s | %-*s |\n", w_sid, "ID", w_sname, "Name", w_cap, "Capacity");
+
+        printf("+"); for(int k=0; k<w_sid+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_sname+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_cap+2; k++) printf("-"); printf("+\n");
+
+        for (int i = 0; i < studio_count; i++) {
+            char t_cap[20]; sprintf(t_cap, "%d", all_studios[i].capacity);
+            printf("| %-*d | %-*s | %-*s |\n", w_sid, all_studios[i].id, w_sname, all_studios[i].name, w_cap, t_cap);
+        }
+        printf("+"); for(int k=0; k<w_sid+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_sname+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_cap+2; k++) printf("-"); printf("+\n");
+        
+        printf("Leave blank (Press Enter) to keep current Studio ID [%d]\n", target_sch.studio_id);
+        printf("(Enter '0' to Cancel & Go Back)\n");
+        printf("-----------------------------------------------------------------\n");
+        printf("Enter Studio ID or Name : ");
+        
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+        
+        // Skip jika blank
+        if (strlen(input) == 0) {
+            studio_done = 1;
+            break;
+        }
+
+        for (int i = 0; input[i] != '\0'; i++) lower_input[i] = tolower(input[i]);
+        lower_input[strlen(input)] = '\0';
+
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) if (!isdigit(input[i])) { is_num = 0; break; }
+
+        Studio matched[100];
+        int match_count = 0;
+
+        if (is_num) {
+            int input_id = atoi(input);
+            for (int i = 0; i < studio_count; i++) {
+                if (all_studios[i].id == input_id) { matched[match_count++] = all_studios[i]; break; }
+            }
+        } else {
+            for (int i = 0; i < studio_count; i++) {
+                char lower_name[100]; strcpy(lower_name, all_studios[i].name);
+                for (int j = 0; lower_name[j] != '\0'; j++) lower_name[j] = tolower(lower_name[j]);
+                if (strstr(lower_name, lower_input) != NULL) matched[match_count++] = all_studios[i];
+            }
+        }
+
+        if (match_count == 0) {
+            printf("[ERROR] Studio \"%s\" not found!\n", input);
+            system("pause");
+        } else if (match_count == 1) {
+            target_sch.studio_id = matched[0].id;
+            studio_done = 1;
+        } else {
+            int resolved = 0;
+            do {
+                system("cls");
+                printf("============================================\n");
+                printf("       SELECT STUDIO - MULTIPLE MATCHES     \n");
+                printf("============================================\n");
+                for (int i = 0; i < match_count; i++) printf("ID: %-4d | Name: %s\n", matched[i].id, matched[i].name);
+                printf("--------------------------------------------\n");
+                printf("Enter EXACT ID (or '0' to go back) : ");
+                
+                char id_input[100];
+                fgets(id_input, sizeof(id_input), stdin);
+                id_input[strcspn(id_input, "\n")] = '\0';
+
+                if (strcmp(id_input, "0") == 0) { schedule_manage(); return; }
+                if (strlen(id_input) == 0) { printf("[ERROR] Empty input!\n"); system("pause"); continue; }
+
+                int id_is_num = 1;
+                for (int i = 0; id_input[i] != '\0'; i++) if (!isdigit(id_input[i])) id_is_num = 0;
+                if (!id_is_num) { printf("[ERROR] Enter a numeric ID.\n"); system("pause"); continue; }
+
+                int selected_id = atoi(id_input);
+                for (int i = 0; i < match_count; i++) {
+                    if (matched[i].id == selected_id) {
+                        target_sch.studio_id = selected_id;
+                        resolved = 1; studio_done = 1; break;
+                    }
+                }
+                if (!resolved) { printf("[ERROR] ID %d not in list!\n", selected_id); system("pause"); }
+            } while (!resolved);
+        }
+    } while (!studio_done);
+
+
+    // ==========================================
+    // PAGE 3: EDIT FILM (Dynamic Search)
+    // ==========================================
+    Film all_films[200];
+    int film_count = 0;
+    btree_inorder(film_tree, all_films, &film_count);
+
+    int w_fid = 2, w_ftitle = 5, w_fgenre = 5, w_fdur = 8;
+    for (int i = 0; i < film_count; i++) {
+        char temp_id[20], temp_dur[20];
+        sprintf(temp_id, "%d", all_films[i].id);
+        sprintf(temp_dur, "%d", all_films[i].duration);
+        if ((int)strlen(temp_id) > w_fid) w_fid = strlen(temp_id);
+        if ((int)strlen(all_films[i].title) > w_ftitle) w_ftitle = strlen(all_films[i].title);
+        if ((int)strlen(all_films[i].genre) > w_fgenre) w_fgenre = strlen(all_films[i].genre);
+        if ((int)strlen(temp_dur) > w_fdur) w_fdur = strlen(temp_dur);
+    }
+
+    int film_done = 0;
+    do {
+        system("cls");
+        printf("===========================================================================\n");
+        printf("                   EDIT SCHEDULE ID: %d (FILM)                             \n", edit_id);
+        printf("===========================================================================\n");
+        
+        printf("+"); for(int k=0; k<w_fid+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_ftitle+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_fgenre+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_fdur+2; k++) printf("-"); printf("+\n");
+
+        printf("| %-*s | %-*s | %-*s | %-*s |\n", w_fid, "ID", w_ftitle, "Title", w_fgenre, "Genre", w_fdur, "Duration");
+
+        printf("+"); for(int k=0; k<w_fid+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_ftitle+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_fgenre+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_fdur+2; k++) printf("-"); printf("+\n");
+
+        for (int i = 0; i < film_count; i++) {
+            char temp_dur[20]; sprintf(temp_dur, "%d", all_films[i].duration);
+            printf("| %-*d | %-*s | %-*s | %-*s |\n", w_fid, all_films[i].id, w_ftitle, all_films[i].title, w_fgenre, all_films[i].genre, w_fdur, temp_dur);
+        }
+        printf("+"); for(int k=0; k<w_fid+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_ftitle+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_fgenre+2; k++) printf("-");
+        printf("+"); for(int k=0; k<w_fdur+2; k++) printf("-"); printf("+\n");
+        
+        printf("Leave blank (Press Enter) to keep current Film ID [%d]\n", target_sch.film_id);
+        printf("(Enter '0' to Cancel & Go Back)\n");
+        printf("---------------------------------------------------------------------------\n");
+        printf("Enter Film ID or Title : ");
+        
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+        
+        if (strlen(input) == 0) { film_done = 1; break; } // Keep current
+
+        for (int i = 0; input[i] != '\0'; i++) lower_input[i] = tolower(input[i]);
+        lower_input[strlen(input)] = '\0';
+
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) if (!isdigit(input[i])) { is_num = 0; break; }
+
+        Film matched[200];
+        int match_count = 0;
+
+        if (is_num) {
+            int input_id = atoi(input);
+            for (int i = 0; i < film_count; i++) {
+                if (all_films[i].id == input_id) { matched[match_count++] = all_films[i]; break; }
+            }
+        } else {
+            for (int i = 0; i < film_count; i++) {
+                char lower_title[100]; strcpy(lower_title, all_films[i].title);
+                for (int j = 0; lower_title[j] != '\0'; j++) lower_title[j] = tolower(lower_title[j]);
+                if (strstr(lower_title, lower_input) != NULL) matched[match_count++] = all_films[i];
+            }
+        }
+
+        if (match_count == 0) {
+            printf("[ERROR] Film \"%s\" not found!\n", input);
+            system("pause");
+        } else if (match_count == 1) {
+            target_sch.film_id = matched[0].id;
+            film_done = 1;
+        } else {
+            int resolved = 0;
+            do {
+                system("cls");
+                printf("============================================\n");
+                printf("        SELECT FILM - MULTIPLE MATCHES      \n");
+                printf("============================================\n");
+                for (int i = 0; i < match_count; i++) printf("ID: %-4d | Title: %s\n", matched[i].id, matched[i].title);
+                printf("--------------------------------------------\n");
+                printf("Enter EXACT ID (or '0' to go back) : ");
+                
+                char id_input[100];
+                fgets(id_input, sizeof(id_input), stdin);
+                id_input[strcspn(id_input, "\n")] = '\0';
+
+                if (strcmp(id_input, "0") == 0) { schedule_manage(); return; }
+                if (strlen(id_input) == 0) { printf("[ERROR] Empty input!\n"); system("pause"); continue; }
+
+                int id_is_num = 1;
+                for (int i = 0; id_input[i] != '\0'; i++) if (!isdigit(id_input[i])) id_is_num = 0;
+                if (!id_is_num) { printf("[ERROR] Enter a numeric ID.\n"); system("pause"); continue; }
+
+                int selected_id = atoi(id_input);
+                for (int i = 0; i < match_count; i++) {
+                    if (matched[i].id == selected_id) {
+                        target_sch.film_id = selected_id;
+                        resolved = 1; film_done = 1; break;
+                    }
+                }
+                if (!resolved) { printf("[ERROR] ID %d not in list!\n", selected_id); system("pause"); }
+            } while (!resolved);
+        }
+    } while (!film_done);
+
+    Film* selected_film = btree_search(film_tree, target_sch.film_id);
+
+
+    // ==========================================
+    // PAGE 4: EDIT DATE & TIME
+    // ==========================================
+    int date_done = 0;
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("        EDIT SCHEDULE ID: %d (DATE)         \n", edit_id);
+        printf("============================================\n");
+        printf("Leave blank (Press Enter) to keep current Date [%s]\n", target_sch.date);
+        printf("(Enter '0' to Cancel & Go Back)\n");
+        printf("--------------------------------------------\n");
+        printf("Enter Date (YYYY-MM-DD) : ");
+
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(input) == 0) { 
+            date_done = 1; break; // Keep current
+        }
+
+        if (validate_date(input)) {
+            strcpy(target_sch.date, input);
+            date_done = 1;
+        } else {
+            printf("[ERROR] Invalid date format! Must be YYYY-MM-DD.\n");
+            system("pause");
+        }
+    } while (!date_done);
+
+
+    int conflict_id;
+    char temp_time[20];
+    strcpy(temp_time, target_sch.time); // Backup time awal
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("        EDIT SCHEDULE ID: %d (TIME)         \n", edit_id);
+        printf("============================================\n");
+        printf("Leave blank (Press Enter) to keep current Time [%s]\n", temp_time);
+        printf("(Enter '0' to Cancel & Go Back)\n");
+        printf("--------------------------------------------\n");
+        printf("Enter Time (HH:MM) : ");
+
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(input) > 0) {
+            if (!validate_time(input)) {
+                printf("[ERROR] Invalid time format (HH:MM).\n");
+                system("pause");
+                conflict_id = 0; // Trigger ulangan loop
+                continue;
+            }
+            strcpy(temp_time, input);
+        }
+
         conflict_id = check_schedule_conflict(
-            sch.studio_id, sch.date, temp_time,
-            selected_film->duration, edit_id);
+            target_sch.studio_id, target_sch.date, temp_time,
+            selected_film->duration, edit_id); // Skip edit_id ini sendiri
+
         if (conflict_id != -1) {
-            printf("SCHEDULE CONFLICT with ID %d. Re-enter Time (HH:MM) : ", conflict_id);
-            scanf("%s", temp_time);
-            while (getchar() != '\n');
-        } else break;
-    }
-    strcpy(sch.time, temp_time);
+            Schedule conflict_sch;
+            find_schedule(conflict_id, &conflict_sch);
+            Film* cf = btree_search(film_tree, conflict_sch.film_id);
+            char end_time_str[10];
+            int end_min = time_to_minutes(conflict_sch.time) + (cf ? cf->duration : 0);
+            minutes_to_time_str(end_min, end_time_str);
+            
+            printf("\n[ERROR] SCHEDULE CONFLICT DETECTED!\n");
+            printf("Studio is occupied by: [ID %d] %s (%s - %s)\n", conflict_id, cf ? cf->title : "?", conflict_sch.time, end_time_str);
+            printf("Please enter a different time.\n");
+            system("pause");
+            strcpy(temp_time, target_sch.time); // Reset ke original kalau error
+        } else {
+            strcpy(target_sch.time, temp_time);
+        }
+    } while (conflict_id != -1);
 
-    printf("\n=== PRICE ===\n");
-    printf("Current Price [%.0f] : ", sch.price);
-    fgets(new_val, sizeof(new_val), stdin);
-    new_val[strcspn(new_val, "\n")] = '\0';
-    if (strlen(new_val) != 0) {
-        float np = atof(new_val);
-        if (np > 0) sch.price = np;
-        else printf("Invalid price. Keeping current.\n");
-    }
 
+    // ==========================================
+    // PAGE 5: EDIT PRICE
+    // ==========================================
+    int price_done = 0;
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("        EDIT SCHEDULE ID: %d (PRICE)        \n", edit_id);
+        printf("============================================\n");
+        printf("Leave blank (Press Enter) to keep current Price [Rp %.0f]\n", target_sch.price);
+        printf("(Enter '0' to Cancel & Go Back)\n");
+        printf("--------------------------------------------\n");
+        printf("Enter Price (Rp) : ");
+
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(input) == 0) { price_done = 1; break; }
+
+        int is_float = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i]) && input[i] != '.') { is_float = 0; break; }
+        }
+
+        if (is_float) {
+            float np = atof(input);
+            if (np > 0) {
+                target_sch.price = np;
+                price_done = 1;
+            } else {
+                printf("[ERROR] Price must be greater than 0!\n");
+                system("pause");
+            }
+        } else {
+            printf("[ERROR] Price must be a valid number!\n");
+            system("pause");
+        }
+    } while (!price_done);
+
+
+    // ==========================================
+    // TAHAP 6: SIMPAN PERUBAHAN
+    // ==========================================
     FILE* in  = fopen(schedule_file, "r");
     FILE* tmp = fopen("temp_schedule.txt", "w");
     if (in == NULL || tmp == NULL) { invalid_file(); return; }
+    
     char buf[300];
     while (fgets(buf, sizeof(buf), in)) {
         buf[strcspn(buf, "\n")] = 0;
         int id; sscanf(buf, "%d=", &id);
         if (id == edit_id)
             fprintf(tmp, "%d=%d=%d=%s=%s=%.0f\n",
-                    sch.id, sch.film_id, sch.studio_id,
-                    sch.date, sch.time, sch.price);
+                    target_sch.id, target_sch.film_id, target_sch.studio_id,
+                    target_sch.date, target_sch.time, target_sch.price);
         else
             fprintf(tmp, "%s\n", buf);
     }
@@ -3130,149 +4596,523 @@ void edit_schedule() {
     remove(schedule_file);
     rename("temp_schedule.txt", schedule_file);
 
+
+    // ==========================================
+    // PAGE 7: TAMPILAN INVOICE / SUCCESS DETAIL
+    // ==========================================
+    Film* final_film = btree_search(film_tree, target_sch.film_id);
+    char final_film_title[100] = "Unknown";
+    int final_duration = 0;
+    if (final_film != NULL) {
+        strcpy(final_film_title, final_film->title);
+        final_duration = final_film->duration;
+    }
+
+    Studio final_st;
+    char final_studio_name[50] = "Unknown";
+    if (find_studio(target_sch.studio_id, &final_st)) {
+        strcpy(final_studio_name, final_st.name);
+    }
+
+    char final_end_time[20] = "?";
+    if (final_film != NULL) {
+        minutes_to_time_str(time_to_minutes(target_sch.time) + final_duration, final_end_time);
+    }
+
+    system("cls");
+    printf("============================================\n");
+    printf("        Schedule ID %d updated!             \n", edit_id);
     printf("--------------------------------------------\n");
-    printf("Schedule ID %d updated successfully!\n", edit_id);
+    printf("  Detail Schedule:\n");
+    printf("  ID       : %d\n", target_sch.id);
+    printf("  Film     : %s\n", final_film_title);
+    printf("  Studio   : %s\n", final_studio_name);
+    printf("  Date     : %s\n", target_sch.date);
+    printf("  Time     : %s - %s\n", target_sch.time, final_end_time);
+    printf("  Price    : Rp %.0f\n", target_sch.price);
     printf("============================================\n");
     system("pause");
     schedule_manage();
 }
 
-// DELETE SCHEDULE
+// ============================================================
+// !! DELETE SCHEDULE !!
+// ============================================================
 void del_schedule() {
-    system("cls");
-    printf("============================================\n");
-    printf("               DELETE SCHEDULE              \n");
-    printf("--------------------------------------------\n");
-
-    FILE* fp = fopen(schedule_file, "r");
-    if (fp == NULL) {
-        printf("No schedules available.\n");
-        system("pause");
-        schedule_manage();
-        return;
-    }
-
-    char buffer[300];
+    Schedule schedules[500];
     int count = 0;
-    printf("%-4s %-22s %-12s %-12s %-6s %s\n",
-           "ID", "Film", "Studio", "Date", "Time", "Price");
-    printf("--------------------------------------------\n");
-    while (fgets(buffer, sizeof(buffer), fp)) {
-        buffer[strcspn(buffer, "\n")] = 0;
-        Schedule sch;
-        sscanf(buffer, "%d=%d=%d=%[^=]=%[^=]=%f",
-               &sch.id, &sch.film_id, &sch.studio_id,
-               sch.date, sch.time, &sch.price);
-        Film*  f = btree_search(film_tree, sch.film_id);
-        Studio st; find_studio(sch.studio_id, &st);
-        printf("%-4d %-22s %-12s %-12s %-6s Rp %.0f\n",
-               sch.id, f ? f->title : "Unknown", st.name,
-               sch.date, sch.time, sch.price);
-        count++;
+
+    // ==========================================
+    // TAHAP 1: BACA DATA KE DALAM ARRAY
+    // ==========================================
+    FILE* fp = fopen(schedule_file, "r");
+    if (fp != NULL) {
+        char buffer[300];
+        while (fgets(buffer, sizeof(buffer), fp)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            if (strlen(buffer) == 0) continue;
+
+            if (sscanf(buffer, "%d=%d=%d=%[^=]=%[^=]=%f",
+                       &schedules[count].id, &schedules[count].film_id, &schedules[count].studio_id,
+                       schedules[count].date, schedules[count].time, &schedules[count].price) == 6) {
+                count++;
+            }
+        }
+        fclose(fp);
     }
-    fclose(fp);
 
     if (count == 0) {
+        system("cls");
+        printf("============================================\n");
+        printf("              DELETE SCHEDULE               \n");
+        printf("============================================\n");
         printf("No schedules available.\n");
         system("pause");
         schedule_manage();
         return;
     }
-    printf("--------------------------------------------\n");
 
-    char input[10];
-    int del_id, valid;
+    // ==========================================
+    // HITUNG LEBAR KOLOM DINAMIS
+    // ==========================================
+    int w_id = 2, w_film = 4, w_studio = 6, w_date = 4, w_start = 5, w_end = 3, w_price = 5;
+
+    for (int i = 0; i < count; i++) {
+        char t_id[20], t_price[30], t_end[20];
+        sprintf(t_id, "%d", schedules[i].id);
+        sprintf(t_price, "Rp %.0f", schedules[i].price);
+
+        Film* f = btree_search(film_tree, schedules[i].film_id);
+        char film_title[100] = "Unknown";
+        if (f != NULL) {
+            strcpy(film_title, f->title);
+            minutes_to_time_str(time_to_minutes(schedules[i].time) + f->duration, t_end);
+        } else {
+            strcpy(t_end, "?");
+        }
+
+        Studio st;
+        char st_name[50] = "Unknown";
+        if (find_studio(schedules[i].studio_id, &st)) strcpy(st_name, st.name);
+
+        if ((int)strlen(t_id) > w_id) w_id = strlen(t_id);
+        if ((int)strlen(film_title) > w_film) w_film = strlen(film_title);
+        if ((int)strlen(st_name) > w_studio) w_studio = strlen(st_name);
+        if ((int)strlen(schedules[i].date) > w_date) w_date = strlen(schedules[i].date);
+        if ((int)strlen(schedules[i].time) > w_start) w_start = strlen(schedules[i].time);
+        if ((int)strlen(t_end) > w_end) w_end = strlen(t_end);
+        if ((int)strlen(t_price) > w_price) w_price = strlen(t_price);
+    }
+
+    #define PRINT_SCH_LINE() \
+        do { \
+            printf("+"); \
+            for(int k=0; k<w_id+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_film+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_studio+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_date+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_start+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_end+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_price+2; k++) printf("-"); printf("+\n"); \
+        } while(0)
+
+    char input[100];
+    int target_id = -1;
+    Schedule target_sch;
+    int target_found = 0;
+
+    // ==========================================
+    // PAGE 1: PILIH JADWAL YANG INGIN DIHAPUS
+    // ==========================================
+    do {
+        system("cls");
+        printf("=================================================================================================\n");
+        printf("                                         DELETE SCHEDULE                                         \n");
+        printf("=================================================================================================\n");
+        
+        PRINT_SCH_LINE();
+        printf("| %-*s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+               w_id, "ID", w_film, "Film", w_studio, "Studio", 
+               w_date, "Date", w_start, "Start", w_end, "End", w_price, "Price");
+        PRINT_SCH_LINE();
+
+        for (int i = 0; i < count; i++) {
+            char t_price[30], t_end[20];
+            sprintf(t_price, "Rp %.0f", schedules[i].price);
+
+            Film* f = btree_search(film_tree, schedules[i].film_id);
+            char film_title[100] = "Unknown";
+            if (f != NULL) {
+                strcpy(film_title, f->title);
+                minutes_to_time_str(time_to_minutes(schedules[i].time) + f->duration, t_end);
+            } else {
+                strcpy(t_end, "?");
+            }
+
+            Studio st;
+            char st_name[50] = "Unknown";
+            if (find_studio(schedules[i].studio_id, &st)) strcpy(st_name, st.name);
+
+            printf("| %-*d | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+                   w_id, schedules[i].id, w_film, film_title, w_studio, st_name,
+                   w_date, schedules[i].date, w_start, schedules[i].time, w_end, t_end, w_price, t_price);
+        }
+        PRINT_SCH_LINE();
+        printf(" (Enter '0' to go back)\n");
+        printf("-------------------------------------------------------------------------------------------------\n");
+        
+        printf("Enter Schedule ID to delete : ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(input) == 0) {
+            printf("[ERROR] Input cannot be empty!\n");
+            system("pause");
+            continue;
+        }
+
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i])) { is_num = 0; break; }
+        }
+
+        if (!is_num) {
+            printf("[ERROR] ID must be a number!\n");
+            system("pause");
+            continue;
+        }
+
+        target_id = atoi(input);
+        if (!find_schedule(target_id, &target_sch)) {
+            printf("[ERROR] Schedule with ID %d not found!\n", target_id);
+            system("pause");
+            target_id = -1;
+        } else {
+            target_found = 1;
+        }
+    } while (!target_found);
+
+
+    // ==========================================
+    // PERSIAPKAN DATA DETAIL UNTUK DITAMPILKAN
+    // ==========================================
+    Film* del_film_ptr = btree_search(film_tree, target_sch.film_id);
+    char del_film_title[100] = "Unknown";
+    int del_film_dur = 0;
+    if (del_film_ptr != NULL) {
+        strcpy(del_film_title, del_film_ptr->title);
+        del_film_dur = del_film_ptr->duration;
+    }
+
+    Studio del_st;
+    char del_studio_name[50] = "Unknown";
+    if (find_studio(target_sch.studio_id, &del_st)) {
+        strcpy(del_studio_name, del_st.name);
+    }
+
+    char del_end_time[20] = "?";
+    if (del_film_ptr != NULL) {
+        minutes_to_time_str(time_to_minutes(target_sch.time) + del_film_dur, del_end_time);
+    }
+
+
+    // ==========================================
+    // PAGE 2 : KONFIRMASI Y/N
+    // ==========================================
+    char confirm_str[10];
+    char confirm_char;
+    int conf_valid = 0;
 
     do {
-        printf("Enter Schedule ID to delete : ");
-        scanf("%s", input);
-        valid = 1;
-        for (int i = 0; input[i] != '\0'; i++)
-            if (!isdigit(input[i])) { valid = 0; break; }
-        if (!valid) { printf("ID must be a number!\n"); continue; }
-        del_id = atoi(input);
-        Schedule tmp;
-        if (!find_schedule(del_id, &tmp)) {
-            printf("Schedule with ID %d not found!\n", del_id);
-            valid = 0;
+        system("cls");
+        printf("============================================\n");
+        printf("            CONFIRM DELETION                \n");
+        printf("============================================\n");
+        printf("  Detail Schedule:\n");
+        printf("  ID       : %d\n", target_sch.id);
+        printf("  Film     : %s\n", del_film_title);
+        printf("  Studio   : %s\n", del_studio_name);
+        printf("  Date     : %s\n", target_sch.date);
+        printf("  Time     : %s - %s\n", target_sch.time, del_end_time);
+        printf("  Price    : Rp %.0f\n", target_sch.price);
+        printf("--------------------------------------------\n");
+        printf("Are you sure you want to delete this schedule?\n");
+        printf("Type (Y/N) or '0' to go back : ");
+
+        fgets(confirm_str, sizeof(confirm_str), stdin);
+        confirm_str[strcspn(confirm_str, "\n")] = '\0';
+
+        if (strcmp(confirm_str, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(confirm_str) == 0) {
+            printf("[ERROR] Input cannot be empty! Enter Y or N.\n");
+            system("pause");
+            continue;
         }
-    } while (!valid);
 
-    Schedule sch; find_schedule(del_id, &sch);
-    Film*  f = btree_search(film_tree, sch.film_id);
-    Studio st; find_studio(sch.studio_id, &st);
+        if (strcmp(confirm_str, "Y") == 0 || strcmp(confirm_str, "y") == 0) {
+            confirm_char = 'y';
+            conf_valid = 1;
+        } else if (strcmp(confirm_str, "N") == 0 || strcmp(confirm_str, "n") == 0) {
+            confirm_char = 'n';
+            conf_valid = 1;
+        } else {
+            printf("[ERROR] Invalid input! Enter Y or N.\n");
+            system("pause");
+        }
+    } while (!conf_valid);
 
-    printf("--------------------------------------------\n");
-    printf("  Film   : %s\n", f ? f->title : "Unknown");
-    printf("  Studio : %s\n", st.name);
-    printf("  Date   : %s  Time: %s\n", sch.date, sch.time);
-    printf("  Price  : Rp %.0f\n", sch.price);
-    printf("--------------------------------------------\n");
-    printf("Are you sure? (y/n) : ");
-    char confirm;
-    scanf(" %c", &confirm);
-
-    if (confirm != 'y' && confirm != 'Y') {
+    if (confirm_char == 'n') {
         printf("Deletion cancelled.\n");
         system("pause");
         schedule_manage();
         return;
     }
 
+
+    // ==========================================
+    // PAGE 3 : KONFIRMASI PASSWORD ADMIN
+    // ==========================================
+    char input_pass[100];
+    char confirm_pass_input[100]; 
+    int pass_match = 0;
+
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("         ADMIN PASSWORD CONFIRMATION        \n");
+        printf("============================================\n");
+        printf(" [WARNING] This action cannot be undone!    \n");
+        printf("--------------------------------------------\n");
+        printf(" (Enter '0' at any prompt to go back)\n");
+        printf("--------------------------------------------\n");
+
+        printf("Enter Admin password : ");
+        fgets(input_pass, sizeof(input_pass), stdin);
+        input_pass[strcspn(input_pass, "\n")] = '\0';
+
+        if (strcmp(input_pass, "0") == 0) { schedule_manage(); return; }
+
+        if (strlen(input_pass) == 0) {
+            printf("[ERROR] Password cannot be empty!\n");
+            system("pause");
+            continue;
+        }
+
+        printf("Confirm Admin password : ");
+        fgets(confirm_pass_input, sizeof(confirm_pass_input), stdin);
+        confirm_pass_input[strcspn(confirm_pass_input, "\n")] = '\0';
+
+        if (strcmp(confirm_pass_input, "0") == 0) { schedule_manage(); return; }
+
+        if (strcmp(input_pass, confirm_pass_input) != 0) {
+            printf("\n[ERROR] Passwords do not match! Please try again.\n");
+            system("pause");
+            continue;
+        }
+
+        // Hardcoded admin password validation
+        if (strcmp(input_pass, "admin123@") != 0) {
+            printf("\n[ERROR] Incorrect password! Please try again.\n");
+            system("pause");
+            continue;
+        }
+
+        pass_match = 1; 
+    } while (!pass_match);
+
+
+    // ==========================================
+    // PAGE 4 : EKSEKUSI PENGHAPUSAN FILE
+    // ==========================================
     FILE* in  = fopen(schedule_file, "r");
     FILE* tmp = fopen("temp_schedule.txt", "w");
     if (in == NULL || tmp == NULL) { invalid_file(); return; }
-    char buf[300];
-    while (fgets(buf, sizeof(buf), in)) {
-        buf[strcspn(buf, "\n")] = 0;
-        int id; sscanf(buf, "%d=", &id);
-        if (id != del_id) fprintf(tmp, "%s\n", buf);
+
+    char sbuf[300];
+    while (fgets(sbuf, sizeof(sbuf), in)) {
+        sbuf[strcspn(sbuf, "\n")] = 0;
+        if(strlen(sbuf) == 0) continue;
+        
+        int sid; 
+        sscanf(sbuf, "%d=", &sid);
+        if (sid != target_id) {
+            fprintf(tmp, "%s\n", sbuf);
+        }
     }
-    fclose(in); fclose(tmp);
+    fclose(in); 
+    fclose(tmp);
     remove(schedule_file);
     rename("temp_schedule.txt", schedule_file);
 
-    printf("Schedule ID %d deleted successfully!\n", del_id);
+
+    // ==========================================
+    // PAGE 5 : SUCCESS INVOICE
+    // ==========================================
+    system("cls");
+    printf("============================================\n");
+    printf("              SCHEDULE DELETED              \n");
+    printf("============================================\n");
+    printf("\n");
+    printf("   Schedule ID %d (%s) \n", target_id, del_film_title);
+    printf("       deleted successfully!                \n");
+    printf("\n");
+    printf("============================================\n");
     system("pause");
     schedule_manage();
 }
 
-// VIEW ALL SCHEDULES
+// ============================================================
+// !! VIEW ALL SCHEDULES !!
+// ============================================================
 void view_schedule() {
     system("cls");
-    printf("============================================\n");
-    printf("               ALL SCHEDULES                \n");
-    printf("============================================\n");
 
-    FILE* fp = fopen(schedule_file, "r");
+    Schedule schedules[500];
     int count = 0;
-    printf("%-4s %-22s %-12s %-12s %-8s %-8s %s\n",
-           "ID", "Film", "Studio", "Date", "Start", "End", "Price");
-    printf("--------------------------------------------\n");
+
+    // ==========================================
+    // TAHAP 1: BACA DATA KE DALAM ARRAY
+    // ==========================================
+    FILE* fp = fopen(schedule_file, "r");
     if (fp != NULL) {
         char buffer[300];
         while (fgets(buffer, sizeof(buffer), fp)) {
             buffer[strcspn(buffer, "\n")] = 0;
-            Schedule sch;
-            sscanf(buffer, "%d=%d=%d=%[^=]=%[^=]=%f",
-                   &sch.id, &sch.film_id, &sch.studio_id,
-                   sch.date, sch.time, &sch.price);
-            Film*  f = btree_search(film_tree, sch.film_id);
-            Studio st; find_studio(sch.studio_id, &st);
-            char end_time_str[10] = "?";
-            if (f != NULL)
-                minutes_to_time_str(time_to_minutes(sch.time) + f->duration, end_time_str);
-            printf("%-4d %-22s %-12s %-12s %-8s %-8s Rp %.0f\n",
-                   sch.id, f ? f->title : "Unknown", st.name,
-                   sch.date, sch.time, end_time_str, sch.price);
-            count++;
+            if (strlen(buffer) == 0) continue;
+
+            if (sscanf(buffer, "%d=%d=%d=%[^=]=%[^=]=%f",
+                       &schedules[count].id, &schedules[count].film_id, &schedules[count].studio_id,
+                       schedules[count].date, schedules[count].time, &schedules[count].price) == 6) {
+                count++;
+            }
         }
         fclose(fp);
     }
-    printf("--------------------------------------------\n");
-    if (count == 0) printf("No schedules available.\n");
-    else printf("Total: %d schedule(s)\n", count);
-    printf("============================================\n");
+
+    // ==========================================
+    // TAHAP 2: HITUNG LEBAR KOLOM DINAMIS
+    // ==========================================
+    int w_id = 2;       // "ID"
+    int w_film = 4;     // "Film"
+    int w_studio = 6;   // "Studio"
+    int w_date = 4;     // "Date"
+    int w_start = 5;    // "Start"
+    int w_end = 3;      // "End"
+    int w_price = 5;    // "Price"
+
+    for (int i = 0; i < count; i++) {
+        char t_id[20], t_price[30], t_end[20];
+        sprintf(t_id, "%d", schedules[i].id);
+        sprintf(t_price, "Rp %.0f", schedules[i].price);
+
+        Film* f = btree_search(film_tree, schedules[i].film_id);
+        char film_title[100] = "Unknown";
+        if (f != NULL) {
+            strcpy(film_title, f->title);
+            minutes_to_time_str(time_to_minutes(schedules[i].time) + f->duration, t_end);
+        } else {
+            strcpy(t_end, "?");
+        }
+
+        Studio st;
+        char st_name[50] = "Unknown";
+        if (find_studio(schedules[i].studio_id, &st)) {
+            strcpy(st_name, st.name);
+        }
+
+        if ((int)strlen(t_id) > w_id) w_id = strlen(t_id);
+        if ((int)strlen(film_title) > w_film) w_film = strlen(film_title);
+        if ((int)strlen(st_name) > w_studio) w_studio = strlen(st_name);
+        if ((int)strlen(schedules[i].date) > w_date) w_date = strlen(schedules[i].date);
+        if ((int)strlen(schedules[i].time) > w_start) w_start = strlen(schedules[i].time);
+        if ((int)strlen(t_end) > w_end) w_end = strlen(t_end);
+        if ((int)strlen(t_price) > w_price) w_price = strlen(t_price);
+    }
+
+    // Hitung total lebar tabel (7 kolom)
+    int total_width = w_id + w_film + w_studio + w_date + w_start + w_end + w_price + 22;
+
+    #define PRINT_SCH_LINE() \
+        do { \
+            printf("+"); \
+            for(int k=0; k<w_id+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_film+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_studio+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_date+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_start+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_end+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_price+2; k++) printf("-"); printf("+\n"); \
+        } while(0)
+
+    // ==========================================
+    // TAHAP 3: CETAK TABEL
+    // ==========================================
+    printf("\n");
+    for(int i = 0; i < total_width; i++) printf("="); printf("\n");
+    
+    // Teks tengah (Center alignment)
+    int padding = (total_width - 13) / 2; // "ALL SCHEDULES" = 13 char
+    if (padding < 0) padding = 0;
+    for(int i = 0; i < padding; i++) printf(" ");
+    printf("ALL SCHEDULES\n");
+    
+    for(int i = 0; i < total_width; i++) printf("="); printf("\n");
+
+    if (count == 0) {
+        printf("| %-*s |\n", total_width - 4, "No schedules available at the moment.");
+        for(int i = 0; i < total_width; i++) printf("="); printf("\n");
+    } else {
+        PRINT_SCH_LINE();
+        
+        // Cetak Header
+        printf("| %-*s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+               w_id, "ID", w_film, "Film", w_studio, "Studio", 
+               w_date, "Date", w_start, "Start", w_end, "End", w_price, "Price");
+               
+        PRINT_SCH_LINE();
+
+        // Cetak Konten
+        for (int i = 0; i < count; i++) {
+            char t_price[30], t_end[20];
+            sprintf(t_price, "Rp %.0f", schedules[i].price);
+
+            Film* f = btree_search(film_tree, schedules[i].film_id);
+            char film_title[100] = "Unknown";
+            if (f != NULL) {
+                strcpy(film_title, f->title);
+                minutes_to_time_str(time_to_minutes(schedules[i].time) + f->duration, t_end);
+            } else {
+                strcpy(t_end, "?");
+            }
+
+            Studio st;
+            char st_name[50] = "Unknown";
+            if (find_studio(schedules[i].studio_id, &st)) {
+                strcpy(st_name, st.name);
+            }
+
+            printf("| %-*d | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+                   w_id, schedules[i].id, 
+                   w_film, film_title, 
+                   w_studio, st_name,
+                   w_date, schedules[i].date, 
+                   w_start, schedules[i].time, 
+                   w_end, t_end, 
+                   w_price, t_price);
+        }
+        
+        PRINT_SCH_LINE();
+        printf("Total: %d schedule(s)\n", count);
+        for(int i = 0; i < total_width; i++) printf("="); printf("\n");
+    }
+    printf("\n");
+
+    // ==========================================
+    // TAHAP 4: KEMBALI KE MENU (PRESS ANY KEY)
+    // ==========================================
     system("pause");
     schedule_manage();
 }
@@ -3292,7 +5132,7 @@ void acc_manage() {
         printf("           USER ACCOUNT MANAGEMENT          \n");
         printf("--------------------------------------------\n");
         printf("[1] View All Users\n");
-        printf("[2] Search User by Username\n");
+        printf("[2] Search User\n");
         printf("[3] Delete User Account\n");
         printf("[0] Back\n");
         printf("============================================\n");
@@ -3309,7 +5149,7 @@ void acc_manage() {
 
         if (strcmp(lower_input, "1") == 0 || strcmp(lower_input, "view all users") == 0) {
             choice = 1;
-        } else if (strcmp(lower_input, "2") == 0 || strcmp(lower_input, "search user by username") == 0) {
+        } else if (strcmp(lower_input, "2") == 0 || strcmp(lower_input, "search user") == 0) {
             choice = 2;
         } else if (strcmp(lower_input, "3") == 0 || strcmp(lower_input, "delete user account") == 0) {
             choice = 3;
@@ -3331,138 +5171,736 @@ void acc_manage() {
     }
 }
 
-void view_users() {
+// ============================================================
+// !! VIEW ALL USERS !!
+// ============================================================
+void view_users() { // Sesuaikan nama fungsi ini jika berbeda
     system("cls");
-    FILE* data = fopen(account_file, "r");
-    if (data == NULL) { invalid_file(); return; }
-
-    char buffer[500];
+    
+    // Asumsi struktur data sementara untuk membaca file
+    struct {
+        char username[100];
+        char fullname[100];
+        char email[100];
+    } users[500];
+    
     int count = 0;
+    char buffer[300];
 
-    printf("============================================\n");
-    printf("                  ALL USERS                  \n");
-    printf("============================================\n");
-    printf("%-20s %-25s %-30s\n", "Username", "Full Name", "Email");
-    printf("--------------------------------------------\n");
+    // ==========================================
+    // TAHAP 1: BACA DATA KE DALAM ARRAY
+    // ==========================================
+    // Ganti 'account_file' dengan variabel file Anda (misal: "users.txt" atau "account.txt")
+    FILE* fp = fopen(account_file, "r"); 
+    if (fp != NULL) {
+        while (fgets(buffer, sizeof(buffer), fp)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            if (strlen(buffer) == 0) continue;
 
-    while (fgets(buffer, sizeof(buffer), data)) {
-        Account acc;
-        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]",
-               acc.username, acc.password, acc.name, acc.email);
-        printf("%-20s %-25s %-30s\n", acc.username, acc.name, acc.email);
-        count++;
-    }
-    fclose(data);
-
-    printf("--------------------------------------------\n");
-    if (count == 0) printf("No users available.\n");
-    else printf("Total: %d user(s)\n", count);
-    printf("============================================\n");
-    system("pause");
-    acc_manage();
-}
-
-void search_user() {
-    system("cls");
-    char keyword[100];
-    Account accounts[100];
-    int n = 0, found = 0;
-    char buffer[500];
-
-    FILE* data = fopen(account_file, "r");
-    if (data == NULL) { invalid_file(); return; }
-
-    while (fgets(buffer, sizeof(buffer), data)) {
-        buffer[strcspn(buffer, "\n")] = 0;
-        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]",
-               accounts[n].username, accounts[n].password,
-               accounts[n].name, accounts[n].email);
-        n++;
-    }
-    fclose(data);
-
-    printf("============================================\n");
-    printf("           SEARCH USER BY KEYWORD           \n");
-    printf("--------------------------------------------\n");
-    printf("Input keyword to search : ");
-    scanf("%s", keyword);
-
-    printf("\n%-20s %-25s %-30s\n", "Username", "Full Name", "Email");
-    printf("--------------------------------------------\n");
-    for (int i = 0; i < n; i++) {
-        if (strstr(accounts[i].username, keyword) != NULL) {
-            printf("%-20s %-25s %-30s\n",
-                   accounts[i].username, accounts[i].name, accounts[i].email);
-            found = 1;
+            char temp_pass[100];
+            
+            // ASUMSI FORMAT FILE: username=password=fullname=email
+            // Jika separator Anda '#' (bukan '='), ubah "%[^=]=" menjadi "%[^#]#"
+            // Jika tidak ada password, hapus variabel temp_pass dan sesuaikan format sscanf
+            if (sscanf(buffer, "%[^,],%[^,],%[^,],%[^,]", 
+                       users[count].username, 
+                       temp_pass, 
+                       users[count].fullname, 
+                       users[count].email) >= 3) {
+                count++;
+            }
         }
+        fclose(fp);
     }
-    if (!found) printf("\nUser \"%s\" not found.\n", keyword);
 
-    printf("\n============================================\n");
+    // ==========================================
+    // TAHAP 2: HITUNG LEBAR KOLOM DINAMIS
+    // ==========================================
+    int w_uname = 8;     // Lebar minimal "Username"
+    int w_fname = 9;     // Lebar minimal "Full Name"
+    int w_email = 5;     // Lebar minimal "Email"
+
+    for (int i = 0; i < count; i++) {
+        if ((int)strlen(users[i].username) > w_uname) w_uname = strlen(users[i].username);
+        if ((int)strlen(users[i].fullname) > w_fname) w_fname = strlen(users[i].fullname);
+        if ((int)strlen(users[i].email) > w_email) w_email = strlen(users[i].email);
+    }
+
+    int total_width = w_uname + w_fname + w_email + 10;
+
+    #define PRINT_USER_LINE() \
+        do { \
+            printf("+"); \
+            for(int k=0; k<w_uname+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_fname+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_email+2; k++) printf("-"); printf("+\n"); \
+        } while(0)
+
+    // ==========================================
+    // TAHAP 3: CETAK TABEL
+    // ==========================================
+    printf("\n");
+    for (int i = 0; i < total_width; i++) printf("="); printf("\n");
+    
+    // Render text ke tengah (Center alignment)
+    int padding = (total_width - 9) / 2; // 9 adalah panjang teks "ALL USERS"
+    if (padding < 0) padding = 0;
+    for (int i = 0; i < padding; i++) printf(" ");
+    printf("ALL USERS\n");
+    
+    for (int i = 0; i < total_width; i++) printf("="); printf("\n");
+
+    if (count == 0) {
+        printf("| %-*s |\n", total_width - 4, "No users available at the moment.");
+        for (int i = 0; i < total_width; i++) printf("="); printf("\n");
+    } else {
+        PRINT_USER_LINE();
+        
+        printf("| %-*s | %-*s | %-*s |\n", w_uname, "Username", w_fname, "Full Name", w_email, "Email");
+               
+        PRINT_USER_LINE();
+
+        for (int i = 0; i < count; i++) {
+            printf("| %-*s | %-*s | %-*s |\n", 
+                   w_uname, users[i].username, 
+                   w_fname, users[i].fullname, 
+                   w_email, users[i].email);
+        }
+        
+        PRINT_USER_LINE();
+        printf("Total: %d user(s)\n", count);
+        for (int i = 0; i < total_width; i++) printf("="); printf("\n");
+    }
+    printf("\n");
+
+    // ==========================================
+    // TAHAP 4: KEMBALI KE MENU (PRESS ANY KEY)
+    // ==========================================
     system("pause");
     acc_manage();
 }
 
-void delete_user() {
-    system("cls");
-    Account accounts[100];
-    int n = 0;
-    char buffer[500];
-    char keyword[100];
-    int found = 0;
+// ============================================================
+// !! SEARCH USER (BY USERNAME OR FULL NAME) !!
+// ============================================================
+void search_user() {
+    // Struktur data sementara untuk membaca file
+    struct {
+        char username[100];
+        char password[100];
+        char fullname[100];
+        char email[100];
+    } users[500];
+    
+    int count = 0;
+    char buffer[512];
 
-    FILE* data = fopen(account_file, "r");
-    FILE* temp = fopen("temp.txt", "w");
-    if (data == NULL || temp == NULL) { invalid_file(); return; }
+    // ==========================================
+    // TAHAP 1: BACA DATA KE DALAM ARRAY
+    // ==========================================
+    FILE* fp = fopen("users.txt", "r"); 
+    if (fp != NULL) {
+        while (fgets(buffer, sizeof(buffer), fp)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            if (strlen(buffer) == 0) continue;
 
-    while (fgets(buffer, sizeof(buffer), data)) {
-        buffer[strcspn(buffer, "\n")] = 0;
-        sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]",
-               accounts[n].username, accounts[n].password,
-               accounts[n].name, accounts[n].email);
-        n++;
+            if (sscanf(buffer, "%[^,],%[^,],%[^,],%[^,]", 
+                       users[count].username, 
+                       users[count].password, 
+                       users[count].fullname, 
+                       users[count].email) >= 3) {
+                count++;
+            }
+        }
+        fclose(fp);
     }
-    fclose(data);
 
-    printf("==============================\n");
-    printf("          DELETE USER         \n");
-    printf("==============================\n");
-    printf("%-20s %-25s\n", "Username", "Full Name");
-    printf("------------------------------\n");
-    for (int i = 0; i < n; i++)
-        printf("%-20s %-25s\n", accounts[i].username, accounts[i].name);
-    printf("------------------------------\n");
+    if (count == 0) {
+        system("cls");
+        printf("============================================\n");
+        printf("                SEARCH USER                 \n");
+        printf("============================================\n");
+        printf("No users available in the database.\n");
+        printf("============================================\n");
+        system("pause");
+        acc_manage(); // <-- PENTING: Ganti dengan nama fungsi menu User Anda jika berbeda
+        return; 
+    }
 
-    if (n == 0) {
-        printf("No users available.\n");
-        printf("==============================\n");
-        fclose(temp);
+    // ==========================================
+    // TAHAP 2: HITUNG LEBAR KOLOM DINAMIS
+    // ==========================================
+    int w_uname = 8;     
+    int w_fname = 9;     
+    int w_email = 5;     
+
+    for (int i = 0; i < count; i++) {
+        if ((int)strlen(users[i].username) > w_uname) w_uname = strlen(users[i].username);
+        if ((int)strlen(users[i].fullname) > w_fname) w_fname = strlen(users[i].fullname);
+        if ((int)strlen(users[i].email) > w_email) w_email = strlen(users[i].email);
+    }
+
+    #define PRINT_ALL_USER_LINE() \
+        do { \
+            printf("+"); \
+            for(int k=0; k<w_uname+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_fname+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_email+2; k++) printf("-"); printf("+\n"); \
+        } while(0)
+
+    char input[100];
+    char lower_input[100];
+    int target_index = -1;
+
+    // ==========================================
+    // PAGE 1: TAMPILKAN TABEL & INPUT PENCARIAN
+    // ==========================================
+    do {
+        system("cls");
+        
+        int total_width = w_uname + w_fname + w_email + 10;
+        for (int i = 0; i < total_width; i++) printf("="); printf("\n");
+        
+        int padding = (total_width - 11) / 2;
+        if (padding < 0) padding = 0;
+        for (int i = 0; i < padding; i++) printf(" ");
+        printf("SEARCH USER\n");
+        
+        for (int i = 0; i < total_width; i++) printf("="); printf("\n");
+
+        PRINT_ALL_USER_LINE();
+        printf("| %-*s | %-*s | %-*s |\n", w_uname, "Username", w_fname, "Full Name", w_email, "Email");
+        PRINT_ALL_USER_LINE();
+
+        for (int i = 0; i < count; i++) {
+            printf("| %-*s | %-*s | %-*s |\n", 
+                   w_uname, users[i].username, 
+                   w_fname, users[i].fullname, 
+                   w_email, users[i].email);
+        }
+        
+        PRINT_ALL_USER_LINE();
+        
+        printf(" (Enter '0' to go back)\n");
+        for (int i = 0; i < total_width; i++) printf("-"); printf("\n");
+        
+        printf("Enter Username or Full Name to search : ");
+
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        // --- FITUR BACK BERFUNGSI DI SINI ---
+        if (strcmp(input, "0") == 0) {
+            acc_manage(); // <-- PENTING: Ganti dengan nama fungsi menu User Anda jika berbeda
+            return; 
+        }
+
+        if (strlen(input) == 0) {
+            printf("[ERROR] Input cannot be empty!\n");
+            system("pause");
+            continue;
+        }
+
+        for (int i = 0; input[i] != '\0'; i++) lower_input[i] = tolower(input[i]);
+        lower_input[strlen(input)] = '\0';
+
+        int match_indices[500];
+        int match_count = 0;
+
+        for (int i = 0; i < count; i++) {
+            char lower_uname[100];
+            char lower_fname[100];
+            strcpy(lower_uname, users[i].username);
+            strcpy(lower_fname, users[i].fullname);
+            
+            for (int j = 0; lower_uname[j] != '\0'; j++) lower_uname[j] = tolower(lower_uname[j]);
+            for (int j = 0; lower_fname[j] != '\0'; j++) lower_fname[j] = tolower(lower_fname[j]);
+            
+            if (strstr(lower_uname, lower_input) != NULL || strstr(lower_fname, lower_input) != NULL) {
+                match_indices[match_count++] = i;
+            }
+        }
+
+        if (match_count == 0) {
+            printf("[ERROR] User \"%s\" not found! Please try again.\n", input);
+            system("pause");
+        } else if (match_count == 1) {
+            target_index = match_indices[0]; 
+        } else {
+            // ==========================================
+            // RESOLUSI AMBIGUITAS
+            // ==========================================
+            int resolved = 0;
+            
+            int w_uname_match = 8;
+            int w_fname_match = 9;
+            for (int i = 0; i < match_count; i++) {
+                int idx = match_indices[i];
+                if ((int)strlen(users[idx].username) > w_uname_match) w_uname_match = strlen(users[idx].username);
+                if ((int)strlen(users[idx].fullname) > w_fname_match) w_fname_match = strlen(users[idx].fullname);
+            }
+
+            #define PRINT_MATCH_LINE() \
+                do { \
+                    printf("+"); \
+                    for(int k=0; k<w_uname_match+2; k++) printf("-"); printf("+"); \
+                    for(int k=0; k<w_fname_match+2; k++) printf("-"); printf("+\n"); \
+                } while(0)
+
+            do {
+                system("cls");
+                printf("============================================\n");
+                printf("       SEARCH USER - MULTIPLE MATCHES       \n");
+                printf("============================================\n");
+                printf("Multiple users found for \"%s\":\n", input);
+                
+                PRINT_MATCH_LINE();
+                printf("| %-*s | %-*s |\n", w_uname_match, "Username", w_fname_match, "Full Name");
+                PRINT_MATCH_LINE();
+                
+                for (int i = 0; i < match_count; i++) {
+                    int idx = match_indices[i];
+                    printf("| %-*s | %-*s |\n", w_uname_match, users[idx].username, w_fname_match, users[idx].fullname);
+                }
+                PRINT_MATCH_LINE();
+                
+                printf("\nEnter EXACT Username from the list above\n");
+                printf(" (or '0' to go back) : ");
+                
+                char exact_input[100];
+                fgets(exact_input, sizeof(exact_input), stdin);
+                exact_input[strcspn(exact_input, "\n")] = '\0';
+
+                // --- FITUR BACK BERFUNGSI DI SINI ---
+                if (strcmp(exact_input, "0") == 0) {
+                    acc_manage(); // <-- PENTING: Ganti dengan nama fungsi menu User Anda jika berbeda
+                    return; 
+                }
+
+                if (strlen(exact_input) == 0) { 
+                    printf("[ERROR] Input cannot be empty!\n"); 
+                    system("pause"); 
+                    continue; 
+                }
+
+                for (int i = 0; i < match_count; i++) {
+                    int idx = match_indices[i];
+                    char temp_exact[100], temp_user[100];
+                    strcpy(temp_exact, exact_input);
+                    strcpy(temp_user, users[idx].username);
+                    
+                    for(int k=0; temp_exact[k]; k++) temp_exact[k] = tolower(temp_exact[k]);
+                    for(int k=0; temp_user[k]; k++) temp_user[k] = tolower(temp_user[k]);
+
+                    if (strcmp(temp_exact, temp_user) == 0) {
+                        target_index = idx;
+                        resolved = 1;
+                        break;
+                    }
+                }
+
+                if (!resolved) {
+                    printf("[ERROR] Username \"%s\" is not on the list! Please type exactly as shown.\n", exact_input);
+                    system("pause");
+                }
+            } while (!resolved);
+        }
+    } while (target_index == -1);
+
+
+    // ==========================================
+    // PAGE 2: TAMPILAN PROFIL USER
+    // ==========================================
+    system("cls");
+    printf("============================================\n");
+    printf("                USER PROFILE                \n");
+    printf("============================================\n");
+    printf("  Username   : %s\n", users[target_index].username);
+    printf("  Full Name  : %s\n", users[target_index].fullname);
+    printf("  Email      : %s\n", users[target_index].email);
+    printf("============================================\n");
+    system("pause");
+    
+    acc_manage();
+}
+
+// ============================================================
+// !! DELETE USER ACCOUNT !!
+// ============================================================
+void delete_user() {
+    struct {
+        char username[100];
+        char password[100];
+        char fullname[100];
+        char email[100];
+    } users[500];
+    
+    int count = 0;
+    char buffer[512];
+
+    // ==========================================
+    // TAHAP 1: BACA DATA KE DALAM ARRAY
+    // ==========================================
+    FILE* fp = fopen("users.txt", "r"); 
+    if (fp != NULL) {
+        while (fgets(buffer, sizeof(buffer), fp)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+            if (strlen(buffer) == 0) continue;
+
+            if (sscanf(buffer, "%[^,],%[^,],%[^,],%[^,]", 
+                       users[count].username, 
+                       users[count].password, 
+                       users[count].fullname, 
+                       users[count].email) >= 3) {
+                count++;
+            }
+        }
+        fclose(fp);
+    }
+
+    if (count == 0) {
+        system("cls");
+        printf("============================================\n");
+        printf("               DELETE USER                  \n");
+        printf("============================================\n");
+        printf("No users available in the database.\n");
+        printf("============================================\n");
+        system("pause");
+        acc_manage(); 
+        return; 
+    }
+
+    // ==========================================
+    // TAHAP 2: HITUNG LEBAR KOLOM DINAMIS
+    // ==========================================
+    int w_uname = 8;     
+    int w_fname = 9;     
+    int w_email = 5;     
+
+    for (int i = 0; i < count; i++) {
+        if ((int)strlen(users[i].username) > w_uname) w_uname = strlen(users[i].username);
+        if ((int)strlen(users[i].fullname) > w_fname) w_fname = strlen(users[i].fullname);
+        if ((int)strlen(users[i].email) > w_email) w_email = strlen(users[i].email);
+    }
+
+    #define PRINT_ALL_USER_LINE() \
+        do { \
+            printf("+"); \
+            for(int k=0; k<w_uname+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_fname+2; k++) printf("-"); printf("+"); \
+            for(int k=0; k<w_email+2; k++) printf("-"); printf("+\n"); \
+        } while(0)
+
+    char input[100];
+    char lower_input[100];
+    int target_index = -1;
+
+    // ==========================================
+    // PAGE 1: TAMPILKAN TABEL & INPUT PENCARIAN
+    // ==========================================
+    do {
+        system("cls");
+        
+        int total_width = w_uname + w_fname + w_email + 10;
+        for (int i = 0; i < total_width; i++) printf("="); printf("\n");
+        
+        int padding = (total_width - 11) / 2;
+        if (padding < 0) padding = 0;
+        for (int i = 0; i < padding; i++) printf(" ");
+        printf("DELETE USER\n");
+        
+        for (int i = 0; i < total_width; i++) printf("="); printf("\n");
+
+        PRINT_ALL_USER_LINE();
+        printf("| %-*s | %-*s | %-*s |\n", w_uname, "Username", w_fname, "Full Name", w_email, "Email");
+        PRINT_ALL_USER_LINE();
+
+        for (int i = 0; i < count; i++) {
+            printf("| %-*s | %-*s | %-*s |\n", 
+                   w_uname, users[i].username, 
+                   w_fname, users[i].fullname, 
+                   w_email, users[i].email);
+        }
+        
+        PRINT_ALL_USER_LINE();
+        
+        printf(" (Enter '0' to go back)\n");
+        for (int i = 0; i < total_width; i++) printf("-"); printf("\n");
+        
+        printf("Enter Username or Full Name to delete : ");
+
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
+        if (strcmp(input, "0") == 0) {
+            acc_manage(); 
+            return; 
+        }
+
+        if (strlen(input) == 0) {
+            printf("[ERROR] Input cannot be empty!\n");
+            system("pause");
+            continue;
+        }
+
+        for (int i = 0; input[i] != '\0'; i++) lower_input[i] = tolower(input[i]);
+        lower_input[strlen(input)] = '\0';
+
+        int match_indices[500];
+        int match_count = 0;
+
+        for (int i = 0; i < count; i++) {
+            char lower_uname[100];
+            char lower_fname[100];
+            strcpy(lower_uname, users[i].username);
+            strcpy(lower_fname, users[i].fullname);
+            
+            for (int j = 0; lower_uname[j] != '\0'; j++) lower_uname[j] = tolower(lower_uname[j]);
+            for (int j = 0; lower_fname[j] != '\0'; j++) lower_fname[j] = tolower(lower_fname[j]);
+            
+            if (strstr(lower_uname, lower_input) != NULL || strstr(lower_fname, lower_input) != NULL) {
+                match_indices[match_count++] = i;
+            }
+        }
+
+        if (match_count == 0) {
+            printf("[ERROR] User \"%s\" not found! Please try again.\n", input);
+            system("pause");
+        } else if (match_count == 1) {
+            target_index = match_indices[0]; 
+        } else {
+            // ==========================================
+            // RESOLUSI AMBIGUITAS
+            // ==========================================
+            int resolved = 0;
+            
+            int w_uname_match = 8;
+            int w_fname_match = 9;
+            for (int i = 0; i < match_count; i++) {
+                int idx = match_indices[i];
+                if ((int)strlen(users[idx].username) > w_uname_match) w_uname_match = strlen(users[idx].username);
+                if ((int)strlen(users[idx].fullname) > w_fname_match) w_fname_match = strlen(users[idx].fullname);
+            }
+
+            #define PRINT_MATCH_LINE() \
+                do { \
+                    printf("+"); \
+                    for(int k=0; k<w_uname_match+2; k++) printf("-"); printf("+"); \
+                    for(int k=0; k<w_fname_match+2; k++) printf("-"); printf("+\n"); \
+                } while(0)
+
+            do {
+                system("cls");
+                printf("============================================\n");
+                printf("       DELETE USER - MULTIPLE MATCHES       \n");
+                printf("============================================\n");
+                printf("Multiple users found for \"%s\":\n", input);
+                
+                PRINT_MATCH_LINE();
+                printf("| %-*s | %-*s |\n", w_uname_match, "Username", w_fname_match, "Full Name");
+                PRINT_MATCH_LINE();
+                
+                for (int i = 0; i < match_count; i++) {
+                    int idx = match_indices[i];
+                    printf("| %-*s | %-*s |\n", w_uname_match, users[idx].username, w_fname_match, users[idx].fullname);
+                }
+                PRINT_MATCH_LINE();
+                
+                printf("\nEnter EXACT Username to delete\n");
+                printf(" (or '0' to go back) : ");
+                
+                char exact_input[100];
+                fgets(exact_input, sizeof(exact_input), stdin);
+                exact_input[strcspn(exact_input, "\n")] = '\0';
+
+                if (strcmp(exact_input, "0") == 0) {
+                    acc_manage(); 
+                    return; 
+                }
+
+                if (strlen(exact_input) == 0) { 
+                    printf("[ERROR] Input cannot be empty!\n"); 
+                    system("pause"); 
+                    continue; 
+                }
+
+                for (int i = 0; i < match_count; i++) {
+                    int idx = match_indices[i];
+                    char temp_exact[100], temp_user[100];
+                    strcpy(temp_exact, exact_input);
+                    strcpy(temp_user, users[idx].username);
+                    
+                    for(int k=0; temp_exact[k]; k++) temp_exact[k] = tolower(temp_exact[k]);
+                    for(int k=0; temp_user[k]; k++) temp_user[k] = tolower(temp_user[k]);
+
+                    if (strcmp(temp_exact, temp_user) == 0) {
+                        target_index = idx;
+                        resolved = 1;
+                        break;
+                    }
+                }
+
+                if (!resolved) {
+                    printf("[ERROR] Username \"%s\" is not on the list! Please type exactly as shown.\n", exact_input);
+                    system("pause");
+                }
+            } while (!resolved);
+        }
+    } while (target_index == -1);
+
+
+    // ==========================================
+    // PAGE 2 : KONFIRMASI Y/N
+    // ==========================================
+    char confirm_str[10];
+    char confirm_char;
+    int conf_valid = 0;
+
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("            CONFIRM DELETION                \n");
+        printf("============================================\n");
+        printf("  Account Detail:\n");
+        printf("  Username  : %s\n", users[target_index].username);
+        printf("  Full Name : %s\n", users[target_index].fullname);
+        printf("  Email     : %s\n", users[target_index].email);
+        printf("--------------------------------------------\n");
+        printf("Are you sure you want to delete this user?\n");
+        printf("Type (Y/N) or '0' to go back : ");
+
+        fgets(confirm_str, sizeof(confirm_str), stdin);
+        confirm_str[strcspn(confirm_str, "\n")] = '\0';
+
+        if (strcmp(confirm_str, "0") == 0) { acc_manage(); return; }
+
+        if (strlen(confirm_str) == 0) {
+            printf("[ERROR] Input cannot be empty! Enter Y or N.\n");
+            system("pause");
+            continue;
+        }
+
+        if (strcmp(confirm_str, "Y") == 0 || strcmp(confirm_str, "y") == 0) {
+            confirm_char = 'y';
+            conf_valid = 1;
+        } else if (strcmp(confirm_str, "N") == 0 || strcmp(confirm_str, "n") == 0) {
+            confirm_char = 'n';
+            conf_valid = 1;
+        } else {
+            printf("[ERROR] Invalid input! Enter Y or N.\n");
+            system("pause");
+        }
+    } while (!conf_valid);
+
+    if (confirm_char == 'n') {
+        printf("Deletion cancelled.\n");
         system("pause");
         acc_manage();
         return;
     }
-    printf("==============================\n");
 
-    printf("Enter Username to delete : ");
-    scanf("%s", keyword);
 
-    for (int i = 0; i < n; i++) {
-        if (strcmp(accounts[i].username, keyword) == 0) found = 1;
-        else fprintf(temp, "%s,%s,%s,%s\n",
-                     accounts[i].username, accounts[i].password,
-                     accounts[i].name, accounts[i].email);
+    // ==========================================
+    // PAGE 3 : KONFIRMASI PASSWORD ADMIN
+    // ==========================================
+    char input_pass[100];
+    char confirm_pass_input[100]; 
+    int pass_match = 0;
+
+    do {
+        system("cls");
+        printf("============================================\n");
+        printf("         ADMIN PASSWORD CONFIRMATION        \n");
+        printf("============================================\n");
+        printf(" [WARNING] This action cannot be undone!    \n");
+        printf("--------------------------------------------\n");
+        printf(" (Enter '0' at any prompt to go back)\n");
+        printf("--------------------------------------------\n");
+
+        printf("Enter Admin password : ");
+        fgets(input_pass, sizeof(input_pass), stdin);
+        input_pass[strcspn(input_pass, "\n")] = '\0';
+
+        if (strcmp(input_pass, "0") == 0) { acc_manage(); return; }
+
+        if (strlen(input_pass) == 0) {
+            printf("[ERROR] Password cannot be empty!\n");
+            system("pause");
+            continue;
+        }
+
+        printf("Confirm Admin password : ");
+        fgets(confirm_pass_input, sizeof(confirm_pass_input), stdin);
+        confirm_pass_input[strcspn(confirm_pass_input, "\n")] = '\0';
+
+        if (strcmp(confirm_pass_input, "0") == 0) { acc_manage(); return; }
+
+        if (strcmp(input_pass, confirm_pass_input) != 0) {
+            printf("\n[ERROR] Passwords do not match! Please try again.\n");
+            system("pause");
+            continue;
+        }
+
+        // Hardcoded admin password validation
+        if (strcmp(input_pass, "admin123@") != 0) {
+            printf("\n[ERROR] Incorrect password! Please try again.\n");
+            system("pause");
+            continue;
+        }
+
+        pass_match = 1; 
+    } while (!pass_match);
+
+
+    // ==========================================
+    // PAGE 4 : EKSEKUSI PENGHAPUSAN FILE
+    // ==========================================
+    FILE* in  = fopen("users.txt", "r");
+    FILE* tmp = fopen("temp_users.txt", "w");
+    if (in == NULL || tmp == NULL) { 
+        printf("[ERROR] Could not open database files!\n");
+        system("pause");
+        acc_manage();
+        return; 
     }
-    fclose(temp);
 
-    if (found) {
-        remove(account_file);
-        rename("temp.txt", account_file);
-        printf("User \"%s\" deleted successfully!\n", keyword);
-    } else {
-        remove("temp.txt");
-        printf("User \"%s\" not found!\n", keyword);
+    char sbuf[512];
+    while (fgets(sbuf, sizeof(sbuf), in)) {
+        char current_line[512];
+        strcpy(current_line, sbuf); // Backup baris original (termasuk \n)
+        
+        sbuf[strcspn(sbuf, "\n")] = 0;
+        if(strlen(sbuf) == 0) continue;
+        
+        char parsed_uname[100];
+        // Baca username sebelum koma pertama
+        if (sscanf(sbuf, "%[^,]", parsed_uname) == 1) {
+            // Jika username tidak sama dengan target, tulis kembali ke file sementara
+            if (strcmp(parsed_uname, users[target_index].username) != 0) {
+                fprintf(tmp, "%s", current_line); 
+            }
+        }
     }
+    fclose(in); 
+    fclose(tmp);
+    remove("users.txt");
+    rename("temp_users.txt", "users.txt");
+
+
+    // ==========================================
+    // PAGE 5 : SUCCESS INVOICE
+    // ==========================================
+    system("cls");
+    printf("============================================\n");
+    printf("               ACCOUNT DELETED              \n");
+    printf("============================================\n");
+    printf("\n");
+    printf("   User \"%s\" (%s) \n", users[target_index].username, users[target_index].fullname);
+    printf("       deleted successfully!                \n");
+    printf("\n");
+    printf("============================================\n");
     system("pause");
+    
     acc_manage();
 }
 
@@ -3702,12 +6140,12 @@ void view_film_cust() {
     fclose(data);
 }
 
-
 // ============================================================
 // !! BOOK TICKET !!
 // ============================================================
 void book_ticket() {
     char input[100];
+    char lower_input[100];
     int valid;
 
     /* -- LANGKAH 1: Ambil Data Film -- */
@@ -3737,7 +6175,7 @@ void book_ticket() {
         if ((int)strlen(temp_age) > w_age) w_age = strlen(temp_age);
     }
 
-    int film_id;
+    int film_id = -1;
     Film* chosen_film = NULL;
 
     /* Loop Halaman PAGE 1: Pemilihan Film */
@@ -3785,7 +6223,7 @@ void book_ticket() {
         printf("+"); for(int k=0; k<w_dur+2; k++) printf("-");
         printf("+"); for(int k=0; k<w_age+2; k++) printf("-"); printf("+\n");
 
-        printf("Masukkan Film ID (Ketik '0' untuk Batal) : ");
+        printf("Masukkan Film ID atau Judul (Ketik '0' untuk Batal) : ");
         fgets(input, sizeof(input), stdin);
         input[strcspn(input, "\n")] = '\0';
 
@@ -3796,31 +6234,122 @@ void book_ticket() {
         }
 
         if (strlen(input) == 0) {
-            printf("[ERROR] ID tidak boleh kosong!\n");
+            printf("[ERROR] Input tidak boleh kosong!\n");
             system("pause");
-            valid = 0;
             continue;
         }
 
-        valid = 1;
+        // Konversi ke lowercase untuk pencarian teks
         for (int i = 0; input[i] != '\0'; i++) {
-            if (!isdigit(input[i])) { valid = 0; break; }
+            lower_input[i] = tolower(input[i]);
         }
-        if (!valid) {
-            printf("[ERROR] ID harus berupa angka!\n");
-            system("pause");
-            continue;
+        lower_input[strlen(input)] = '\0';
+
+        // Cek apakah input murni angka
+        int is_num = 1;
+        for (int i = 0; input[i] != '\0'; i++) {
+            if (!isdigit(input[i])) { is_num = 0; break; }
         }
 
-        film_id = atoi(input);
-        chosen_film = btree_search(film_tree, film_id);
-        if (chosen_film == NULL) {
-            printf("[ERROR] Film dengan ID %d tidak ditemukan!\n", film_id);
-            system("pause");
-            valid = 0;
-            continue;
+        Film matched[200];
+        int match_count = 0;
+
+        if (is_num) {
+            // Pencarian berdasarkan ID
+            int input_id = atoi(input);
+            for (int i = 0; i < film_count; i++) {
+                if (all_films[i].id == input_id) {
+                    matched[match_count] = all_films[i];
+                    match_count++;
+                    break;
+                }
+            }
+        } else {
+            // Pencarian berdasarkan Judul
+            for (int i = 0; i < film_count; i++) {
+                char lower_title[100];
+                strcpy(lower_title, all_films[i].title);
+                for (int j = 0; lower_title[j] != '\0'; j++) {
+                    lower_title[j] = tolower(lower_title[j]);
+                }
+                if (strstr(lower_title, lower_input) != NULL) {
+                    matched[match_count] = all_films[i];
+                    match_count++;
+                }
+            }
         }
-    } while (!valid);
+
+        // Eksekusi Hasil Pencarian
+        if (match_count == 0) {
+            printf("[ERROR] Film \"%s\" tidak ditemukan! Silakan coba lagi.\n", input);
+            system("pause");
+        } else if (match_count == 1) {
+            film_id = matched[0].id;
+        } else {
+            // Jika ada banyak kecocokan
+            int resolved = 0;
+            do {
+                system("cls");
+                printf("======================================================================================================\n");
+                printf("                                      BOOK TICKET - MULTIPLE MATCHES                                  \n");
+                printf("======================================================================================================\n");
+                printf("Beberapa film ditemukan untuk pencarian \"%s\":\n", input);
+                printf("--------------------------------------------\n");
+                for (int i = 0; i < match_count; i++) {
+                    printf("ID: %-4d | Title: %s\n", matched[i].id, matched[i].title);
+                }
+                printf("--------------------------------------------\n");
+                printf("Masukkan EXACT ID dari daftar di atas\n");
+                printf(" (atau '0' untuk kembali) : ");
+                
+                char id_input[100];
+                fgets(id_input, sizeof(id_input), stdin);
+                id_input[strcspn(id_input, "\n")] = '\0';
+
+                if (strcmp(id_input, "0") == 0) { menu_cust(); return; }
+                
+                if (strlen(id_input) == 0) { 
+                    printf("[ERROR] Input tidak boleh kosong!\n"); 
+                    system("pause"); 
+                    continue; 
+                }
+
+                int id_is_num = 1;
+                for (int i = 0; id_input[i] != '\0'; i++) {
+                    if (!isdigit(id_input[i])) { id_is_num = 0; break; }
+                }
+
+                if (!id_is_num) {
+                    printf("[ERROR] Invalid input! Harus berupa ID angka.\n");
+                    system("pause");
+                    continue;
+                }
+
+                int selected_id = atoi(id_input);
+                for (int i = 0; i < match_count; i++) {
+                    if (matched[i].id == selected_id) {
+                        film_id = selected_id;
+                        resolved = 1;
+                        break;
+                    }
+                }
+
+                if (!resolved) {
+                    printf("[ERROR] ID %d tidak ada dalam daftar di atas!\n", selected_id);
+                    system("pause");
+                }
+            } while (!resolved);
+        }
+
+        if (film_id != -1) {
+            chosen_film = btree_search(film_tree, film_id);
+            if (chosen_film == NULL) {
+                printf("[ERROR] Terjadi kesalahan. Film tidak ditemukan!\n");
+                system("pause");
+                film_id = -1; // Reset agar kembali ke pemilihan
+            }
+        }
+    } while (film_id == -1);
 
 
     /* -- LANGKAH 2: Ambil Data Jadwal Sesuai Film ID -- */
