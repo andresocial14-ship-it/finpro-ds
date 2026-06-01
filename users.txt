@@ -102,3 +102,4 @@ ari_lasso,ari123,Ari Lasso,ari@mail.com
 bunga_cl,bunga99,Bunga Citra,bunga@gmail.com
 chico_j,chicopass,Chico Jerikho,chico@binus.ac.id
 deddy_c,deddy88,Deddy Corbuzier,deddy@binus.com
+adilla,adilla,adilla,adilla@gmail.com

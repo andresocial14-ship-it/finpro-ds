@@ -2,8 +2,19 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <unistd.h>
 
-// !! DEFINE !! //
+// =========================== DESAIN ==============================
+#define CENTER_PAD "\t\t\t\t\t\t"
+#define LOAD_SPEED 25000
+#define GOLD "\033[1;33m"
+#define RED "\033[1;31m"
+#define GREEN "\033[1;32m"
+#define DIM_GOLD "\033[2;33m"
+#define RESET "\033[0m"
+// ================================================================
+
+// ============================ DEFINES ============================
 #define account_file  "users.txt"
 #define film_file     "films.txt"
 #define studio_file   "studios.txt"
@@ -175,13 +186,6 @@ void validate_ticket();
 void sell();
 void seat_status();
 
-// ============================================================
-// MAIN
-// ============================================================
-int main() {
-    main_menu();
-    return 0;
-}
 
 // ============================================================
 // !! UTILITY !!
@@ -194,6 +198,98 @@ void invalid_choice() {
 void invalid_file() {
     printf("Failed to open file!\n");
     system("pause");
+}
+
+// ============================================================
+// !! ASCII BANNER IMPLEMENTATION !!
+// ============================================================
+void XXI_Banner(){
+	
+    /* Bersihkan layar */
+    printf("\033[2J\033[H");
+
+    /* Padding vertikal */
+    printf("\n\n\n\n\n");
+
+    /* Warna Gold */
+    printf("\033[1;33m");
+
+    /* ================================================
+       ASCII Art XXI
+       ================================================ */
+
+    printf("\t\t\t\t\t\tXXXXXXX       XXXXXXX   XXXXXXX       XXXXXXX   IIIIIIIIII\n");
+    printf("\t\t\t\t\t\tX:::::X       X:::::X   X:::::X       X:::::X   I::::::::I\n");
+    printf("\t\t\t\t\t\tX:::::X       X:::::X   X:::::X       X:::::X   I::::::::I\n");
+    printf("\t\t\t\t\t\tX::::::X     X::::::X   X::::::X     X::::::X   II::::::II\n");
+    printf("\t\t\t\t\t\tXXX:::::X   X:::::XXX   XXX:::::X   X:::::XXX     I::::I\n");
+    printf("\t\t\t\t\t\t   X:::::X X:::::X         X:::::X X:::::X        I::::I\n");
+    printf("\t\t\t\t\t\t    X:::::X:::::X           X:::::X:::::X         I::::I\n");
+    printf("\t\t\t\t\t\t     X:::::::::X             X:::::::::X          I::::I\n");
+    printf("\t\t\t\t\t\t     X:::::::::X             X:::::::::X          I::::I\n");
+    printf("\t\t\t\t\t\t    X:::::X:::::X           X:::::X:::::X         I::::I\n");
+    printf("\t\t\t\t\t\t   X:::::X X:::::X         X:::::X X:::::X        I::::I\n");
+    printf("\t\t\t\t\t\tXXX:::::X   X:::::XXX   XXX:::::X   X:::::XXX   II::::::II\n");
+    printf("\t\t\t\t\t\tX::::::X     X::::::X   X::::::X     X::::::X   I::::::::I\n");
+    printf("\t\t\t\t\t\tX:::::X       X:::::X   X:::::X       X:::::X   I::::::::I\n");
+    printf("\t\t\t\t\t\tX:::::X       X:::::X   X:::::X       X:::::X   I::::::::I\n");
+    printf("\t\t\t\t\t\tXXXXXXX       XXXXXXX   XXXXXXX       XXXXXXX   IIIIIIIIII\n");
+
+    /* Reset warna */
+    printf("\033[0m");
+}
+void loading_bar(int total, const char *label) {
+    int bar_width = 38;
+
+    for (int i = 0; i <= total; i++) {
+        int filled  = (i * bar_width) / total;
+        int percent = (i * 100) / total;
+
+        printf("\r" CENTER_PAD "\033[1;33m%-18s \033[0m[", label);
+
+        printf("\033[1;33m");
+        for (int j = 0; j < filled; j++)
+            printf("=");
+
+        printf("\033[2;33m");
+        for (int j = filled; j < bar_width; j++)
+            printf("=");
+
+        printf("\033[0m] \033[1;33m%3d%%\033[0m", percent);
+
+        fflush(stdout);
+        usleep(LOAD_SPEED);
+    }
+
+    printf("\n");
+}
+
+void tampilkan_menu() {
+    printf("\n");
+
+    printf(GOLD "\t\t\t\t\t\t   +------------------------------------------------+\n");
+    printf("\t\t\t\t\t\t   |             SELAMAT DATANG DI XXI              |\n");
+    printf("\t\t\t\t\t\t   |------------------------------------------------|\n");
+
+    printf("\t\t\t\t\t\t   |  [1] Login Ke Akun                             |\n");
+    printf("\t\t\t\t\t\t   |  [2] Daftar Akun Baru (Register)               |\n");
+    printf("\t\t\t\t\t\t   |  [0] Keluar Aplikasi                           |\n");
+
+    printf("\t\t\t\t\t\t   +------------------------------------------------+\n" RESET);
+}
+
+void loginBanner() {
+    printf(GOLD);
+
+    printf("\t\t\t\t\t\t\t\t  _                _       \n");
+    printf("\t\t\t\t\t\t\t\t | |    ___   __ _(_)_ __  \n");
+    printf("\t\t\t\t\t\t\t\t | |   / _ \\ / _` | | '_ \\\\\n");
+    printf("\t\t\t\t\t\t\t\t | |__| (_) | (_| | | | | |\n");
+    printf("\t\t\t\t\t\t\t\t |_____\\___/ \\__, |_|_| |_|\n");
+    printf("\t\t\t\t\t\t\t\t             |___/         \n");
+
+    printf(RESET);
+    printf("\n");
 }
 
 // ============================================================
@@ -824,14 +920,9 @@ void main_menu() {
 
     do {
         system("cls");
-        printf("============================================\n");
-        printf("          CINEMA BOOKING SYSTEM             \n");
-        printf("--------------------------------------------\n");
-        printf("[1] Login\n");
-        printf("[2] Register New Account\n");
-        printf("[0] Exit\n");
-        printf("============================================\n");
-        printf("Choose : ");
+        XXI_Banner();
+        tampilkan_menu();
+        printf(GOLD "\n\t\t\t\t\t\t   Choose Menu : " RESET);
         // Menggunakan fgets untuk membaca string, termasuk spasi
         fgets(input, sizeof(input), stdin);
         input[strcspn(input, "\n")] = '\0'; // Menghapus karakter newline (\n)
@@ -853,9 +944,9 @@ void main_menu() {
             choice = 0;
         } else {
             // Jika input di luar opsi
-            printf("\n[ERROR] Invalid Input!\n");
-            printf("Please enter the number (1, 2, 0) or the exact option text.\n");
-            system("pause");
+            printf("\n");
+            printf(RED "\t\t\t\t\t\t   [ERORR] Invalid Choice!" RESET "\n");
+            getchar();
             valid = 0; // Input tidak valid, loop akan diulang
         }
     } while (!valid);
@@ -869,81 +960,135 @@ void main_menu() {
 
 // ============================================================
 // !! LOGIN !!
-// ============================================================
 void login() {
     system("cls");
+
     char username[100], password[100];
     char fileUsername[100], filePassword[100];
     char buffer[200];
-    int  success;
+    int success;
 
     while (1) {
-        success = 0; // Reset status success
+
+        success = 0;
         system("cls");
-        printf("============================================\n");
-        printf("                   LOGIN                    \n");
-        printf("--------------------------------------------\n");
-        printf(" (Enter '0' on Username to go back)\n");
-        printf("--------------------------------------------\n");
+        printf("\n\n\n\n");
+        loginBanner();
+
+        printf("\n");
+
+        printf(GOLD "\t\t\t\t\t\t\t  +--------------------------------------+\n");
+        printf("\t\t\t\t\t\t\t  |                 LOGIN                |\n");
+        printf("\t\t\t\t\t\t\t  |--------------------------------------|\n");
+        printf(DIM_GOLD "\t\t\t\t\t\t\t  |    Enter 0 on username to go back    |\n");
+        printf(GOLD "\t\t\t\t\t\t\t  +--------------------------------------+\n\n" RESET);
+
+        /* ================= USERNAME ================= */
 
         do {
-            printf("Username : ");
+
+            printf(GOLD "\t\t\t\t\t\t\t  Username : " RESET);
+
             fgets(username, sizeof(username), stdin);
-            username[strcspn(username, "\n")] = 0; // Hapus karakter newline
-            
-            // Fitur Back ke Main Menu
+            username[strcspn(username, "\n")] = '\0';
+
             if (strcmp(username, "0") == 0) {
                 main_menu();
                 return;
             }
+
             if (strlen(username) == 0) {
-                printf("Username cannot be empty!\n");
+                printf(RED "\n\t\t\t\t\t\t\t  ? Username cannot be empty!\n\n" RESET);
             }
+
         } while (strlen(username) == 0);
 
+        /* ================= PASSWORD ================= */
+
         do {
-            printf("Password : ");
+
+            printf(GOLD "\t\t\t\t\t\t\t  Password : " RESET);
+
             fgets(password, sizeof(password), stdin);
-            password[strcspn(password, "\n")] = 0; // Hapus karakter newline
+            password[strcspn(password, "\n")] = '\0';
 
             if (strlen(password) == 0) {
-                printf("Password cannot be empty!\n");
+                printf(RED "\n\t\t\t\t\t\t\t  ? Password cannot be empty!\n\n" RESET);
             }
+
         } while (strlen(password) == 0);
 
-    printf("============================================\n");
+        printf("\n");
 
-    if (strcmp(username, "admin123@") == 0 && strcmp(password, "admin123@") == 0) {
-        system("pause");
-        menu_admin();
-        return;
-    }
+        /* ================= ADMIN ================= */
 
-    if (strcmp(username, "cashier123@") == 0 && strcmp(password, "cashier123@") == 0) {
-        system("pause");
-        menu_cashier();
-        return;
-    }
+        if (strcmp(username, "admin123@") == 0 &&
+            strcmp(password, "admin123@") == 0) {
 
-    FILE* fp = fopen(account_file, "r");
-    if (fp == NULL) { invalid_file(); return; }
+            printf(GREEN "\t\t\t\t\t\t\t  ? Login Successful!\n" RESET);
 
-    while (fgets(buffer, sizeof(buffer), fp)) {
-        buffer[strcspn(buffer, "\n")] = 0;
-        sscanf(buffer, "%[^,],%[^,]", fileUsername, filePassword);
-        if (strcmp(username, fileUsername) == 0 &&
-            strcmp(password, filePassword) == 0) {
-            success = 1;
-            strcpy(current_user, username);
-            break;
+            getchar();
+            menu_admin();
+            return;
         }
-    }
-    fclose(fp);
 
-    if (success) { menu_cust(); return; }
+        /* ================= CASHIER ================= */
 
-    printf("Wrong username or password!\n");
-    system("pause");
+        if (strcmp(username, "cashier123@") == 0 &&
+            strcmp(password, "cashier123@") == 0) {
+
+            printf(GREEN "\t\t\t\t\t\t\t  ? Login Successful!\n" RESET);
+
+            getchar();
+            menu_cashier();
+            return;
+        }
+
+        /* ================= CUSTOMER ================= */
+
+        FILE *fp = fopen(account_file, "r");
+
+        if (fp == NULL) {
+            invalid_file();
+            return;
+        }
+
+        while (fgets(buffer, sizeof(buffer), fp)) {
+
+            buffer[strcspn(buffer, "\n")] = '\0';
+
+            sscanf(buffer,
+                   "%[^,],%[^,]",
+                   fileUsername,
+                   filePassword);
+
+            if (strcmp(username, fileUsername) == 0 &&
+                strcmp(password, filePassword) == 0) {
+
+                success = 1;
+                strcpy(current_user, username);
+                break;
+            }
+        }
+
+        fclose(fp);
+
+        if (success) {
+
+            printf(GREEN "\t\t\t\t\t\t\t  ? Login Successful!\n" RESET);
+
+            getchar();
+            menu_cust();
+            return;
+        }
+
+        /* ================= ERROR ================= */
+
+        printf(RED "\n\t\t\t\t\t\t\t  ? Wrong Username or Password!\n" RESET);
+
+        printf(DIM_GOLD "\t\t\t\t\t\t\t  Press ENTER to try again..." RESET);
+
+        getchar();
     }
 }
 
@@ -4652,3 +4797,32 @@ void seat_status() {
     system("pause");
     menu_cashier();
 }
+
+
+// ============================================================
+// MAIN
+// ============================================================
+int main() {
+    XXI_Banner();
+
+    printf("\n" CENTER_PAD "\033[2;33m");
+    for (int i = 0; i < 58; i++)
+        printf("-");
+    printf("\033[0m\n\n");
+
+    /* Loading Bar */
+    loading_bar(100, "Loading...");
+
+    /* Pesan sukses */
+    printf("\n" CENTER_PAD "\033[1;32m? Welcome. System fully loaded.\033[0m\n\n");
+
+    getchar(); // Tunggu user menekan Enter
+
+    /* Bersihkan layar */
+    printf("\033[2J\033[H");
+
+    main_menu();
+
+    return 0;
+}
+

@@ -1,20 +1,20 @@
-342=Misteri Kamar Kos=Horror=110=17=Teror hantu masa lalu penghuni kos.
-812=Cinta di Batas Kota=Romance=95=13=Kisah cinta remaja beda kasta.
 15=Balapan Maut 2026=Action=120=17=Aksi balap liar taruhan nyawa.
-567=Mengejar Matahari=Drama=105=3=Petualangan anak desa menggapai mimpi.
-901=Lembah Tengkorak=Thriller=115=21=Sekelompok remaja terjebak di hutan.
 23=Komedi Salah Paham=Comedy=90=13=Aksi kocak akibat salah kirim pesan.
-744=Detektif Cilik=Mystery=100=3=Tiga anak SD memecahkan kasus hilang.
-412=Dendam Kesumat=Action=125=21=Aksi balas dendam mantan narapidana.
-619=Melodi Musim Gugur=Romance=118=13=Kisah pianis buta menemukan cinta.
 88=Robot Penjaga Bumi=Sci-Fi=130=3=Perjuangan robot menyelamatkan dunia.
-502=Malam Satu Suro=Horror=102=17=Ritual mistis di desa terpencil.
-934=Dunia Paralel=Sci-Fi=122=13=Penemuan gerbang menuju dimensi lain.
 167=Koki Super Cilik=Comedy=95=3=Kompetisi memasak anak-anak nasional.
-489=Mafia Ibu Kota=Crime=135=21=Perang antar geng berebut wilayah.
-711=Surat untuk Ibu=Drama=108=3=Perjuangan anak merawat ibunya.
 234=Hacker Profesional=Action=112=17=Aksi peretasan sistem bank dunia.
-855=Pendaki Terakhir=Adventure=120=13=Penyelamatan di puncak gunung bersalju.
 309=Cinta di Perpustakaan=Romance=88=13=Pertemuan manis dua mahasiswa unik.
-641=Terperangkap di Lift=Thriller=92=17=Ketegangan psikologis lima orang asing.
+342=Misteri Kamar Kos=Horror=110=17=Teror hantu masa lalu penghuni kos.
+412=Dendam Kesumat=Action=125=21=Aksi balas dendam mantan narapidana.
+489=Mafia Ibu Kota=Crime=135=21=Perang antar geng berebut wilayah.
+502=Malam Satu Suro=Horror=102=17=Ritual mistis di desa terpencil.
+567=Mengejar Matahari=Drama=105=3=Petualangan anak desa menggapai mimpi.
 577=Legenda Sang Naga=Fantasy=132=3=Kisah fantasi pendekar pedang.
+619=Melodi Musim Gugur=Romance=118=13=Kisah pianis buta menemukan cinta.
+641=Terperangkap di Lift=Thriller=92=17=Ketegangan psikologis lima orang asing.
+711=Surat untuk Ibu=Drama=108=3=Perjuangan anak merawat ibunya.
+744=Detektif Cilik=Mystery=100=3=Tiga anak SD memecahkan kasus hilang.
+812=Cinta di Batas Kota=Romance=95=13=Kisah cinta remaja beda kasta.
+855=Pendaki Terakhir=Adventure=120=13=Penyelamatan di puncak gunung bersalju.
+901=Lembah Tengkorak=Thriller=115=21=Sekelompok remaja terjebak di hutan.
+934=123=Sci-Fi=1=21=Penemuan gerbang menuju dimensi lain.
