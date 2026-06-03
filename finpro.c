@@ -6946,7 +6946,7 @@ void cancel_banner(){
     }
 
     printf(GOLD"\n");
-    printf("\t\t\t\t\t\t    ====================== BOOKING AKTIFff =========================\n");
+    printf("\t\t\t\t\t\t    ====================== BOOKING AKTIF =========================\n");
     printf("\t\t\t\t====================================================================================================\n");
     printf("\t\t\t\t| %-15s | %-35s | %-12s | %-10s | %-12s |\n",
            "BOOKING CODE", "FILM", "DATE", "SEAT", "PRICE");
@@ -7183,22 +7183,37 @@ void cancel_banner(){
 
         do {
             system("cls");
-            printf("============================================\n");
-            printf("                EDIT PROFILE                \n");
-            printf("--------------------------------------------\n");
-            printf("[1] View Profile\n");
-            printf("[2] Change Full Name\n");
-            printf("[3] Change Username\n");
-            printf("[4] Change Email\n");
-            printf("[5] Change Password\n");
-            printf("[6] Delete Account\n");
-            printf("[0] Back\n");
-            printf("============================================\n");
-            printf("Choose : ");
+
+            printf(GOLD);
+            printf("\n");
+            printf("\t\t\t\t\t\t      =============================================================\n");
+            printf("\t\t\t\t\t\t                            EDIT PROFILE                          \n");
+            printf("\t\t\t\t\t\t      =============================================================\n");
+            printf(RESET);
+
+            printf("\t\t\t\t\t\t      [1] View Profile\n");
+            printf("\t\t\t\t\t\t      [2] Change Full Name\n");
+            printf("\t\t\t\t\t\t      [3] Change Email\n");
+            printf("\t\t\t\t\t\t      [4] Change Password\n");
+            printf("\t\t\t\t\t\t      [5] Delete Account\n");
+
+            printf(GOLD);
+            printf("\t\t\t\t\t\t      -------------------------------------------------------------\n");
+            printf(RESET);
+
+            printf(RED"\t\t\t\t\t\t      [0] Back\n"RESET);
+
+            printf(GOLD);
+            printf("\t\t\t\t\t\t      =============================================================\n");
+            printf(RESET);
+
+            printf("\n");
+            printf(GOLD"\t\t\t\t\t\t      Choose : "RESET);
+
             fgets(input, sizeof(input), stdin);
             input[strcspn(input, "\n")] = '\0';
 
-            // Mengonversi input menjadi lowercase
+            /* Mengubah input menjadi lowercase */
             for (int i = 0; input[i] != '\0'; i++) {
                 lower_input[i] = tolower(input[i]);
             }
@@ -7206,37 +7221,42 @@ void cancel_banner(){
 
             valid = 1;
 
-            // Pengecekan kondisi berdasarkan angka atau teks
-            if (strcmp(lower_input, "1") == 0 || strcmp(lower_input, "view profile") == 0) {
+            if (strcmp(lower_input, "1") == 0 ||
+                strcmp(lower_input, "view profile") == 0) {
                 choice = 1;
-            } else if (strcmp(lower_input, "2") == 0 || strcmp(lower_input, "change full name") == 0) {
+            }
+            else if (strcmp(lower_input, "2") == 0 ||
+                    strcmp(lower_input, "change full name") == 0) {
                 choice = 2;
-            } else if (strcmp(lower_input, "3") == 0 || strcmp(lower_input, "change username") == 0) {
+            } else if (strcmp(lower_input, "3") == 0 || strcmp(lower_input, "change email") == 0) {
                 choice = 3;
-            } else if (strcmp(lower_input, "4") == 0 || strcmp(lower_input, "change email") == 0) {
+            } else if (strcmp(lower_input, "4") == 0 || strcmp(lower_input, "change password") == 0) {
                 choice = 4;
-            } else if (strcmp(lower_input, "5") == 0 || strcmp(lower_input, "change password") == 0) {
+            } else if (strcmp(lower_input, "5") == 0 || strcmp(lower_input, "delete account") == 0) {
                 choice = 5;
-            } else if (strcmp(lower_input, "6") == 0 || strcmp(lower_input, "delete account") == 0) {
-                choice = 6;
-            } else if (strcmp(lower_input, "0") == 0 || strcmp(lower_input, "back") == 0) {
+            }
+            else if (strcmp(lower_input, "0") == 0 ||
+                strcmp(lower_input, "back") == 0) {
                 choice = 0;
-            } else {
-                // Jika input kosong atau di luar opsi
-                printf("\n[ERROR] Invalid Input!\n");
-                printf("Please enter the number (0-6) or the exact option text.\n");
+            }
+            else {
+                printf("\n");
+                printf(RED"\t\t\t\t\t\t      [ERROR] Invalid Input!\n"RESET);
+                printf("\t\t\t\t\t\t      Please enter:\n");
+                printf("\t\t\t\t\t\t      - Number 0 to 5\n");
+                printf("\t\t\t\t\t\t      - Or the exact menu name\n\n");
                 system("pause");
                 valid = 0;
             }
+
         } while (!valid);
 
         switch (choice) {
             case 1: view_profile(); break;
             case 2: change_name();  break;
-            case 3: change_usn();   break;
-            case 4: change_email(); break;
-            case 5: change_pass();  break;
-            case 6: delete_account_cust(); break;
+            case 3: change_email(); break;
+            case 4: change_pass();  break;
+            case 5: delete_account_cust(); break;
             case 0: menu_cust();    break;
         }
     }
@@ -7268,15 +7288,30 @@ void cancel_banner(){
         // Pindahkan UI dan cls ke dalam do-while loop
         do {
             system("cls");
-            printf("============================================\n");
-            printf("              CHANGE FULL NAME              \n");
-            printf("============================================\n");
-            printf("Current Full Name : %s\n", current_name);
-            printf("--------------------------------------------\n");
-            printf(" (Enter '0' to go back)\n");
-            printf("--------------------------------------------\n");
-            printf("Enter new Full Name : ");
-            
+
+            printf(GOLD);
+            printf("\n");
+            printf("\t\t\t\t\t\t      =============================================================\n");
+            printf("\t\t\t\t\t\t                          CHANGE FULL NAME                         \n");
+            printf("\t\t\t\t\t\t      =============================================================\n");
+            printf(RESET);
+
+            printf("\n");
+            printf("\t\t\t\t\t\t      Current Full Name : %s\n", current_name);
+
+            printf(GOLD);
+            printf("\t\t\t\t\t\t      -------------------------------------------------------------\n");
+            printf(RESET);
+
+            printf("\t\t\t\t\t\t      [0] Back\n");
+
+            printf(GOLD);
+            printf("\t\t\t\t\t\t      -------------------------------------------------------------\n");
+            printf(RESET);
+
+            printf("\n");
+            printf(GOLD"\t\t\t\t\t\t      Enter New Full Name : "RESET);
+
             fgets(new_name, sizeof(new_name), stdin);
             new_name[strcspn(new_name, "\n")] = '\0';
 
@@ -7284,26 +7319,30 @@ void cancel_banner(){
                 edit_profile();
                 return;
             }
+
             if (strlen(new_name) == 0) {
-                printf("Full Name cannot be empty!\n");
-                system("pause"); 
-                continue; // Ulangi loop tanpa kembali ke menu
-            }
-            if (strcmp(current_name, new_name) == 0) {
-                printf("New Full Name cannot be the same as current!\n");
-                system("pause"); 
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Full Name cannot be empty!\n"RESET);
+                system("pause");
                 continue;
             }
-            
-            valid = 1; // Asumsi valid
+
+            if (strcmp(current_name, new_name) == 0) {
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] New Full Name cannot be the same as current!\n"RESET);
+                system("pause");
+                continue;
+            }
+
+            valid = 1;
+
             for (int i = 0; new_name[i] != '\0'; i++) {
                 if (isdigit(new_name[i])) {
-                    printf("Full name cannot contain numbers!\n");
-                    system("pause"); 
-                    valid = 0; 
+                    printf(RED"\n\t\t\t\t\t\t      [ERROR] Full Name cannot contain numbers!\n"RESET);
+                    system("pause");
+                    valid = 0;
                     break;
                 }
             }
+
         } while (!valid);
 
         FILE* data = fopen(account_file, "r");
@@ -7320,96 +7359,7 @@ void cancel_banner(){
         fclose(data); fclose(temp);
         remove(account_file); rename("temp.txt", account_file);
 
-        printf("Full Name successfully updated!\n");
-        system("pause");
-        edit_profile();
-    }
-
-
-    void change_usn() {
-        char buffer[1024];
-        Account acc;
-        char new_usn[100];
-        int valid = 0;
-
-        do {
-            system("cls");
-            printf("============================================\n");
-            printf("              CHANGE USERNAME               \n");
-            printf("============================================\n");
-            printf("Current Username : %s\n", current_user);
-            printf("--------------------------------------------\n");
-            printf(" (Enter '0' to go back)\n");
-            printf("--------------------------------------------\n");
-            printf("Enter new Username : ");
-            
-            fgets(new_usn, sizeof(new_usn), stdin);
-            new_usn[strcspn(new_usn, "\n")] = '\0';
-            
-            if (strcmp(new_usn, "0") == 0) {
-                edit_profile();
-                return;
-            }
-            if (strlen(new_usn) == 0) {
-                printf("Username cannot be empty!\n");
-                system("pause"); 
-                continue;
-            }
-            if (strcmp(current_user, new_usn) == 0) {
-                printf("New Username cannot be the same as current!\n");
-                system("pause"); 
-                continue;
-            }
-            
-            int has_space = 0;
-            for (int i = 0; new_usn[i] != '\0'; i++) {
-                if (isspace(new_usn[i])) { has_space = 1; break; }
-            }
-            if (has_space) { 
-                printf("Username cannot contain spaces!\n"); 
-                system("pause"); 
-                continue; 
-            }
-
-            int found = 0;
-            FILE* chk = fopen(account_file, "r");
-            if (chk != NULL) {
-                char tb[1024], cu[100];
-                while (fgets(tb, sizeof(tb), chk)) {
-                    sscanf(tb, "%[^,]", cu);
-                    if (strcmp(cu, new_usn) == 0) {
-                        found = 1; 
-                        break;
-                    }
-                }
-                fclose(chk);
-            }
-            
-            if (found) {
-                printf("Username already exists!\n");
-                system("pause");
-                continue;
-            }
-            
-            valid = 1;
-        } while (!valid);
-
-        FILE* data = fopen(account_file, "r");
-        FILE* temp = fopen("temp.txt", "w");
-        if (!data || !temp) { invalid_file(); return; }
-        while (fgets(buffer, sizeof(buffer), data)) {
-            buffer[strcspn(buffer, "\n")] = 0;
-            sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]",
-                acc.username, acc.password, acc.name, acc.email);
-            if (strcmp(acc.username, current_user) == 0) strcpy(acc.username, new_usn);
-            fprintf(temp, "%s,%s,%s,%s\n",
-                    acc.username, acc.password, acc.name, acc.email);
-        }
-        fclose(data); fclose(temp);
-        remove(account_file); rename("temp.txt", account_file);
-        strcpy(current_user, new_usn);
-
-        printf("Username successfully updated!\n");
+        printf("\n\t\t\t\t\t\t      Full Name successfully updated!\n");
         system("pause");
         edit_profile();
     }
@@ -7438,59 +7388,68 @@ void cancel_banner(){
 
         do {
             system("cls");
-            printf("============================================\n");
-            printf("                CHANGE EMAIL                \n");
-            printf("============================================\n");
-            printf("Current Email : %s\n", current_email);
-            printf("--------------------------------------------\n");
-            printf(" (Enter '0' to go back)\n");
-            printf("--------------------------------------------\n");
-            printf("Enter new Email : ");
-            
+
+            printf(GOLD"\n");
+            printf("\t\t\t\t\t\t      ========================================================\n");
+            printf("\t\t\t\t\t\t                         CHANGE EMAIL                         \n");
+            printf("\t\t\t\t\t\t      ========================================================\n");
+            printf("\t\t\t\t\t\t        Current Email : %s\n", current_email);
+            printf("\t\t\t\t\t\t      --------------------------------------------------------\n");
+            printf("\t\t\t\t\t\t        [0] Back\n");
+            printf("\t\t\t\t\t\t      --------------------------------------------------------\n");
+            printf("\t\t\t\t\t\t        Enter New Email : "RESET);
+
             fgets(new_email, sizeof(new_email), stdin);
             new_email[strcspn(new_email, "\n")] = '\0';
-            
+
             if (strcmp(new_email, "0") == 0) {
                 edit_profile();
                 return;
             }
+
             if (strlen(new_email) == 0) {
-                printf("Email cannot be empty!\n");
-                system("pause"); 
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Email cannot be empty!\n"RESET);
+                system("pause");
                 continue;
-            }
-            if (strcmp(current_email, new_email) == 0) {
-                printf("New Email cannot be the same as current!\n");
-                system("pause"); 
-                continue;
-            }
-            
-            int validasi_at = 0;
-            for (int i = 0; new_email[i] != '\0'; i++) {
-                if (new_email[i] == '@') { validasi_at = 1; break; }
-            }
-            if (!validasi_at) { 
-                printf("Email must contain '@'!\n"); 
-                system("pause"); 
-                continue; 
             }
 
-            printf("Confirm new Email : ");
+            if (strcmp(current_email, new_email) == 0) {
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] New email cannot be the same as current!\n"RESET);
+                system("pause");
+                continue;
+            }
+
+            int validasi_at = 0;
+            for (int i = 0; new_email[i] != '\0'; i++) {
+                if (new_email[i] == '@') {
+                    validasi_at = 1;
+                    break;
+                }
+            }
+
+            if (!validasi_at) {
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Email must contain '@'!\n"RESET);
+                system("pause");
+                continue;
+            }
+
+            printf(GOLD"\t\t\t\t\t\t        Confirm New Email : "RESET);
             fgets(confirm_email, sizeof(confirm_email), stdin);
             confirm_email[strcspn(confirm_email, "\n")] = '\0';
-            
+
             if (strcmp(confirm_email, "0") == 0) {
                 edit_profile();
                 return;
             }
-            
+
             if (strcmp(new_email, confirm_email) != 0) {
-                printf("Email does not match! Try again!\n");
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Email confirmation does not match!\n"RESET);
                 system("pause");
                 continue;
             }
-            
+
             valid = 1;
+
         } while (!valid);
 
         FILE* data = fopen(account_file, "r");
@@ -7507,7 +7466,7 @@ void cancel_banner(){
         fclose(data); fclose(temp);
         remove(account_file); rename("temp.txt", account_file);
 
-        printf("Email successfully updated!\n");
+        printf(GOLD"\t\t\t\t\t\t      Email successfully updated!\n"RESET );
         system("pause");
         edit_profile();
     }
@@ -7536,55 +7495,67 @@ void cancel_banner(){
 
         do {
             system("cls");
-            printf("============================================\n");
-            printf("              CHANGE PASSWORD               \n");
-            printf("============================================\n");
-            printf("Current Password : ");
-            for (int i = 0; i < (int)strlen(current_pass); i++) printf("*");
-            printf("\n--------------------------------------------\n");
-            printf(" (Enter '0' to go back)\n");
-            printf("--------------------------------------------\n");
-            printf("Enter new Password : ");
-            
+
+            printf(GOLD"\n");
+            printf("\t\t\t\t\t\t      ========================================================\n");
+            printf("\t\t\t\t\t\t                    CHANGE PASSWORD                          \n");
+            printf("\t\t\t\t\t\t      ========================================================\n");
+
+            printf("\t\t\t\t\t\t      Current Password : ");
+            for (int i = 0; i < (int)strlen(current_pass); i++)
+                printf("*");
+
+            printf("\n");
+            printf("\t\t\t\t\t\t      --------------------------------------------------------\n");
+            printf("\t\t\t\t\t\t      [0] Back\n");
+            printf("\t\t\t\t\t\t      --------------------------------------------------------\n");
+
+            printf("\t\t\t\t\t\t      Enter New Password : "RESET);
+
             fgets(new_pass, sizeof(new_pass), stdin);
             new_pass[strcspn(new_pass, "\n")] = '\0';
-            
+
             if (strcmp(new_pass, "0") == 0) {
                 edit_profile();
                 return;
             }
+
             if (strlen(new_pass) == 0) {
-                printf("Password cannot be empty!\n");
-                system("pause"); 
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Password cannot be empty!\n"RESET);
+                system("pause");
                 continue;
             }
+
             if (strcmp(current_pass, new_pass) == 0) {
-                printf("New Password cannot be the same as current!\n");
-                system("pause"); 
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] New password cannot be the same as current!\n"RESET);
+                system("pause");
                 continue;
             }
+
             if (strlen(new_pass) < 5) {
-                printf("Password must be at least 5 characters long!\n"); 
-                system("pause"); 
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Password must be at least 5 characters long!\n"RESET);
+                system("pause");
                 continue;
             }
-            
-            printf("Confirm new Password : ");
+
+            printf(GOLD"\t\t\t\t\t\t      Confirm New Password : "RESET);
+
             fgets(confirm_pass, sizeof(confirm_pass), stdin);
             confirm_pass[strcspn(confirm_pass, "\n")] = '\0';
-            
+
             if (strcmp(confirm_pass, "0") == 0) {
                 edit_profile();
                 return;
             }
-            
+
             if (strcmp(new_pass, confirm_pass) != 0) {
-                printf("Password does not match! Try again!\n");
-                system("pause"); 
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Password confirmation does not match!\n"RESET);
+                system("pause");
                 continue;
             }
-            
+
             valid = 1;
+
         } while (!valid);
 
         FILE* data = fopen(account_file, "r");
@@ -7634,15 +7605,23 @@ void cancel_banner(){
 
         do {
             system("cls");
-            printf("============================================\n");
-            printf("               DELETE ACCOUNT               \n");
-            printf("============================================\n");
-            printf(" [WARNING] This action cannot be undone!    \n");
-            printf("--------------------------------------------\n");
-            printf(" (Enter '0' at any prompt to go back)\n");
-            printf("--------------------------------------------\n");
 
-            printf("Enter your password : ");
+            printf(GOLD"\n");
+            printf("\t\t\t\t\t\t      ========================================================\n");
+            printf("\t\t\t\t\t\t                      DELETE ACCOUNT                        \n");
+            printf("\t\t\t\t\t\t      ========================================================\n"RESET);
+
+            printf(RED);
+            printf("\t\t\t\t\t\t      [WARNING] This action cannot be undone!\n");
+            printf(RESET);
+
+            printf(GOLD);
+            printf("\t\t\t\t\t\t      --------------------------------------------------------\n");
+            printf("\t\t\t\t\t\t      Enter [0] at any prompt to go back\n");
+            printf("\t\t\t\t\t\t      --------------------------------------------------------\n");
+            printf(RESET);
+
+            printf(GOLD"\t\t\t\t\t\t      Enter Your Password : "RESET);
             fgets(input_pass, sizeof(input_pass), stdin);
             input_pass[strcspn(input_pass, "\n")] = '\0';
 
@@ -7652,12 +7631,12 @@ void cancel_banner(){
             }
 
             if (strlen(input_pass) == 0) {
-                printf("Password cannot be empty!\n");
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Password cannot be empty!\n"RESET);
                 system("pause");
                 continue;
             }
 
-            printf("Confirm password    : ");
+            printf(GOLD"\t\t\t\t\t\t      Confirm Password    : "RESET);
             fgets(confirm_pass_input, sizeof(confirm_pass_input), stdin);
             confirm_pass_input[strcspn(confirm_pass_input, "\n")] = '\0';
 
@@ -7667,39 +7646,53 @@ void cancel_banner(){
             }
 
             if (strcmp(input_pass, confirm_pass_input) != 0) {
-                printf("\nPasswords do not match! Please try again.\n");
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Password confirmation does not match!\n"RESET);
                 system("pause");
                 continue;
             }
 
             if (strcmp(input_pass, current_pass) != 0) {
-                printf("\nIncorrect password! Please try again.\n");
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Incorrect password!\n"RESET);
                 system("pause");
                 continue;
             }
 
-            pass_match = 1; 
-        } while (!pass_match);
+            pass_match = 1;
 
+        } while (!pass_match);
 
         do {
             system("cls");
-            printf("============================================\n");
-            printf("             FINAL CONFIRMATION             \n");
-            printf("============================================\n");
-            printf(" Are you absolutely sure you want to delete \n");
-            printf(" your account? All data will be lost.       \n");
-            printf("--------------------------------------------\n");
-            printf(" Type 'Yes' to permanently delete.\n");
-            printf(" Type 'No' or '0' to cancel and go back.\n");
-            printf("--------------------------------------------\n");
-            printf("Your Choice : ");
+
+            printf(RED"\n");
+            printf("\t\t\t\t\t\t      ========================================================\n");
+            printf("\t\t\t\t\t\t                   FINAL CONFIRMATION                        \n");
+            printf("\t\t\t\t\t\t      ========================================================\n");
+            printf(RESET);
+
+            printf("\t\t\t\t\t\t      Are you absolutely sure you want to delete\n");
+            printf("\t\t\t\t\t\t      your account? All data will be lost.\n");
+
+            printf(RED);
+            printf("\t\t\t\t\t\t      --------------------------------------------------------\n");
+            printf("\t\t\t\t\t\t      WARNING : This action cannot be undone!\n");
+            printf("\t\t\t\t\t\t      --------------------------------------------------------\n");
+            printf(RESET);
+
+            printf("\t\t\t\t\t\t      Type 'Yes' to permanently delete account.\n");
+            printf("\t\t\t\t\t\t      Type 'No' or '0' to cancel and go back.\n");
+
+            printf(RED);
+            printf("\t\t\t\t\t\t      --------------------------------------------------------\n");
+            printf(RESET);
+
+            printf(RED"\t\t\t\t\t\t      Your Choice : "RESET);
 
             fgets(confirm, sizeof(confirm), stdin);
             confirm[strcspn(confirm, "\n")] = '\0';
 
             if (strlen(confirm) == 0) {
-                printf("\nInput cannot be empty!\n");
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Input cannot be empty!\n"RESET);
                 system("pause");
                 continue;
             }
@@ -7711,15 +7704,24 @@ void cancel_banner(){
 
             if (strcmp(lower_confirm, "yes") == 0) {
                 confirmed = 1;
-            } else if (strcmp(lower_confirm, "no") == 0 || strcmp(lower_confirm, "0") == 0) {
-                printf("\nAccount deletion cancelled.\n");
+            }
+            else if (strcmp(lower_confirm, "no") == 0 ||
+                    strcmp(lower_confirm, "0") == 0) {
+
+                printf(GOLD"\n");
+                printf("\t\t\t\t\t\t      ========================================================\n");
+                printf("\t\t\t\t\t\t                ACCOUNT DELETION CANCELLED                  \n");
+                printf("\t\t\t\t\t\t      ========================================================\n"RESET);
+
                 system("pause");
                 edit_profile();
                 return;
-            } else {
-                printf("\nInvalid input. Please type 'Yes', 'No', or '0'.\n");
+            }
+            else {
+                printf(RED"\n\t\t\t\t\t\t      [ERROR] Please type 'Yes', 'No', or '0'!\n"RESET);
                 system("pause");
             }
+
         } while (!confirmed);
 
         FILE* data = fopen(account_file, "r");
@@ -7745,52 +7747,86 @@ void cancel_banner(){
         memset(current_user, 0, sizeof(current_user));
 
         system("cls");
-        printf("============================================\n");
-        printf("               ACCOUNT DELETED              \n");
-        printf("============================================\n");
-        printf("\n");
-        printf("       Account deleted successfully!        \n");
-        printf("\n");
-        printf("============================================\n");
+
+        printf(RED"\n");
+        printf("\t\t\t\t\t\t      ========================================================\n");
+        printf("\t\t\t\t\t\t                  ACCOUNT DELETED SUCCESSFULLY              \n");
+        printf("\t\t\t\t\t\t      ========================================================\n");
+        printf(RESET);
+
+        printf("\t\t\t\t\t\t      Thank you for using Cinema Booking System.\n");
+        printf("\t\t\t\t\t\t      Your account has been permanently removed.\n");
+
+        printf(RED);
+        printf("\t\t\t\t\t\t      --------------------------------------------------------\n");
+        printf("\t\t\t\t\t\t      We hope to see you again in the future.\n");
+        printf("\t\t\t\t\t\t      ========================================================\n");
+        printf(RESET);
+
         system("pause");
         
         main_menu();
     }
 
     void view_profile() {
-        system("cls");
-        char buffer[1024];
-        Account acc;
-        int found = 0;
+    system("cls");
 
-        FILE* check = fopen(account_file, "r");
-        if (check != NULL) {
-            while (fgets(buffer, sizeof(buffer), check)) {
-                buffer[strcspn(buffer, "\n")] = 0;
-                sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]",
-                    acc.username, acc.password, acc.name, acc.email);
-                if (strcmp(acc.username, current_user) == 0) { found = 1; break; }
+    char buffer[1024];
+    Account acc;
+    int found = 0;
+
+    FILE* check = fopen(account_file, "r");
+    if (check != NULL) {
+        while (fgets(buffer, sizeof(buffer), check)) {
+            buffer[strcspn(buffer, "\n")] = 0;
+
+            sscanf(buffer, "%[^,],%[^,],%[^,],%[^\n]",
+                   acc.username,
+                   acc.password,
+                   acc.name,
+                   acc.email);
+
+            if (strcmp(acc.username, current_user) == 0) {
+                found = 1;
+                break;
             }
-            fclose(check);
         }
-
-        printf("============================================\n");
-        printf("                MY PROFILE                  \n");
-        printf("============================================\n");
-        if (found) {
-            printf("Full Name : %s\n", acc.name);
-            printf("Username  : %s\n", acc.username);
-            printf("Email     : %s\n", acc.email);
-            printf("Password  : ");
-            for (int i = 0; i < (int)strlen(acc.password); i++) printf("*");
-            printf("\n");
-        } else {
-            printf("Error: Profile data not found!\n");
-        }
-        printf("============================================\n");
-        system("pause");
-        edit_profile();
+        fclose(check);
     }
+
+    printf(GOLD);
+    printf("\n");
+    printf("\t\t\t\t\t\t      ======================================================\n");
+    printf("\t\t\t\t\t\t                      MY PROFILE\n");
+    printf("\t\t\t\t\t\t      ======================================================\n");
+
+    if (found) {
+
+        printf("\t\t\t\t\t\t      Full Name : %s\n", acc.name);
+        printf("\t\t\t\t\t\t      Username  : %s\n", acc.username);
+        printf("\t\t\t\t\t\t      Email     : %s\n", acc.email);
+
+        printf("\t\t\t\t\t\t      Password  : ");
+        for (int i = 0; i < (int)strlen(acc.password); i++) {
+            printf("*");
+        }
+        printf("\n");
+
+    } else {
+
+        printf(RED);
+        printf("\t\t\t\t\t\t      [ERROR] Profile data not found!\n");
+        printf(GOLD);
+
+    }
+
+    printf("\t\t\t\t\t\t      ======================================================\n");
+    printf(RESET);
+
+    printf("\n");
+    system("pause");
+    edit_profile();
+}
 
     // ============================================================
     // !! CASHIER MENU !!
