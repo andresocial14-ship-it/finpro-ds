@@ -7049,43 +7049,63 @@ void cancel_banner(){
     char confirm_str[10];
 
     do {
-        system("cls");
-        printf("============================================\n");
-        printf("           KONFIRMASI PEMBATALAN            \n");
-        printf("============================================\n");
-        printf("  Detail Booking:\n");
-        printf("  Code    : %s\n", target.booking_code);
-        printf("  Film    : %s\n", film_title);
-        printf("  Studio  : %s\n", studio_name);
-        printf("  Tanggal : %s\n", (find_schedule(target.schedule_id, &sch)) ? sch.date : "-");
-        printf("  Kursi   : %s\n", target.seat);
-        printf("  Harga   : Rp %.0f\n", target.total_price);
-        printf("--------------------------------------------\n");
-        printf("Yakin ingin membatalkan booking %s? (Y/N) : ", target.booking_code);
+    system("cls");
+    cancel_banner();
 
-        fgets(confirm_str, sizeof(confirm_str), stdin);
-        confirm_str[strcspn(confirm_str, "\n")] = '\0';
+    printf(GOLD"\n");
+    printf("\t\t\t\t\t\t      =============================================================\n");
+    printf("\t\t\t\t\t\t                       KONFIRMASI PEMBATALAN BOOKING              \n");
+    printf("\t\t\t\t\t\t      =============================================================\n");
+    printf(RESET);
 
-        if (strlen(confirm_str) == 0) {
-            printf("[ERROR] Input tidak boleh kosong! Masukkan huruf Y atau N.\n");
-            system("pause");
-            continue;
-        }
+    printf("\t\t\t\t\t\t      Booking Code : %s\n", target.booking_code);
+    printf("\t\t\t\t\t\t      Film         : %s\n", film_title);
+    printf("\t\t\t\t\t\t      Studio       : %s\n", studio_name);
+    printf("\t\t\t\t\t\t      Tanggal      : %s\n",
+           (find_schedule(target.schedule_id, &sch)) ? sch.date : "-");
+    printf("\t\t\t\t\t\t      Kursi        : %s\n", target.seat);
 
-        if (strcmp(confirm_str, "Y") == 0 || strcmp(confirm_str, "y") == 0) {
-            confirm_char = 'y';
-            conf_valid = 1;
-        } else if (strcmp(confirm_str, "N") == 0 || strcmp(confirm_str, "n") == 0) {
-            confirm_char = 'n';
-            conf_valid = 1;
-        } else {
-            printf("[ERROR] Input tidak valid! Masukkan hanya huruf Y atau N.\n");
-            system("pause");
-        }
-    } while (!conf_valid);
+    printf(GOLD"\t\t\t\t\t\t      -------------------------------------------------------------\n"RESET);
+
+    printf("\t\t\t\t\t\t      Total Harga  : Rp %.0f\n", target.total_price);
+
+    printf(GOLD"\t\t\t\t\t\t      -------------------------------------------------------------\n"RESET);
+
+    printf("\n");
+    printf(RED"\t\t\t\t\t\t      Apakah Anda yakin ingin membatalkan booking ini?\n"RESET);
+    printf(GOLD"\t\t\t\t\t\t      [Y] Ya, Batalkan Booking\n"RESET);
+    printf(GOLD"\t\t\t\t\t\t      [N] Tidak, Kembali\n\n"RESET);
+
+    printf(GOLD"\t\t\t\t\t\t      Pilihan Anda : "RESET);
+
+    fgets(confirm_str, sizeof(confirm_str), stdin);
+    confirm_str[strcspn(confirm_str, "\n")] = '\0';
+
+    if (strlen(confirm_str) == 0) {
+        printf(RED"\n\t\t\t\t\t\t      [ERROR] Input tidak boleh kosong!\n"RESET);
+        printf("\t\t\t\t\t\t      Masukkan Y untuk Ya atau N untuk Tidak.\n");
+        system("pause");
+        continue;
+    }
+
+    if (strcmp(confirm_str, "Y") == 0 || strcmp(confirm_str, "y") == 0) {
+        confirm_char = 'y';
+        conf_valid = 1;
+    }
+    else if (strcmp(confirm_str, "N") == 0 || strcmp(confirm_str, "n") == 0) {
+        confirm_char = 'n';
+        conf_valid = 1;
+    }
+    else {
+        printf(RED"\n\t\t\t\t\t\t      [ERROR] Pilihan tidak valid!\n"RESET);
+        printf("\t\t\t\t\t\t      Gunakan hanya Y atau N.\n");
+        system("pause");
+    }
+
+} while (!conf_valid);
 
     if (confirm_char == 'n') {
-        printf("Pembatalan diurungkan.\n");
+        printf(GOLD"\t\t\t\t\t\t      Pembatalan diurungkan.\n"RESET);
         system("pause");
         menu_cust();
         return;
@@ -7122,14 +7142,32 @@ void cancel_banner(){
        PAGE 3: SUCCESS INVOICE
        ========================================== */
     system("cls");
-    printf("============================================\n");
-    printf("          PEMBATALAN BERHASIL!              \n");
-    printf("============================================\n");
+
+    printf(GOLD"\n");
+    printf("\t\t\t\t\t\t=============================================================\n");
+    printf("\t\t\t\t\t\t                   PEMBATALAN BERHASIL!                     \n");
+    printf("\t\t\t\t\t\t=============================================================\n");
+    printf(RESET);
+
     printf("\n");
-    printf("  Booking %s berhasil dibatalkan.\n", code_input);
-    printf("  Kursi %s sekarang tersedia kembali.\n", target.seat);
+    printf("\t\t\t\t\t\tBooking Code : %s\n", code_input);
+    printf("\t\t\t\t\t\tKursi        : %s\n", target.seat);
+
+    printf(GOLD"\t\t\t\t\t\t-------------------------------------------------------------\n"RESET);
+
+    printf(GREEN"\t\t\t\t\t\tBooking berhasil dibatalkan.\n"RESET);
+    printf(GREEN"\t\t\t\t\t\tKursi kembali tersedia untuk dipesan.\n"RESET);
+
+    printf(GOLD"\t\t\t\t\t\t-------------------------------------------------------------\n"RESET);
+
     printf("\n");
-    printf("============================================\n");
+    printf(GOLD"\t\t\t\t\t\tTerima kasih telah menggunakan layanan kami.\n"RESET);
+
+    printf("\n");
+    printf(GOLD"\t\t\t\t\t\t=============================================================\n");
+    printf("\t\t\t\t\t\t          Tekan Enter untuk kembali ke menu utama           \n");
+    printf("\t\t\t\t\t\t=============================================================\n"RESET);
+
     system("pause");
     menu_cust();
 }
@@ -8207,4 +8245,3 @@ void cancel_banner(){
     }
 
 
-	
