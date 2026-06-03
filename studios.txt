@@ -1,12 +1,5 @@
 1=Arjuno=100=10=10
 2=Bromo=25=5=5
-3=Semeru=144=12=12
-4=Kelud=180=12=15
-5=Ijen=225=15=15
-6=Raung=240=12=20
-7=Argopuro=256=16=16
-8=Panderman=300=15=20
-9=Penanggungan=320=16=20
-10=Welirang=500=20=25
-11=Lawu=500=20=25
-12=Kawi=625=25=25
+3=Semeru=150=15=10
+4=Kelud=120=12=10
+5=Ijen=150=15=10
