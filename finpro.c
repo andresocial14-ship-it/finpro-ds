@@ -8034,12 +8034,12 @@ void validate_ticket() {
 
     printf(GOLD_BOLD "\n\t\t\t\t\t\t      [ STEP 1 ] Pilih Film\n" RESET);
     printf(DARK_GOLD PAD "%-5s %-25s %-12s %-6s\n" RESET, "ID", "Title", "Genre", "Min");
-    printf(GOLD      PAD "--------------------------------------------\n" RESET);
+    printf(GOLD      PAD "-----------------------------------------------------\n" RESET);
     for (int i = 0; i < film_count; i++)
         printf(GOLD PAD "%-5d %-25s %-12s %d min\n" RESET,
             all_films[i].id, all_films[i].title,
             all_films[i].genre, all_films[i].duration);
-    printf(GOLD PAD "--------------------------------------------\n" RESET);
+    printf(GOLD      PAD "-----------------------------------------------------\n" RESET);
 
     char input[20];
     int film_id, valid;
@@ -8286,7 +8286,7 @@ void validate_ticket() {
     printf("\n");
     printf("\t\t\t\t\t      %-4s %-25s %-12s %-12s %-8s %s\n",
            "ID", "Film", "Studio", "Date", "Time", "Price");
-    printf("\t\t\t\t\t      ----------------------------------------------------------------------\n");
+    printf("\t\t\t\t\t      ----------------------------------------------------------------------------\n");
     printf(RESET);
 
     while (fgets(buffer, sizeof(buffer), fp)) {
@@ -8330,7 +8330,7 @@ void validate_ticket() {
     }
 
     printf(GOLD);
-    printf("\t\t\t\t\t\t      ----------------------------------------------------------------------\n");
+    printf("\t\t\t\t\t      ----------------------------------------------------------------------------\n");
     printf(RESET);
 
     /* =========================
