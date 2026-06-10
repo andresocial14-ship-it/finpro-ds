@@ -3,5 +3,5 @@
 3=Spionase Siber=Thriller=110=17=Peretas muda mengungkap skandal spionase tingkat tinggi
 4=Cinta di Sudut Kota=Romance=105=21=Pertemuan tidak sengaja dua hati yang membawa perubahan besar
 5=Konspirasi Korporat=Drama=115=13=Seorang detektif swasta terjebak dalam pusaran korupsi raksasa
-6=Petualangan Pulau Terlarang=Adventure=130=13=Sekelompok mahasiswa tersesat di pulau yang tak terpetakan
+6=Petualangan Pulau Bali=Adventure=130=13=Sekelompok mahasiswa tersesat di pulau yang tak terpetakan
 7=Hacker Pembela Kebenaran=Sci-Fi=100=13=Aksi peretasan demi menyelidiki hilangnya dana bantuan sosial

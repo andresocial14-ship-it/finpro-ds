@@ -7899,579 +7899,803 @@ void cancel_banner(){
     }
 }
 
-    // ============================================================
+// ============================================================
     // !! VALIDATE TICKET (Cashier) !!
     // !! Cashier memasukkan booking code untuk check-in         !!
     // ============================================================
-void validate_ticket() {
-    system("cls");
+    void validate_ticket() {
+        char code_input[20];
+        Booking bk;
+        int valid = 0;
 
-    printf(GOLD);
-    printf("\n\n");
-    printf("\t\t\t\t\t\t============================================================\n");
-    printf("\t\t\t\t\t\t                 VALIDATE TICKET (CHECK-IN)                 \n");
-    printf("\t\t\t\t\t\t============================================================\n");
-    printf(RESET);
+        /* Menggunakan loop agar user bisa mencoba lagi jika input salah/kosong */
+        do {
+            system("cls");
 
-    char code_input[20];
+            printf(GOLD);
+            printf("\n\n");
+            printf("\t\t\t\t\t\t============================================================\n");
+            printf("\t\t\t\t\t\t                 VALIDATE TICKET (CHECK-IN)                 \n");
+            printf("\t\t\t\t\t\t============================================================\n");
+            printf(RESET);
 
-    printf("\n");
-    printf("      \t\t\t\t\t\tEnter Booking Code : ");
-    fgets(code_input, sizeof(code_input), stdin);
-    code_input[strcspn(code_input, "\n")] = '\0';
+            printf("\n");
+            printf("      \t\t\t\t\t\tEnter Booking Code (Type '0' to Back) : ");
+            
+            fgets(code_input, sizeof(code_input), stdin);
+            code_input[strcspn(code_input, "\n")] = '\0';
 
-    for (int i = 0; code_input[i]; i++)
-        code_input[i] = toupper(code_input[i]);
+            /* Fitur Back */
+            if (strcmp(code_input, "0") == 0) {
+                menu_cashier();
+                return;
+            }
 
-    Booking bk;
+            /* Validasi Input Kosong */
+            if (strlen(code_input) == 0) {
+                printf(RED);
+                printf("\n      \t\t\t\t\t\t[ERROR] Booking Code cannot be empty!\n");
+                printf(RESET);
+                
+                printf("\n");
+                printf(GOLD);
+                printf("\t\t\t\t\t\t============================================================\n");
+                printf(RESET);
+                
+                system("pause");
+                continue; /* Mengulang loop ke atas (layar akan dibersihkan) */
+            }
 
-    if (!find_booking(code_input, &bk)) {
+            /* Uppercase input agar matching lebih akurat */
+            for (int i = 0; code_input[i]; i++) {
+                code_input[i] = toupper(code_input[i]);
+            }
+
+            /* Pencarian Booking */
+            if (!find_booking(code_input, &bk)) {
+                printf("\n");
+
+                printf(RED);
+                printf("      \t\t\t\t\t\t[ERROR] Booking Code \"%s\" Not Found!\n", code_input);
+                printf(RESET);
+
+                printf("\n");
+                printf(GOLD);
+                printf("\t\t\t\t\t\t============================================================\n");
+                printf(RESET);
+
+                system("pause");
+                continue; /* Mengulang loop ke atas (layar akan dibersihkan) */
+            }
+
+            /* Jika lolos semua validasi, hentikan loop */
+            valid = 1;
+
+        } while (!valid);
+
+        /* Ambil Detail (Ini hanya dieksekusi jika Booking Code valid) */
+        Schedule sch;
+        char film_title[100] = "Unknown";
+        char studio_name[50] = "Unknown";
+
+        if (find_schedule(bk.schedule_id, &sch)) {
+            Film* f = btree_search(film_tree, sch.film_id);
+
+            if (f != NULL)
+                strcpy(film_title, f->title);
+
+            Studio st;
+            if (find_studio(sch.studio_id, &st))
+                strcpy(studio_name, st.name);
+        }
+
+        system("cls"); /* Bersihkan layar sekali lagi untuk menampilkan invoice dengan rapi */
         printf("\n");
 
-        printf(RED);
-        printf("      \t\t\t\t\t\t[ERROR] Booking Code \"%s\" Not Found!\n", code_input);
+        printf(GOLD);
+        printf("\t\t\t\t\t\t============================================================\n");
         printf(RESET);
 
+        printf("      \t\t\t\t\t\tBooking Code : %s\n", bk.booking_code);
+        printf("      \t\t\t\t\t\tUsername     : %s\n", bk.username);
+        printf("      \t\t\t\t\t\tFilm         : %s\n", film_title);
+        printf("      \t\t\t\t\t\tStudio       : %s\n", studio_name);
+        printf("      \t\t\t\t\t\tDate         : %s\n", sch.date);
+        printf("      \t\t\t\t\t\tTime         : %s\n", sch.time);
+        printf("      \t\t\t\t\t\tSeat         : %s\n", bk.seat);
+        printf("      \t\t\t\t\t\tPrice        : Rp %.0f\n", bk.total_price);
+
+        printf("      \t\t\t\t\t\tStatus       : ");
+
+        if (bk.status == 1)
+            printf(GREEN "ACTIVE\n" RESET);
+        else
+            printf(RED "CANCELLED\n" RESET);
+
         printf("\n");
+
+        if (bk.status == 1) {
+
+            printf(GREEN);
+            printf("      \t\t\t\t\t\t[SUCCESS] Ticket Valid\n");
+            printf("      \t\t\t\t\t\tPassenger May Enter The Studio\n");
+            printf(RESET);
+
+        } else {
+
+            printf(RED);
+            printf("      \t\t\t\t\t\t[REJECTED] Ticket Has Been Cancelled!\n");
+            printf("      \t\t\t\t\t\tEntry Is Not Allowed.\n");
+            printf(RESET);
+
+        }
+
+        printf("\n");
+
         printf(GOLD);
         printf("\t\t\t\t\t\t============================================================\n");
         printf(RESET);
 
         system("pause");
         menu_cashier();
-        return;
     }
-
-    /* Ambil Detail */
-    Schedule sch;
-    char film_title[100] = "Unknown";
-    char studio_name[50] = "Unknown";
-
-    if (find_schedule(bk.schedule_id, &sch)) {
-        Film* f = btree_search(film_tree, sch.film_id);
-
-        if (f != NULL)
-            strcpy(film_title, f->title);
-
-        Studio st;
-        if (find_studio(sch.studio_id, &st))
-            strcpy(studio_name, st.name);
-    }
-
-    printf("\n");
-
-    printf(GOLD);
-    printf("\t\t\t\t\t\t============================================================\n");
-    printf(RESET);
-
-    printf("      \t\t\t\t\t\tBooking Code : %s\n", bk.booking_code);
-    printf("      \t\t\t\t\t\tUsername     : %s\n", bk.username);
-    printf("      \t\t\t\t\t\tFilm         : %s\n", film_title);
-    printf("      \t\t\t\t\t\tStudio       : %s\n", studio_name);
-    printf("      \t\t\t\t\t\tDate         : %s\n", sch.date);
-    printf("      \t\t\t\t\t\tTime         : %s\n", sch.time);
-    printf("      \t\t\t\t\t\tSeat         : %s\n", bk.seat);
-    printf("      \t\t\t\t\t\tPrice        : Rp %.0f\n", bk.total_price);
-
-    printf("      \t\t\t\t\t\tStatus       : ");
-
-    if (bk.status == 1)
-        printf(GREEN "ACTIVE\n" RESET);
-    else
-        printf(RED "CANCELLED\n" RESET);
-
-    printf("\n");
-
-    if (bk.status == 1) {
-
-        printf(GREEN);
-        printf("      \t\t\t\t\t\t[SUCCESS] Ticket Valid\n");
-        printf("      \t\t\t\t\t\tPassenger May Enter The Studio\n");
-        printf(RESET);
-
-    } else {
-
-        printf(RED);
-        printf("      \t\t\t\t\t\t[REJECTED] Ticket Has Been Cancelled!\n");
-        printf("      \t\t\t\t\t\tEntry Is Not Allowed.\n");
-        printf(RESET);
-
-    }
-
-    printf("\n");
-
-    printf(GOLD);
-    printf("\t\t\t\t\t\t============================================================\n");
-    printf(RESET);
-
-    system("pause");
-    menu_cashier();
-}
 
     // ============================================================
     // !! SELL TICKET (Cashier) !!
     // !! Cashier bisa memesan tiket atas nama customer offline  !!
     // ============================================================
     void sell() {
-    system("cls");
+        char input[100];
+        int valid;
 
-    /* ── Header ── */
-    printf(GOLD_BOLD PAD "============================================\n" RESET);
-    printf(GOLD_BOLD PAD "               SELL TICKET                  \n" RESET);
-    printf(GOLD_BOLD PAD "============================================\n" RESET);
+        /* ==========================================
+           STEP 1: PILIH FILM
+           ========================================== */
+        Film all_films[200];
+        int film_count = 0;
+        btree_inorder(film_tree, all_films, &film_count);
 
-    /* -- STEP 1: Pilih Film -- */
-    Film all_films[200];
-    int film_count = 0;
-    btree_inorder(film_tree, all_films, &film_count);
-
-    if (film_count == 0) {
-        printf(GOLD PAD "Tidak ada film tersedia.\n" RESET);
-        system("pause");
-        menu_cashier();
-        return;
-    }
-
-    printf(GOLD_BOLD "\n\t\t\t\t\t\t      [ STEP 1 ] Pilih Film\n" RESET);
-    printf(DARK_GOLD PAD "%-5s %-25s %-12s %-6s\n" RESET, "ID", "Title", "Genre", "Min");
-    printf(GOLD      PAD "-----------------------------------------------------\n" RESET);
-    for (int i = 0; i < film_count; i++)
-        printf(GOLD PAD "%-5d %-25s %-12s %d min\n" RESET,
-            all_films[i].id, all_films[i].title,
-            all_films[i].genre, all_films[i].duration);
-    printf(GOLD      PAD "-----------------------------------------------------\n" RESET);
-
-    char input[20];
-    int film_id, valid;
-
-    do {
-        printf(GOLD_BOLD PAD "Masukkan Film ID : " RESET);
-        scanf("%s", input);
-        valid = 1;
-        for (int i = 0; input[i]; i++)
-            if (!isdigit(input[i])) { valid = 0; break; }
-        if (!valid) { printf(DARK_GOLD PAD "ID harus angka!\n" RESET); continue; }
-        film_id = atoi(input);
-        if (btree_search(film_tree, film_id) == NULL) {
-            printf(DARK_GOLD PAD "Film ID %d tidak ditemukan!\n" RESET, film_id);
-            valid = 0;
-        }
-    } while (!valid);
-
-    Film* chosen_film = btree_search(film_tree, film_id);
-
-    /* -- STEP 2: Pilih Jadwal -- */
-    printf(GOLD_BOLD PAD "\n\t\t\t\t\t\t      [ STEP 2 ] Pilih Jadwal untuk \"%s\"\n" RESET, chosen_film->title);
-    printf(DARK_GOLD PAD "%-4s %-15s %-12s %-8s %s\n" RESET,
-        "ID", "Studio", "Date", "Time", "Price");
-    printf(GOLD PAD "--------------------------------------------\n" RESET);
-
-    FILE* sfp = fopen(schedule_file, "r");
-    if (sfp == NULL) {
-        printf(DARK_GOLD PAD "Tidak ada jadwal.\n" RESET);
-        system("pause"); menu_cashier(); return;
-    }
-    int sch_count = 0;
-    char sch_buf[300];
-    while (fgets(sch_buf, sizeof(sch_buf), sfp)) {
-        sch_buf[strcspn(sch_buf, "\n")] = 0;
-        Schedule sch;
-        sscanf(sch_buf, "%d=%d=%d=%[^=]=%[^=]=%f",
-            &sch.id, &sch.film_id, &sch.studio_id,
-            sch.date, sch.time, &sch.price);
-        if (sch.film_id != film_id) continue;
-        Studio st; find_studio(sch.studio_id, &st);
-        printf(GOLD PAD "%-4d %-15s %-12s %-8s Rp %.0f\n" RESET,
-            sch.id, st.name, sch.date, sch.time, sch.price);
-        sch_count++;
-    }
-    fclose(sfp);
-
-    if (sch_count == 0) {
-        printf(DARK_GOLD PAD "Tidak ada jadwal untuk film ini.\n" RESET);
-        system("pause"); menu_cashier(); return;
-    }
-    printf(GOLD PAD "--------------------------------------------\n" RESET);
-
-    int schedule_id;
-    Schedule chosen_sch;
-
-    do {
-        printf(GOLD_BOLD PAD "Masukkan Schedule ID : " RESET);
-        scanf("%s", input);
-        valid = 1;
-        for (int i = 0; input[i]; i++)
-            if (!isdigit(input[i])) { valid = 0; break; }
-        if (!valid) { printf(DARK_GOLD PAD "ID harus angka!\n" RESET); continue; }
-        schedule_id = atoi(input);
-        if (!find_schedule(schedule_id, &chosen_sch)) {
-            printf(DARK_GOLD PAD "Jadwal ID %d tidak ditemukan!\n" RESET, schedule_id);
-            valid = 0; continue;
-        }
-        if (chosen_sch.film_id != film_id) {
-            printf(DARK_GOLD PAD "Jadwal ini bukan untuk film yang dipilih!\n" RESET);
-            valid = 0;
-        }
-    } while (!valid);
-
-    Studio chosen_studio;
-    find_studio(chosen_sch.studio_id, &chosen_studio);
-
-    /* -- STEP 3: Pilih Kursi (multi-seat) -- */
-    char selected_seats[MAX_SEATS_PER_ORDER][10];
-    int  seat_count = 0;
-
-    printf(GOLD_BOLD  "\n\t\t\t\t\t\t      [ STEP 3 ] Pilih Kursi\n" RESET);
-    printf(DIM       PAD "  Cashier bisa memilih hingga %d kursi sekaligus.\n" RESET, MAX_SEATS_PER_ORDER);
-    printf(DIM       PAD "  Ketik \"DONE\" jika sudah selesai.\n\n" RESET);
-    display_seat_map(schedule_id, &chosen_studio);
-    while (seat_count < MAX_SEATS_PER_ORDER) {
-        
-
-        if (seat_count > 0) {
-            printf(GOLD PAD "  Kursi dipilih (%d): " RESET, seat_count);
-            for (int i = 0; i < seat_count; i++)
-                printf(GOLD_BOLD "%s%s" RESET, selected_seats[i],
-                            (i < seat_count - 1) ? ", " : "\n");
+        if (film_count == 0) {
+            system("cls");
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD PAD "               SELL TICKET                  \n" RESET);
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(DARK_GOLD PAD "Tidak ada film tersedia.\n" RESET);
+            system("pause");
+            menu_cashier();
+            return;
         }
 
-        char seat_input[10];
-        printf(GOLD_BOLD PAD "Masukkan kursi ke-%d (atau \"DONE\") : " RESET, seat_count + 1);
-        scanf("%s", seat_input);
+        int film_id = -1;
+        Film* chosen_film = NULL;
 
-        for (int i = 0; seat_input[i]; i++)
-            seat_input[i] = toupper(seat_input[i]);
+        do {
+            system("cls");
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD PAD "               SELL TICKET                  \n" RESET);
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD "\n\t\t\t\t\t\t      [ STEP 1 ] Pilih Film\n" RESET);
+            
+            printf(DARK_GOLD PAD "%-5s %-25s %-12s %-6s\n" RESET, "ID", "Title", "Genre", "Min");
+            printf(GOLD      PAD "-----------------------------------------------------\n" RESET);
+            for (int i = 0; i < film_count; i++) {
+                printf(GOLD PAD "%-5d %-25.25s %-12.12s %d min\n" RESET,
+                    all_films[i].id, all_films[i].title,
+                    all_films[i].genre, all_films[i].duration);
+            }
+            printf(GOLD      PAD "-----------------------------------------------------\n" RESET);
 
-        if (strcmp(seat_input, "DONE") == 0) {
-            if (seat_count == 0) {
-                printf(DARK_GOLD PAD "  Pilih minimal 1 kursi!\n\n" RESET);
+            printf(GOLD_BOLD PAD "Masukkan Film ID (Ketik '0' untuk Kembali) : " RESET);
+            fgets(input, sizeof(input), stdin);
+            input[strcspn(input, "\n")] = '\0';
+
+            if (strcmp(input, "0") == 0) { menu_cashier(); return; }
+
+            if (strlen(input) == 0) {
+                printf(RED PAD "[ERROR] Input tidak boleh kosong!\n" RESET);
+                system("pause");
                 continue;
             }
-            break;
-        }
 
-        if (!validate_seat_format(seat_input, &chosen_studio)) {
-            printf(DARK_GOLD PAD "  Kursi \"%s\" tidak valid! Baris A-%c, Kolom 1-%d.\n\n" RESET,
-                seat_input,
-                'A' + chosen_studio.rows - 1,
-                chosen_studio.cols);
-            continue;
-        }
-
-        if (is_seat_booked(schedule_id, seat_input)) {
-            printf(DARK_GOLD PAD "  Kursi %s sudah dipesan!\n\n" RESET, seat_input);
-            continue;
-        }
-
-        /* Cek duplikat dalam sesi ini */
-        int duplicate = 0;
-        for (int i = 0; i < seat_count; i++) {
-            if (strcmp(selected_seats[i], seat_input) == 0) {
-                duplicate = 1; break;
+            valid = 1;
+            for (int i = 0; input[i]; i++) {
+                if (!isdigit(input[i])) { valid = 0; break; }
             }
+
+            if (!valid) { 
+                printf(RED PAD "[ERROR] ID harus berupa angka!\n" RESET); 
+                system("pause");
+                continue; 
+            }
+
+            film_id = atoi(input);
+            chosen_film = btree_search(film_tree, film_id);
+
+            if (chosen_film == NULL) {
+                printf(RED PAD "[ERROR] Film ID %d tidak ditemukan!\n" RESET, film_id);
+                system("pause");
+                valid = 0;
+            }
+        } while (!valid);
+
+
+        /* ==========================================
+           PERSIAPAN STEP 2: CEK JADWAL TERSEDIA
+           ========================================== */
+        Schedule match_schedules[200];
+        int sch_count = 0;
+
+        FILE* sfp = fopen(schedule_file, "r");
+        if (sfp != NULL) {
+            char sch_buf[300];
+            while (fgets(sch_buf, sizeof(sch_buf), sfp)) {
+                sch_buf[strcspn(sch_buf, "\n")] = 0;
+                Schedule sch;
+                if (sscanf(sch_buf, "%d=%d=%d=%[^=]=%[^=]=%f",
+                    &sch.id, &sch.film_id, &sch.studio_id,
+                    sch.date, sch.time, &sch.price) == 6) {
+                    
+                    if (sch.film_id == film_id) {
+                        match_schedules[sch_count++] = sch;
+                    }
+                }
+            }
+            fclose(sfp);
         }
-        if (duplicate) {
-            printf(DARK_GOLD PAD "  Kursi %s sudah Anda pilih sebelumnya!\n\n" RESET, seat_input);
-            continue;
+
+        if (sch_count == 0) {
+            system("cls");
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD PAD "               SELL TICKET                  \n" RESET);
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(DARK_GOLD PAD "Tidak ada jadwal untuk film \"%s\".\n" RESET, chosen_film->title);
+            system("pause"); 
+            menu_cashier(); 
+            return;
         }
 
-        strcpy(selected_seats[seat_count], seat_input);
-        seat_count++;
-        printf(GOLD PAD "  Kursi %s ditambahkan.\n\n" RESET, seat_input);
+
+        /* ==========================================
+           STEP 2: PILIH JADWAL
+           ========================================== */
+        int schedule_id = -1;
+        Schedule chosen_sch;
+
+        do {
+            /* Reset status validasi setiap kali mengulang input */
+            valid = 0; 
+
+            system("cls");
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD PAD "               SELL TICKET                  \n" RESET);
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD "\n\t\t\t\t\t\t      [ STEP 2 ] Pilih Jadwal untuk \"%s\"\n" RESET, chosen_film->title);
+            
+            printf(DARK_GOLD PAD "%-4s %-15s %-12s %-8s %s\n" RESET, "ID", "Studio", "Date", "Time", "Price");
+            printf(GOLD PAD "--------------------------------------------------------\n" RESET);
+
+            for (int i = 0; i < sch_count; i++) {
+                Studio st; 
+                char st_name[50] = "Unknown";
+                if (find_studio(match_schedules[i].studio_id, &st)) {
+                    strcpy(st_name, st.name);
+                }
+                
+                printf(GOLD PAD "%-4d %-15.15s %-12s %-8s Rp %.0f\n" RESET,
+                    match_schedules[i].id, st_name, match_schedules[i].date, 
+                    match_schedules[i].time, match_schedules[i].price);
+            }
+            printf(GOLD PAD "--------------------------------------------------------\n" RESET);
+
+            printf(GOLD_BOLD PAD "Masukkan Schedule ID (Ketik '0' untuk Kembali) : " RESET);
+            fgets(input, sizeof(input), stdin);
+            input[strcspn(input, "\n")] = '\0';
+
+            /* Fitur Back */
+            if (strcmp(input, "0") == 0) { 
+                menu_cashier(); 
+                return; 
+            }
+
+            /* Validasi Input Kosong */
+            if (strlen(input) == 0) {
+                printf(RED PAD "[ERROR] Input tidak boleh kosong!\n" RESET);
+                system("pause");
+                continue; /* Akan mengulang loop */
+            }
+
+            /* Validasi Format Angka */
+            int is_num = 1;
+            for (int i = 0; input[i]; i++) {
+                if (!isdigit(input[i])) { 
+                    is_num = 0; 
+                    break; 
+                }
+            }
+
+            if (!is_num) { 
+                printf(RED PAD "[ERROR] ID harus berupa angka!\n" RESET); 
+                system("pause");
+                continue; 
+            }
+
+            /* Validasi Ketersediaan Jadwal di Daftar Sesuai Film */
+            schedule_id = atoi(input);
+            int found_in_list = 0;
+
+            for (int i = 0; i < sch_count; i++) {
+                if (match_schedules[i].id == schedule_id) {
+                    chosen_sch = match_schedules[i];
+                    found_in_list = 1;
+                    break;
+                }
+            }
+
+            if (!found_in_list) {
+                printf(RED PAD "[ERROR] Jadwal ID %d tidak ditemukan di daftar!\n" RESET, schedule_id);
+                system("pause");
+                continue;
+            }
+
+            /* Jika lolos semua pengecekan, hentikan loop */
+            valid = 1;
+
+        } while (!valid);
+
+        Studio chosen_studio;
+        find_studio(chosen_sch.studio_id, &chosen_studio);
+
+
+        /* ==========================================
+           STEP 3: PILIH KURSI (MULTI-SEAT)
+           ========================================== */
+        char selected_seats[MAX_SEATS_PER_ORDER][10];
+        int  seat_count = 0;
+
+        while (seat_count < MAX_SEATS_PER_ORDER) {
+            system("cls");
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD PAD "               SELL TICKET                  \n" RESET);
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD "\n\t\t\t\t\t\t      [ STEP 3 ] Pilih Kursi\n" RESET);
+            printf(DIM       PAD "  Batas maksimal pemilihan: %d kursi.\n" RESET, MAX_SEATS_PER_ORDER);
+            printf(DIM       PAD "  Ketik \"DONE\" jika sudah selesai.\n" RESET);
+            printf(DIM       PAD "  Ketik \"0\" untuk membatalkan tiket.\n\n" RESET);
+
+            display_seat_map(schedule_id, &chosen_studio);
+            printf("\n");
+
+            if (seat_count > 0) {
+                printf(GOLD PAD "  Kursi dipilih (%d): " RESET, seat_count);
+                for (int i = 0; i < seat_count; i++) {
+                    printf(WHITE_BOLD "%s%s" RESET, selected_seats[i], (i < seat_count - 1) ? ", " : "\n");
+                }
+                printf("\n");
+            }
+
+            char seat_input[20];
+            printf(GOLD_BOLD PAD "Masukkan kursi ke-%d (DONE / 0) : " RESET, seat_count + 1);
+            fgets(seat_input, sizeof(seat_input), stdin);
+            seat_input[strcspn(seat_input, "\n")] = '\0';
+
+            /* Back */
+            if (strcmp(seat_input, "0") == 0) { menu_cashier(); return; }
+
+            if (strlen(seat_input) == 0) {
+                printf(RED PAD "  [ERROR] Kursi tidak boleh kosong!\n" RESET);
+                system("pause");
+                continue;
+            }
+
+            /* Konversi ke UPPERCASE */
+            for (int i = 0; seat_input[i]; i++) {
+                seat_input[i] = toupper(seat_input[i]);
+            }
+
+            /* Logika Selesai Memilih */
+            if (strcmp(seat_input, "DONE") == 0) {
+                if (seat_count == 0) {
+                    printf(RED PAD "  [ERROR] Pilih minimal 1 kursi sebelum selesai!\n" RESET);
+                    system("pause");
+                    continue;
+                }
+                break;
+            }
+
+            /* Validasi Format */
+            if (!validate_seat_format(seat_input, &chosen_studio)) {
+                printf(RED PAD "  [ERROR] Kursi \"%s\" tidak valid! (Baris A-%c, Kolom 1-%d)\n" RESET,
+                    seat_input, 'A' + chosen_studio.rows - 1, chosen_studio.cols);
+                system("pause");
+                continue;
+            }
+
+            /* Validasi Ketersediaan (Database) */
+            if (is_seat_booked(schedule_id, seat_input)) {
+                printf(RED PAD "  [ERROR] Kursi %s sudah dipesan oleh orang lain!\n" RESET, seat_input);
+                system("pause");
+                continue;
+            }
+
+            /* Validasi Duplikat di Input Sekarang */
+            int duplicate = 0;
+            for (int i = 0; i < seat_count; i++) {
+                if (strcmp(selected_seats[i], seat_input) == 0) {
+                    duplicate = 1; break;
+                }
+            }
+            if (duplicate) {
+                printf(RED PAD "  [ERROR] Kursi %s sudah Anda tambahkan sebelumnya!\n" RESET, seat_input);
+                system("pause");
+                continue;
+            }
+
+            /* Simpan Kursi */
+            strcpy(selected_seats[seat_count], seat_input);
+            seat_count++;
+            
+            printf(GREEN PAD "  [SUCCESS] Kursi %s ditambahkan.\n" RESET, seat_input);
+            system("pause");
+        }
+
+
+        /* ==========================================
+           STEP 4: USERNAME CUSTOMER
+           ========================================== */
+        char cust_username[100];
+        do {
+            system("cls");
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD PAD "               SELL TICKET                  \n" RESET);
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD "\n\t\t\t\t\t\t      [ STEP 4 ] Username Customer\n" RESET);
+            printf(DIM       PAD "  (Ketik '0' untuk Kembali)\n\n" RESET);
+
+            printf(GOLD_BOLD PAD "Masukkan Username Customer : " RESET);
+            fgets(cust_username, sizeof(cust_username), stdin);
+            cust_username[strcspn(cust_username, "\n")] = '\0';
+
+            if (strcmp(cust_username, "0") == 0) { menu_cashier(); return; }
+
+            if (strlen(cust_username) == 0) {
+                printf(RED PAD "[ERROR] Username tidak boleh kosong!\n" RESET);
+                system("pause");
+                valid = 0;
+            } else {
+                valid = 1;
+            }
+        } while (!valid);
+
+
+        /* ==========================================
+           STEP 5: KONFIRMASI PENJUALAN
+           ========================================== */
+        float total_harga = chosen_sch.price * seat_count;
+        char confirm_str[10];
+        char confirm_char;
+        int conf_valid = 0;
+
+        do {
+            system("cls");
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD PAD "           KONFIRMASI PENJUALAN             \n" RESET);
+            printf(GOLD_BOLD PAD "============================================\n" RESET);
+            printf(GOLD_BOLD "\n\t\t\t\t\t\t      [ STEP 5 ] Konfirmasi Data\n" RESET);
+
+            printf(GOLD      PAD "  Film     : " WHITE_BOLD "%s\n"  RESET, chosen_film->title);
+            printf(GOLD      PAD "  Studio   : " WHITE_BOLD "%s\n"  RESET, chosen_studio.name);
+            printf(GOLD      PAD "  Tanggal  : " WHITE_BOLD "%s\n"  RESET, chosen_sch.date);
+            printf(GOLD      PAD "  Jam      : " WHITE_BOLD "%s\n"  RESET, chosen_sch.time);
+            
+            printf(GOLD      PAD "  Kursi    : " RESET);
+            for (int i = 0; i < seat_count; i++) {
+                printf(WHITE_BOLD "%s%s" RESET, selected_seats[i], (i < seat_count - 1) ? ", " : "\n");
+            }
+            
+            printf(GOLD      PAD "  Jumlah   : " WHITE_BOLD "%d kursi\n"           RESET, seat_count);
+            printf(GOLD      PAD "  Customer : " WHITE_BOLD "%s\n"                 RESET, cust_username);
+            printf(GOLD      PAD "  Harga    : " WHITE_BOLD "Rp %.0f x %d = Rp %.0f\n" RESET, chosen_sch.price, seat_count, total_harga);
+            printf(GOLD      PAD "--------------------------------------------\n" RESET);
+            
+            printf(GOLD_BOLD PAD "  Konfirmasi Penjualan? [Y/N] (0 untuk Back): " RESET);
+            fgets(confirm_str, sizeof(confirm_str), stdin);
+            confirm_str[strcspn(confirm_str, "\n")] = '\0';
+
+            if (strcmp(confirm_str, "0") == 0) { menu_cashier(); return; }
+
+            if (strlen(confirm_str) == 0) {
+                printf(RED PAD "  [ERROR] Input tidak boleh kosong! Masukkan Y atau N.\n" RESET);
+                system("pause");
+                continue;
+            }
+
+            if (strcmp(confirm_str, "Y") == 0 || strcmp(confirm_str, "y") == 0) {
+                confirm_char = 'y';
+                conf_valid = 1;
+            } else if (strcmp(confirm_str, "N") == 0 || strcmp(confirm_str, "n") == 0) {
+                confirm_char = 'n';
+                conf_valid = 1;
+            } else {
+                printf(RED PAD "  [ERROR] Input tidak valid! Masukkan Y atau N.\n" RESET);
+                system("pause");
+            }
+
+        } while (!conf_valid);
+
+        if (confirm_char == 'n') {
+            printf(RED PAD "  Penjualan dibatalkan.\n" RESET);
+            system("pause");
+            menu_cashier();
+            return;
+        }
+
+
+        /* ==========================================
+           STEP 6: SIMPAN DATA & INVOICE
+           ========================================== */
+        int  base_id = auto_id_booking();
+        char saved_codes[MAX_SEATS_PER_ORDER][20];
+
+        FILE* bk_fp = fopen(booking_file, "a");
+        if (bk_fp == NULL) { invalid_file(); return; }
+
+        for (int i = 0; i < seat_count; i++) {
+            generate_booking_code(base_id + i, saved_codes[i]);
+            fprintf(bk_fp, "%s=%s=%d=%s=%.0f=1\n",
+                    saved_codes[i], cust_username,
+                    schedule_id, selected_seats[i], chosen_sch.price);
+        }
+        fclose(bk_fp);
+
+        system("cls");
+        printf(GOLD_BOLD PAD "============================================\n"  RESET);
+        printf(GOLD_BOLD PAD "          TIKET BERHASIL DIJUAL!            \n"  RESET);
+        printf(GOLD_BOLD PAD "============================================\n"  RESET);
+        printf(GOLD      PAD "  Film         : " WHITE_BOLD "%s\n" RESET, chosen_film->title);
+        printf(GOLD      PAD "  Studio       : " WHITE_BOLD "%s\n" RESET, chosen_studio.name);
+        printf(GOLD      PAD "  Tanggal      : " WHITE_BOLD "%s\n" RESET, chosen_sch.date);
+        printf(GOLD      PAD "  Jam          : " WHITE_BOLD "%s\n" RESET, chosen_sch.time);
+        printf(GOLD      PAD "  Customer     : " WHITE_BOLD "%s\n" RESET, cust_username);
+        printf(GOLD      PAD "  Total Harga  : " GREEN "Rp %.0f\n" RESET, total_harga);
+        printf(GOLD      PAD "--------------------------------------------\n" RESET);
+        printf(GOLD_BOLD PAD "  %-6s  %s\n" RESET, "Kursi", "Booking Code");
+        printf(GOLD      PAD "  ------  ----------------\n" RESET);
+        
+        for (int i = 0; i < seat_count; i++) {
+            printf(GOLD PAD "  %-6s  " CYAN "%s\n" RESET, selected_seats[i], saved_codes[i]);
+        }
+        
+        printf(GOLD_BOLD PAD "============================================\n\n" RESET);
+        
+        system("pause");
+        menu_cashier();
     }
-
-    /* -- STEP 4: Username Customer -- */
-    char cust_username[100];
-    printf(GOLD_BOLD "\n\t\t\t\t\t\t      [ STEP 4 ] Username Customer\n" RESET);
-    printf(GOLD_BOLD PAD "Masukkan username customer : " RESET);
-    scanf("%s", cust_username);
-
-    /* -- STEP 5: Konfirmasi -- */
-    float total_harga = chosen_sch.price * seat_count;
-
-    system("cls");
-    printf(GOLD_BOLD PAD "============================================\n" RESET);
-    printf(GOLD_BOLD PAD "           KONFIRMASI PENJUALAN             \n" RESET);
-    printf(GOLD_BOLD PAD "============================================\n" RESET);
-    printf(GOLD      PAD "  Film     : " WHITE_BOLD "%s\n"  RESET, chosen_film->title);
-    printf(GOLD      PAD "  Studio   : " WHITE_BOLD "%s\n"  RESET, chosen_studio.name);
-    printf(GOLD      PAD "  Tanggal  : " WHITE_BOLD "%s\n"  RESET, chosen_sch.date);
-    printf(GOLD      PAD "  Jam      : " WHITE_BOLD "%s\n"  RESET, chosen_sch.time);
-    printf(GOLD      PAD "  Kursi    : " RESET);
-    for (int i = 0; i < seat_count; i++)
-        printf(WHITE_BOLD "%s%s" RESET, selected_seats[i],
-                    (i < seat_count - 1) ? ", " : "\n");
-    printf(GOLD      PAD "  Jumlah   : " WHITE_BOLD "%d kursi\n"           RESET, seat_count);
-    printf(GOLD      PAD "  Customer : " WHITE_BOLD "%s\n"                 RESET, cust_username);
-    printf(GOLD      PAD "  Harga    : " WHITE_BOLD "Rp %.0f x %d = Rp %.0f\n" RESET,
-        chosen_sch.price, seat_count, total_harga);
-    printf(GOLD      PAD "--------------------------------------------\n" RESET);
-    printf(GOLD_BOLD PAD "  Konfirmasi penjualan? (Y/N) : " RESET);
-
-    char confirm;
-    scanf(" %c", &confirm);
-    if (confirm != 'Y' && confirm != 'y') {
-        printf(DARK_GOLD PAD "  Penjualan dibatalkan.\n" RESET);
-        system("pause"); menu_cashier(); return;
-    }
-
-    /* -- STEP 6: Simpan Booking -- */
-    int  base_id = auto_id_booking();
-    char saved_codes[MAX_SEATS_PER_ORDER][20];
-
-    FILE* bk_fp = fopen(booking_file, "a");
-    if (bk_fp == NULL) { invalid_file(); return; }
-
-    for (int i = 0; i < seat_count; i++) {
-        generate_booking_code(base_id + i, saved_codes[i]);
-        fprintf(bk_fp, "%s=%s=%d=%s=%.0f=1\n",
-                saved_codes[i], cust_username,
-                schedule_id, selected_seats[i], chosen_sch.price);
-    }
-    fclose(bk_fp);
-
-    /* -- Tampilkan Hasil -- */
-    system("cls");
-    printf(GOLD_BOLD PAD "============================================\n"  RESET);
-    printf(GOLD_BOLD PAD "          TIKET BERHASIL DIJUAL!            \n"  RESET);
-    printf(GOLD_BOLD PAD "============================================\n"  RESET);
-    printf(GOLD      PAD "  Film         : " WHITE_BOLD "%s\n" RESET, chosen_film->title);
-    printf(GOLD      PAD "  Studio       : " WHITE_BOLD "%s\n" RESET, chosen_studio.name);
-    printf(GOLD      PAD "  Tanggal      : " WHITE_BOLD "%s\n" RESET, chosen_sch.date);
-    printf(GOLD      PAD "  Jam          : " WHITE_BOLD "%s\n" RESET, chosen_sch.time);
-    printf(GOLD      PAD "  Customer     : " WHITE_BOLD "%s\n" RESET, cust_username);
-    printf(GOLD      PAD "  Total Harga  : " WHITE_BOLD "Rp %.0f\n" RESET, total_harga);
-    printf(GOLD      PAD "--------------------------------------------\n" RESET);
-    printf(GOLD_BOLD PAD "  %-6s  %s\n" RESET, "Kursi", "Booking Code");
-    printf(GOLD      PAD "  ------  ----------------\n" RESET);
-    for (int i = 0; i < seat_count; i++)
-        printf(GOLD PAD "  %-6s  " WHITE_BOLD "%s\n" RESET,
-               selected_seats[i], saved_codes[i]);
-    printf(GOLD_BOLD PAD "============================================\n" RESET);
-    system("pause");
-    menu_cashier();
-}
 
     // ============================================================
     // !! SEAT STATUS (Cashier) !!
     // !! Tampilkan status kursi untuk jadwal tertentu           !!
     // ============================================================
     void seat_status() {
-    system("cls");
+        Schedule schedules[500];
+        int count = 0;
 
-    printf(GOLD);
-    printf("\n");
-    printf("\t\t\t\t\t\t      ================================================\n");
-    printf("\t\t\t\t\t\t              SEAT STATUS PER SCHEDULE\n");
-    printf("\t\t\t\t\t\t      ================================================\n");
-    printf(RESET);
+        /* =========================
+           BACA DATA KE ARRAY DENGAN VALIDASI SCAF
+           ========================= */
+        FILE* fp = fopen(schedule_file, "r");
+        if (fp != NULL) {
+            char buffer[300];
+            while (fgets(buffer, sizeof(buffer), fp)) {
+                buffer[strcspn(buffer, "\n")] = 0;
+                if (strlen(buffer) == 0) continue;
 
-    /* =========================
-       TAMPILKAN DAFTAR JADWAL
-       ========================= */
-    FILE* fp = fopen(schedule_file, "r");
-    if (fp == NULL) {
-        printf(RED);
-        printf("\n\t\t\t\t\t\t      [ERROR] Schedule data not found!\n");
-        printf(RESET);
-        system("pause");
-        menu_cashier();
-        return;
-    }
-
-    char buffer[300];
-    int count = 0;
-
-    printf(GOLD);
-    printf("\n");
-    printf("\t\t\t\t\t      %-4s %-25s %-12s %-12s %-8s %s\n",
-           "ID", "Film", "Studio", "Date", "Time", "Price");
-    printf("\t\t\t\t\t      ----------------------------------------------------------------------------\n");
-    printf(RESET);
-
-    while (fgets(buffer, sizeof(buffer), fp)) {
-        buffer[strcspn(buffer, "\n")] = 0;
-
-        Schedule sch;
-        sscanf(buffer, "%d=%d=%d=%[^=]=%[^=]=%f",
-               &sch.id,
-               &sch.film_id,
-               &sch.studio_id,
-               sch.date,
-               sch.time,
-               &sch.price);
-
-        Film* film = btree_search(film_tree, sch.film_id);
-
-        Studio studio;
-        find_studio(sch.studio_id, &studio);
-
-        printf("\t\t\t\t\t      %-4d %-25s %-12s %-12s %-8s Rp %.0f\n",
-               sch.id,
-               film ? film->title : "Unknown",
-               studio.name,
-               sch.date,
-               sch.time,
-               sch.price);
-
-        count++;
-    }
-
-    fclose(fp);
-
-    if (count == 0) {
-        printf(RED);
-        printf("\n\t\t\t\t\t\t      [ERROR] No schedules available!\n");
-        printf(RESET);
-
-        system("pause");
-        menu_cashier();
-        return;
-    }
-
-    printf(GOLD);
-    printf("\t\t\t\t\t      ----------------------------------------------------------------------------\n");
-    printf(RESET);
-
-    /* =========================
-       INPUT SCHEDULE ID
-       ========================= */
-    char input[20];
-    int sch_id;
-    int valid;
-
-    do {
-        printf(GOLD);
-        printf("\n\t\t\t\t\t\t      Enter Schedule ID (0 = Back) : ");
-        printf(RESET);
-
-        scanf("%s", input);
-
-        if (strcmp(input, "0") == 0) {
-            menu_cashier();
-            return;
+                /* Pastikan sscanf mengembalikan 6, artinya format baris valid */
+                if (sscanf(buffer, "%d=%d=%d=%[^=]=%[^=]=%f",
+                           &schedules[count].id,
+                           &schedules[count].film_id,
+                           &schedules[count].studio_id,
+                           schedules[count].date,
+                           schedules[count].time,
+                           &schedules[count].price) == 6) {
+                    count++;
+                }
+            }
+            fclose(fp);
         }
 
-        valid = 1;
+        char input[20];
+        int sch_id;
+        int valid;
+        Schedule chosen_sch;
 
-        for (int i = 0; input[i]; i++) {
-            if (!isdigit(input[i])) {
+        /* =========================
+           LOOP TAMPILAN TABEL & INPUT
+           ========================= */
+        do {
+            system("cls");
+
+            printf(GOLD);
+            printf("\n");
+            printf("\t\t\t\t\t\t      ================================================\n");
+            printf("\t\t\t\t\t\t              SEAT STATUS PER SCHEDULE\n");
+            printf("\t\t\t\t\t\t      ================================================\n");
+            printf(RESET);
+
+            if (count == 0) {
+                printf(RED);
+                printf("\n\t\t\t\t\t\t      [ERROR] No schedules available!\n");
+                printf(RESET);
+                system("pause");
+                menu_cashier();
+                return;
+            }
+
+            printf(GOLD);
+            printf("\n");
+            printf("\t\t\t\t\t      %-4s | %-25s | %-12s | %-12s | %-6s | %s\n",
+                   "ID", "Film", "Studio", "Date", "Time", "Price");
+            printf("\t\t\t\t\t      -----------------------------------------------------------------------------------\n");
+            printf(RESET);
+
+            for (int i = 0; i < count; i++) {
+                Film* film = btree_search(film_tree, schedules[i].film_id);
+                
+                Studio studio;
+                char st_name[50] = "Unknown";
+                if (find_studio(schedules[i].studio_id, &studio)) {
+                    strcpy(st_name, studio.name);
+                }
+
+                /* Menggunakan %-25.25s agar teks tidak overlap jika kepanjangan */
+                printf("\t\t\t\t\t      %-4d | %-25.25s | %-12.12s | %-12s | %-6s | Rp %.0f\n",
+                       schedules[i].id,
+                       film ? film->title : "Unknown",
+                       st_name,
+                       schedules[i].date,
+                       schedules[i].time,
+                       schedules[i].price);
+            }
+
+            printf(GOLD);
+            printf("\t\t\t\t\t      -----------------------------------------------------------------------------------\n");
+            printf(RESET);
+
+            /* =========================
+               INPUT SCHEDULE ID
+               ========================= */
+            printf(GOLD);
+            printf("\n\t\t\t\t\t\t      Enter Schedule ID (0 = Back) : ");
+            printf(RESET);
+
+            fgets(input, sizeof(input), stdin);
+            input[strcspn(input, "\n")] = '\0';
+
+            /* Fitur Back */
+            if (strcmp(input, "0") == 0) {
+                menu_cashier();
+                return;
+            }
+
+            /* Validasi Input Kosong */
+            if (strlen(input) == 0) {
+                printf(RED);
+                printf("\n\t\t\t\t\t\t      [ERROR] Input cannot be empty!\n");
+                printf(RESET);
+                system("pause");
+                continue;
+            }
+
+            /* Validasi Angka */
+            valid = 1;
+            for (int i = 0; input[i]; i++) {
+                if (!isdigit(input[i])) {
+                    valid = 0;
+                    break;
+                }
+            }
+
+            if (!valid) {
+                printf(RED);
+                printf("\n\t\t\t\t\t\t      [ERROR] Schedule ID must be numeric!\n");
+                printf(RESET);
+                system("pause");
+                continue;
+            }
+
+            /* Validasi Ketersediaan di Database */
+            sch_id = atoi(input);
+            int found = 0;
+            
+            for (int i = 0; i < count; i++) {
+                if (schedules[i].id == sch_id) {
+                    chosen_sch = schedules[i];
+                    found = 1;
+                    break;
+                }
+            }
+
+            if (!found) {
+                printf(RED);
+                printf("\n\t\t\t\t\t\t      [ERROR] Schedule ID %d not found!\n", sch_id);
+                printf(RESET);
+                system("pause");
                 valid = 0;
-                break;
+            }
+
+        } while (!valid);
+
+        /* =========================
+           AMBIL DETAIL JADWAL (Hanya jalan jika lolos validasi)
+           ========================= */
+        Studio chosen_studio;
+        find_studio(chosen_sch.studio_id, &chosen_studio);
+
+        Film* film = btree_search(film_tree, chosen_sch.film_id);
+
+        system("cls");
+
+        printf(GOLD);
+        printf("\n");
+        printf("\t\t\t\t\t\t      ================================================\n");
+        printf("\t\t\t\t\t\t              SCHEDULE INFORMATION\n");
+        printf("\t\t\t\t\t\t      ================================================\n");
+        printf(RESET);
+
+        printf("      \t\t\t\t\t\tFilm     : %s\n", film ? film->title : "Unknown");
+        printf("      \t\t\t\t\t\tStudio   : %s\n", chosen_studio.name);
+        printf("      \t\t\t\t\t\tDate     : %s\n", chosen_sch.date);
+        printf("      \t\t\t\t\t\tTime     : %s\n", chosen_sch.time);
+
+        printf(GOLD);
+        printf("\t\t\t\t\t\t      ================================================\n");
+        printf(RESET);
+
+        printf("\n");
+
+        /* =========================
+           TAMPILKAN PETA KURSI
+           ========================= */
+        display_seat_map(sch_id, &chosen_studio);
+
+        /* =========================
+           HITUNG STATISTIK
+           ========================= */
+        int total_seats = chosen_studio.rows * chosen_studio.cols;
+        int booked_seats = 0;
+
+        for (int r = 0; r < chosen_studio.rows; r++) {
+            char row_char = 'A' + r;
+            for (int c = 1; c <= chosen_studio.cols; c++) {
+                char seat[10];
+                sprintf(seat, "%c%d", row_char, c);
+                if (is_seat_booked(sch_id, seat)) {
+                    booked_seats++;
+                }
             }
         }
 
-        if (!valid) {
-            printf(RED);
-            printf("\n\t\t\t\t\t\t      [ERROR] Schedule ID must be numeric!\n");
-            printf(RESET);
+        int available_seats = total_seats - booked_seats;
 
-            system("pause");
-            continue;
-        }
+        printf("\n");
 
-        sch_id = atoi(input);
+        printf(GOLD);
+        printf("\t\t\t\t\t\t      ================================================\n");
+        printf("\t\t\t\t\t\t                   SEAT SUMMARY\n");
+        printf("\t\t\t\t\t\t      ================================================\n");
+        printf(RESET);
 
-        Schedule temp;
-        if (!find_schedule(sch_id, &temp)) {
-            printf(RED);
-            printf("\n\t\t\t\t\t\t      [ERROR] Schedule ID %d not found!\n", sch_id);
-            printf(RESET);
+        printf("      \t\t\t\t\t\t      Total Seats      : %d\n", total_seats);
+        printf("      \t\t\t\t\t\t      Booked Seats     : %d\n", booked_seats);
+        printf("      \t\t\t\t\t\t      Available Seats  : %d\n", available_seats);
 
-            system("pause");
-            valid = 0;
-        }
+        printf(GOLD);
+        printf("\t\t\t\t\t\t      ================================================\n");
+        printf(RESET);
 
-    } while (!valid);
-
-    /* =========================
-       AMBIL DETAIL JADWAL
-       ========================= */
-    Schedule chosen_sch;
-    find_schedule(sch_id, &chosen_sch);
-
-    Studio chosen_studio;
-    find_studio(chosen_sch.studio_id, &chosen_studio);
-
-    Film* film = btree_search(film_tree, chosen_sch.film_id);
-
-    system("cls");
-
-    printf(GOLD);
-    printf("\n");
-    printf("\t\t\t\t\t\t      ================================================\n");
-    printf("\t\t\t\t\t\t              SCHEDULE INFORMATION\n");
-    printf("\t\t\t\t\t\t      ================================================\n");
-    printf(RESET);
-
-    printf("      \t\t\t\t\t\tFilm     : %s\n",
-           film ? film->title : "Unknown");
-
-    printf("      \t\t\t\t\t\tStudio   : %s\n",
-           chosen_studio.name);
-
-    printf("      \t\t\t\t\t\tDate     : %s\n",
-           chosen_sch.date);
-
-    printf("      \t\t\t\t\t\tTime     : %s\n",
-           chosen_sch.time);
-
-    printf(GOLD);
-    printf("\t\t\t\t\t\t      ================================================\n");
-    printf(RESET);
-
-    printf("\n");
-
-    /* =========================
-       TAMPILKAN PETA KURSI
-       ========================= */
-    display_seat_map(sch_id, &chosen_studio);
-
-    /* =========================
-       HITUNG STATISTIK
-       ========================= */
-    int total_seats =
-        chosen_studio.rows * chosen_studio.cols;
-
-    int booked_seats = 0;
-
-    for (int r = 0; r < chosen_studio.rows; r++) {
-        char row_char = 'A' + r;
-
-        for (int c = 1; c <= chosen_studio.cols; c++) {
-
-            char seat[10];
-            sprintf(seat, "%c%d", row_char, c);
-
-            if (is_seat_booked(sch_id, seat))
-                booked_seats++;
-        }
+        printf("\n");
+        system("pause");
+        menu_cashier();
     }
-
-    int available_seats =
-        total_seats - booked_seats;
-
-    printf("\n");
-
-    printf(GOLD);
-    printf("\t\t\t\t\t\t      ================================================\n");
-    printf("\t\t\t\t\t\t                   SEAT SUMMARY\n");
-    printf("\t\t\t\t\t\t      ================================================\n");
-    printf(RESET);
-
-    printf("      \t\t\t\t\t\t      Total Seats      : %d\n", total_seats);
-    printf("      \t\t\t\t\t\t      Booked Seats     : %d\n", booked_seats);
-    printf("      \t\t\t\t\t\t      Available Seats  : %d\n", available_seats);
-
-    printf(GOLD);
-    printf("\t\t\t\t\t\t      ================================================\n");
-    printf(RESET);
-
-    printf("\n");
-    system("pause");
-    menu_cashier();
-}
-
 
     // ============================================================
     // MAIN
